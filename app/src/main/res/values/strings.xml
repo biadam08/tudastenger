@@ -1,0 +1,33 @@
+<resources>
+    <string name="app_name">Tudástenger</string>
+    <string name="newgame">Új játék kezdése</string>
+    <string name="newgame_favorites">Új játék a kedvenc kategóriákkal</string>
+    <string name="history">Előzmények</string>
+    <string name="rankings">Ranglista</string>
+    <string name="account">Fiók</string>
+    <string name="home">Kezdőoldal</string>
+    <string name="profile">Profil</string>
+    <string name="logout">Kijelentkezés</string>
+    <string name="nav_open">Menü megnyitása</string>
+    <string name="nav_close">Menü bezárása</string>
+    <string name="login">Bejelentkezés</string>
+    <string name="registration">Regisztráció</string>
+    <string name="tudastenger">Tudástenger</string>
+    <string name="password">Jelszó</string>
+    <string name="passwordAgain">Jelszó újra</string>
+    <string name="email">E-mail cím</string>
+    <string name="username">Felhasználónév</string>
+    <string name="already_registered">Van már fiókod? Jelentkezz be!</string>
+    <string name="not_a_user_yet">Nincs még fiókod? Regisztrálj!</string>
+    <string name="add_a_question">Kérdés hozzáadása</string>
+    <string name="add_a_category">Kategória hozzáadása</string>
+    <string name="category_name">Kategória neve</string>
+    <string name="hozzaadas">Hozzáadás</string>
+    <string name="question">Kérdés</string>
+    <string name="new_answer">Új válasz</string>
+    <string name="answer_option">Válaszlehetőség</string>
+    <string name="add_an_image">Kép hozzáadása</string>
+    <string name="remove_last_answer">Utolsó törlése</string>
+    <string name="history_your_answer">Válaszod: %1$s</string>
+    <string name="history_correct_answer">Helyes válasz: %1$s</string>
+</resources>

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_home"
+            android:title="@string/home"
+            android:icon="@drawable/ic_home" />
+        <item
+            android:id="@+id/nav_newgame"
+            android:title="@string/newgame"
+            android:icon="@drawable/ic_newgame" />
+
+    </group>
+
+    <item android:title="Fiók">
+        <menu>
+            <group android:checkableBehavior="single">
+                <item
+                    android:id="@+id/nav_registration"
+                    android:title="@string/registration"
+                    android:icon="@drawable/ic_registration" />
+                <item
+                    android:id="@+id/nav_login"
+                    android:title="@string/login"
+                    android:icon="@drawable/ic_login" />
+                <item
+                    android:id="@+id/nav_profile"
+                    android:title="@string/profile"
+                    android:icon="@drawable/ic_account" />
+                <item
+                    android:id="@+id/nav_history"
+                    android:title="@string/history"
+                    android:icon="@drawable/ic_history" />
+                <item
+                    android:id="@+id/nav_rankings"
+                    android:title="@string/rankings"
+                    android:icon="@drawable/ic_rankings" />
+                <item
+                    android:id="@+id/nav_logout"
+                    android:title="@string/logout"
+                    android:icon="@drawable/ic_logout" />
+            </group>
+        </menu>
+    </item>
+    <item android:title="Adminisztráció" android:id="@+id/nav_admin">
+        <menu>
+            <group android:checkableBehavior="single">
+                <item
+                    android:id="@+id/nav_add_a_question"
+                    android:title="@string/add_a_question"
+                    android:icon="@drawable/ic_add_a_question" />
+                <item
+                    android:id="@+id/nav_add_a_category"
+                    android:title="@string/add_a_category"
+                    android:icon="@drawable/ic_add_a_category" />
+
+            </group>
+        </menu>
+    </item>
+
+</menu>

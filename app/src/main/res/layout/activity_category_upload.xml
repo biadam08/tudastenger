@@ -1,0 +1,66 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    android:background="@drawable/tudastenger_bg2"
+    tools:context=".CategoryUploadActivity"
+    android:orientation="vertical"
+    android:gravity="center">
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        app:cardCornerRadius="20dp"
+        android:layout_gravity="center">
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp"
+            android:background="@color/cardview_light_background">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Kategória hozzáadása"
+                android:textSize="36sp"
+                android:textAlignment="center"
+                android:layout_marginBottom="12dp"
+                android:textColor="@color/browne"
+                />
+
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/custom_shape_edittext"
+                android:id="@+id/categoryName"
+                android:hint="@string/category_name"
+                android:padding="8dp"
+                android:layout_margin="12dp"
+                android:inputType="text"
+                />
+
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/hozzaadas"
+                android:id="@+id/loginButton"
+                android:layout_marginTop="16dp"
+                android:backgroundTint="@color/browne"
+                android:textColor="@color/white"
+                android:background="@drawable/custom_shape_rounded_button"
+                android:layout_marginBottom="12dp"
+                android:onClick="addNewCategory"
+                />
+
+        </LinearLayout>
+
+
+
+    </androidx.cardview.widget.CardView>
+
+</ScrollView>
