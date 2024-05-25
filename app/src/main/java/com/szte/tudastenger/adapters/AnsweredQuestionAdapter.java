@@ -1,24 +1,20 @@
-package com.szte.tudastenger;
+package com.szte.tudastenger.adapters;
 
 import android.content.Context;
-import android.content.Intent;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
+import com.szte.tudastenger.R;
+import com.szte.tudastenger.models.AnsweredQuestion;
+import com.szte.tudastenger.models.Question;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -28,13 +24,11 @@ import java.util.TimeZone;
 public class AnsweredQuestionAdapter extends RecyclerView.Adapter<AnsweredQuestionAdapter.ViewHolder> {
     private ArrayList<AnsweredQuestion> mAnsweredQuestionsData;
     private Context mContext;
-    private String mCurrentUserId;
     private LinearLayout linearLayoutAQ;
 
-    AnsweredQuestionAdapter(Context context, ArrayList<AnsweredQuestion> questionsData, String currentUserId){
+    public AnsweredQuestionAdapter(Context context, ArrayList<AnsweredQuestion> questionsData){
         this.mAnsweredQuestionsData = questionsData;
         this.mContext = context;
-        this.mCurrentUserId = currentUserId;
     }
 
     @NonNull

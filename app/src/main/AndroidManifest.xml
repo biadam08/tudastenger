@@ -22,38 +22,38 @@
         android:theme="@style/Theme.Tudastenger"
         tools:targetApi="31">
         <activity
-            android:name=".HistoryActivity"
+            android:name=".activities.HistoryActivity"
             android:exported="false"
             android:label="Előzmények" />
         <activity
-            android:name=".SavedQuestionsActivity"
+            android:name=".activities.SavedQuestionsActivity"
             android:exported="false"
             android:label="Mentett kérdések" />
         <activity
-            android:name=".ProfileActivity"
+            android:name=".activities.ProfileActivity"
             android:exported="false"
             android:label="Profil" />
         <activity
-            android:name=".QuizGameActivity"
+            android:name=".activities.QuizGameActivity"
             android:exported="false"
             android:label="Kvízjáték" />
         <activity
-            android:name=".CategoryUploadActivity"
+            android:name=".activities.CategoryUploadActivity"
             android:exported="false" />
         <activity
-            android:name=".QuestionUploadActivity"
+            android:name=".activities.QuestionUploadActivity"
             android:exported="false" />
         <activity
-            android:name=".DrawerBaseActivity"
+            android:name=".activities.DrawerBaseActivity"
             android:exported="false" />
         <activity
-            android:name=".LoginActivity"
+            android:name=".activities.LoginActivity"
             android:exported="false" />
         <activity
-            android:name=".RegistrationActivity"
+            android:name=".activities.RegistrationActivity"
             android:exported="false" />
         <activity
-            android:name=".MainActivity"
+            android:name=".activities.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

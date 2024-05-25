@@ -1,9 +1,6 @@
-package com.szte.tudastenger;
+package com.szte.tudastenger.activities;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -15,7 +12,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -34,14 +30,15 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.szte.tudastenger.R;
+import com.szte.tudastenger.adapters.CategoryProfileAdapter;
 import com.szte.tudastenger.databinding.ActivityProfileBinding;
-import com.theartofdev.edmodo.cropper.BuildConfig;
+import com.szte.tudastenger.models.Category;
+import com.szte.tudastenger.models.User;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
-import java.io.File;
 import java.util.ArrayList;
-import java.util.Objects;
 import java.util.UUID;
 
 

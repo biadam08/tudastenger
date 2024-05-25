@@ -1,4 +1,4 @@
-package com.szte.tudastenger;
+package com.szte.tudastenger.models;
 
 import com.google.firebase.Timestamp;
 

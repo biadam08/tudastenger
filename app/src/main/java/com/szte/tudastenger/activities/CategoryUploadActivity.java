@@ -1,6 +1,4 @@
-package com.szte.tudastenger;
-
-import androidx.appcompat.app.AppCompatActivity;
+package com.szte.tudastenger.activities;
 
 import android.os.Bundle;
 import android.view.View;
@@ -9,7 +7,9 @@ import android.widget.Toast;
 
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.szte.tudastenger.R;
 import com.szte.tudastenger.databinding.ActivityCategoryUploadBinding;
+import com.szte.tudastenger.models.Category;
 
 public class CategoryUploadActivity extends DrawerBaseActivity {
 

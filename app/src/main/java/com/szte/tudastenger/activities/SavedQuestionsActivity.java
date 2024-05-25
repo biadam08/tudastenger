@@ -1,6 +1,5 @@
-package com.szte.tudastenger;
+package com.szte.tudastenger.activities;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -9,42 +8,49 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.szte.tudastenger.databinding.ActivityHistoryBinding;
+import com.szte.tudastenger.R;
+import com.szte.tudastenger.adapters.SavedQuestionAdapter;
+import com.szte.tudastenger.databinding.ActivitySavedQuestionsBinding;
+import com.szte.tudastenger.models.Category;
+import com.szte.tudastenger.models.Question;
+import com.szte.tudastenger.models.User;
 
 import java.util.ArrayList;
 
-public class HistoryActivity extends DrawerBaseActivity {
-    private ActivityHistoryBinding activityHistoryBinding;
+public class SavedQuestionsActivity extends DrawerBaseActivity {
+
+    private ActivitySavedQuestionsBinding activitySavedQuestionsBinding;
     private FirebaseFirestore mFirestore;
     private FirebaseUser user;
+    private FirebaseAuth mAuth;
     private User currentUser;
     private CollectionReference mUsers;
     private CollectionReference mQuestions;
-    private CollectionReference mAnsweredQuestions;
+    private CollectionReference mSavedQuestions;
 
-    private ArrayList<AnsweredQuestion> mAnsweredQuestionsData;
+    private ArrayList<Question> mQuestionsData;
     private RecyclerView mRecyclerView;
-    private TextView noSolvedQuestion;
-    private AnsweredQuestionAdapter mAdapter;
+
+    private SavedQuestionAdapter mAdapter;
+
+    private TextView noSavedQuestionTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        activityHistoryBinding = ActivityHistoryBinding.inflate(getLayoutInflater());
-        setContentView(activityHistoryBinding.getRoot());
+        activitySavedQuestionsBinding = ActivitySavedQuestionsBinding.inflate(getLayoutInflater());
+        setContentView(activitySavedQuestionsBinding.getRoot());
 
+        mAuth = FirebaseAuth.getInstance();
         user = FirebaseAuth.getInstance().getCurrentUser();
 
         if (user == null) {
@@ -53,10 +59,11 @@ public class HistoryActivity extends DrawerBaseActivity {
 
         mFirestore = FirebaseFirestore.getInstance();
         mUsers = mFirestore.collection("Users");
-        mAnsweredQuestions = mFirestore.collection("AnsweredQuestions");
+        mSavedQuestions = mFirestore.collection("SavedQuestions");
         mQuestions = mFirestore.collection("Questions");
-        noSolvedQuestion = findViewById(R.id.noSolvedQuestion);
-        noSolvedQuestion.setVisibility(View.GONE);
+
+        noSavedQuestionTextView = findViewById(R.id.noSavedQuestion);
+        noSavedQuestionTextView.setVisibility(View.VISIBLE);
 
         mUsers.whereEqualTo("email", user.getEmail()).get().addOnSuccessListener(queryDocumentSnapshots -> {
             for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
@@ -64,7 +71,6 @@ public class HistoryActivity extends DrawerBaseActivity {
                 displayQuestions();
             }
         });
-
     }
 
     private void displayQuestions() {
@@ -101,15 +107,14 @@ public class HistoryActivity extends DrawerBaseActivity {
 
         mRecyclerView.setLayoutManager(new GridLayoutManager(this, 1));
 
-        mAnsweredQuestionsData = new ArrayList<>();
-        mAdapter = new AnsweredQuestionAdapter(this, mAnsweredQuestionsData, currentUser.getId());
+        mQuestionsData = new ArrayList<>();
+        mAdapter = new SavedQuestionAdapter(this, mQuestionsData, currentUser.getId());
         mRecyclerView.setAdapter(mAdapter);
 
-        mAnsweredQuestionsData.clear();
+        mQuestionsData.clear();
 
-        mAnsweredQuestions
+        mSavedQuestions
                 .whereEqualTo("userId", currentUser.getId())
-                .orderBy("date", Query.Direction.ASCENDING) // firestore összetett index kellett hozzá
                 .get()
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
@@ -122,21 +127,22 @@ public class HistoryActivity extends DrawerBaseActivity {
                                         if (task2.isSuccessful()) {
                                             DocumentSnapshot questionDocument = task2.getResult();
                                             if (questionDocument.exists()) {
-                                                String answer = document.getString("answer");
-                                                boolean correct = document.getBoolean("correct");
-                                                Timestamp timestamp = document.getTimestamp("date");
+                                                String questionText = questionDocument.getString("questionText");
+                                                ArrayList<String> answers = (ArrayList<String>) questionDocument.get("answers");
+                                                int correctAnswerIndex = questionDocument.getLong("correctAnswerIndex").intValue();
                                                 String category = questionDocument.getString("category");
+                                                String image = questionDocument.getString("image");
                                                 if(sortCategory.equals("Összes kategória") || sortCategory.equals(category)) {
-                                                    AnsweredQuestion answeredQuestion = new AnsweredQuestion(questionId, category, currentUser.getId(), timestamp, answer, correct);
-                                                    mAnsweredQuestionsData.add(answeredQuestion);
+                                                    Question question = new Question(questionId, questionText, category, answers, correctAnswerIndex, image);
+                                                    mQuestionsData.add(question);
                                                 }
                                             }
                                         }
                                         mAdapter.notifyDataSetChanged();
-                                        if(mAnsweredQuestionsData.isEmpty()){
-                                            noSolvedQuestion.setVisibility(View.VISIBLE);
+                                        if(mQuestionsData.isEmpty()){
+                                            noSavedQuestionTextView.setVisibility(View.VISIBLE);
                                         } else{
-                                            noSolvedQuestion.setVisibility(View.GONE);
+                                            noSavedQuestionTextView.setVisibility(View.GONE);
                                         }
                                     });
                         }
@@ -144,7 +150,5 @@ public class HistoryActivity extends DrawerBaseActivity {
                         Log.d("Error", task.getException().getMessage());
                     }
                 });
-
-
     }
 }

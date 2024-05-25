@@ -1,8 +1,6 @@
-package com.szte.tudastenger;
+package com.szte.tudastenger.adapters;
 
 import android.content.Context;
-import android.content.Intent;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +14,9 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.szte.tudastenger.R;
+import com.szte.tudastenger.models.Category;
+import com.szte.tudastenger.models.User;
 
 import java.util.ArrayList;
 
@@ -25,7 +26,7 @@ public class CategoryProfileAdapter extends RecyclerView.Adapter<CategoryProfile
     private User currentUser;
     private FirebaseFirestore mFirestore = FirebaseFirestore.getInstance();
 
-    CategoryProfileAdapter(Context context, ArrayList<Category> categoriesData, User currentUser){
+    public CategoryProfileAdapter(Context context, ArrayList<Category> categoriesData, User currentUser){
         this.mCategoriesData = categoriesData;
         this.mContext = context;
         this.currentUser = currentUser;

@@ -1,4 +1,4 @@
-package com.szte.tudastenger;
+package com.szte.tudastenger.activities;
 
 import androidx.annotation.NonNull;
 
@@ -35,7 +35,11 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.szte.tudastenger.R;
 import com.szte.tudastenger.databinding.ActivityQuizGameBinding;
+import com.szte.tudastenger.models.AnsweredQuestion;
+import com.szte.tudastenger.models.Question;
+import com.szte.tudastenger.models.User;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,25 +51,27 @@ public class QuizGameActivity extends DrawerBaseActivity {
     private FirebaseFirestore mFirestore;
     private FirebaseAuth mAuth;
     private FirebaseUser user;
-    private String categoryName;
     private ActivityQuizGameBinding activityQuizGameBinding;
     private CollectionReference mUsers;
     private CollectionReference mQuestions;
     private StorageReference storageReference;
     private User currentUser;
     private TextView userGold;
-    private boolean isSelectedAnswer;
-    private String questionDocId;
+    private String categoryName; // adott kategóriában való játszásnál a kategória neve
+    private boolean isSelectedAnswer; // választott-e már választ a felhasználó az adott kérdésnél
+    private String questionDocId; // kérdés dokumentum ID-ja, ami megegyezik a kérdés ID-jával
     private DocumentReference userRef;
     private boolean savedQuestion = false; // korábban már alapból mentett kérdés volt
     private boolean isQuestionSavedNow = false; // korábban már mentett kérdés volt: ez változhat most
     private boolean savedNow = false; // játék közben mentette el
-    private String savedQuestionId;
-    private Button saveQuestionButton;
-    private String savedDocumentId;
-    private boolean isMixed;
-    private boolean isCorrect = false;
+    private String savedQuestionId; //mentett kérdés ID-je (ha mentett volt)
+    private String savedDocumentId; //mentés dokumentum ID-ja
+    private boolean isMixed; // vegyes kvízjáték indult-e
+    private boolean isCorrect = false; // helyes választ adott-e a felhasználó
+    private boolean isSavedInstanceStateHasData = false; // van-e adat a SavedInstaceState-be mentve (pl. képernyőelfordításkor a kérdés újragenerálásának megakadályozása miatt)
     private Button helpButton;
+    private Button saveQuestionButton;
+    private ImageView questionImageView;
     private TextView questionTextView;
     private String userAnswer;
     private String correctAnswer;
@@ -113,7 +119,7 @@ public class QuizGameActivity extends DrawerBaseActivity {
         helpButton = findViewById(R.id.helpButton);
         questionTextView = findViewById(R.id.questionTextView);
         saveQuestionButton = findViewById(R.id.saveQuestionButton);
-
+        questionImageView = findViewById(R.id.questionImage);
 
         mUsers.whereEqualTo("email", user.getEmail()).get().addOnSuccessListener(queryDocumentSnapshots -> {
             for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
@@ -156,8 +162,7 @@ public class QuizGameActivity extends DrawerBaseActivity {
                                 String category = questionDocument.getString("category");
                                 String image = questionDocument.getString("image");
                                 Question question = new Question(savedQuestionId, questionText, category, answers, correctAnswerIndex, image);
-                                Log.d("EXTRA", question.getId() + ", " + question.getQuestionText() + ": " + question.getCategory() + " - " + question.getAnswers().get(0));
-                                questionDocId = savedQuestionId; //törléshez szükséges
+                                questionDocId = savedQuestionId; //mentésből törléshez szükséges a dokumentum ID
                                 displayQuestion(question);
                             }
                         }
@@ -166,13 +171,21 @@ public class QuizGameActivity extends DrawerBaseActivity {
     }
 
     private void queryRandomQuestion() {
+        if(isQuestionSavedNow){
+            saveQuestionButton.setText("Eltávolítás");
+        } else{
+            saveQuestionButton.setText("Mentés");
+        }
+
         String userId = currentUser.getId();
 
         mFirestore.collection("AnsweredQuestions")
                 .whereEqualTo("userId", userId)
                 .get()
                 .addOnSuccessListener(answeredQuestions -> {
+
                     List<String> answeredQuestionIds = new ArrayList<>();
+
                     for (DocumentSnapshot answeredQuestion : answeredQuestions.getDocuments()) {
                         answeredQuestionIds.add(answeredQuestion.getString("questionId"));
                     }
@@ -196,12 +209,12 @@ public class QuizGameActivity extends DrawerBaseActivity {
                                     questionDocId = randomDoc.getId();
                                     displayQuestion(question);
                                 } else{
-                                    ImageView questionImage = findViewById(R.id.questionImage);
+                                    questionImageView = findViewById(R.id.questionImage);
                                     LinearLayout answersLayout = findViewById(R.id.answersLayout);
-                                    questionImage.setVisibility(View.GONE);
+                                    questionImageView.setVisibility(View.GONE);
                                     answersLayout.setVisibility(View.GONE);
 
-                                    if(!categoryName.isEmpty()) {
+                                    if(categoryName != null) {
                                         questionTextView.setText("Sajnos nincs több kérdés ebben a kategóriában!");
                                     } else{
                                         questionTextView.setText("Sajnos nincs több megválaszolatlan kérdés!");
@@ -225,8 +238,9 @@ public class QuizGameActivity extends DrawerBaseActivity {
         answersLayout.removeAllViews();
 
         if (question.getImage() == null) {
-            ImageView questionImageView = findViewById(R.id.questionImage);
             questionImageView.setVisibility(View.GONE);
+        } else{
+            questionImageView.setVisibility(View.VISIBLE);
         }
 
         questionTextView.setText(question.getQuestionText());
@@ -274,6 +288,7 @@ public class QuizGameActivity extends DrawerBaseActivity {
                     isSelectedAnswer = true;
                     userAnswer = question.getAnswers().get(clickedIndex);
                     correctAnswer = question.getAnswers().get(correctAnswerIndex);
+                    isCorrect = false;
 
                     if (clickedIndex == correctAnswerIndex) {
                         isCorrect = true;
@@ -290,27 +305,13 @@ public class QuizGameActivity extends DrawerBaseActivity {
                                 .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                                     @Override
                                     public void onSuccess(DocumentReference documentReference) {
-                                        userRef.update("gold", FieldValue.increment(goldChange))
-                                                .addOnSuccessListener(aVoid -> {
-                                                    Log.d("Update", "Sikeres arany módosítás");
-                                                })
-                                                .addOnFailureListener(e -> {
-                                                    Log.w("Update", "Arany módosítása sikertelen", e);
-                                                });
+                                        userRef.update("gold", FieldValue.increment(goldChange));
                                         currentUser.setGold(currentUser.getGold() + goldChange);
                                         userGold.setText(currentUser.getGold().toString());
-                                        Toast.makeText(QuizGameActivity.this, "Sikeresen elmentve a jó válasz!", Toast.LENGTH_SHORT).show();
-                                    }
-                                })
-                                .addOnFailureListener(new OnFailureListener() {
-                                    @Override
-                                    public void onFailure(@NonNull Exception e) {
-                                        Toast.makeText(QuizGameActivity.this, "Hiba történt a mentés során.", Toast.LENGTH_SHORT).show();
                                     }
                                 });
                     }
                 } else {
-                    Toast.makeText(getApplicationContext(), "Már válaszoltál...", Toast.LENGTH_SHORT).show();
                     //lekezelni, hogyha nem jött fel az új ablak és már nem kattinthat újat
                 }
             });
@@ -319,6 +320,7 @@ public class QuizGameActivity extends DrawerBaseActivity {
     }
 
     private void saveQuestion() {
+        Log.d("Mentés kezdődne", "Mentés kezdődne...");
         HashMap<String, String> questionToSave = new HashMap<String, String>();
         questionToSave.put("userId", currentUser.getId());
         questionToSave.put("questionId", questionDocId);
@@ -418,6 +420,8 @@ public class QuizGameActivity extends DrawerBaseActivity {
 
         if(isQuestionSavedNow){
             bookmarkButton.setImageResource(R.drawable.ic_remove_bookmark);
+            bookmarkButton.setTag("bookmarked");
+        } else{
             bookmarkButton.setTag("not_bookmarked");
         }
 
@@ -432,11 +436,11 @@ public class QuizGameActivity extends DrawerBaseActivity {
             @Override
             public void onClick(View view) {
                 saveQuestion();
-                if(bookmarkButton.getTag() != null && bookmarkButton.getTag().equals("bookmarked")) {
-                    bookmarkButton.setImageResource(R.drawable.ic_remove_bookmark);
+                if(bookmarkButton.getTag().equals("bookmarked")) {
+                    bookmarkButton.setImageResource(R.drawable.ic_add_bookmark);
                     bookmarkButton.setTag("not_bookmarked");
                 } else {
-                    bookmarkButton.setImageResource(R.drawable.ic_add_bookmark);
+                    bookmarkButton.setImageResource(R.drawable.ic_remove_bookmark);
                     bookmarkButton.setTag("bookmarked");
                 }
             }
@@ -448,7 +452,11 @@ public class QuizGameActivity extends DrawerBaseActivity {
                 if(!savedQuestion){
                     popupWindow.dismiss();
                     isSelectedAnswer = false; // új kérdésnél még nem válaszolt
+                    savedNow = false;
+                    isQuestionSavedNow = false;
                     queryRandomQuestion();
+                } else{
+                    startActivity(new Intent(QuizGameActivity.this, SavedQuestionsActivity.class));
                 }
             }
         });
