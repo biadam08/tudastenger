@@ -18,6 +18,7 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.szte.tudastenger.activities.QuizGameActivity;
 import com.szte.tudastenger.R;
+import com.szte.tudastenger.activities.SavedQuestionGameActivity;
 import com.szte.tudastenger.models.Question;
 
 import java.util.ArrayList;
@@ -72,7 +73,7 @@ public class SavedQuestionAdapter extends RecyclerView.Adapter<SavedQuestionAdap
             mSolveButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    Intent intent = new Intent(mContext, QuizGameActivity.class);
+                    Intent intent = new Intent(mContext, SavedQuestionGameActivity.class);
                     intent.putExtra("questionId", currentQuestion.getId());
                     mContext.startActivity(intent);
                 }

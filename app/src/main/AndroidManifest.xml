@@ -22,6 +22,9 @@
         android:theme="@style/Theme.Tudastenger"
         tools:targetApi="31">
         <activity
+            android:name=".activities.SavedQuestionGameActivity"
+            android:exported="false" />
+        <activity
             android:name=".activities.HistoryActivity"
             android:exported="false"
             android:label="Előzmények" />
@@ -64,6 +67,7 @@
         <activity
             android:name="com.theartofdev.edmodo.cropper.CropImageActivity"
             android:theme="@style/Base.Theme.AppCompat" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="com.szte.tudastenger"

@@ -53,15 +53,18 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="5dp"
                 android:layout_marginRight="5dp"
+                android:padding="6dp"
                 android:layout_weight="1"
+                android:gravity="center"
                 android:background="@drawable/custom_shape_rounded_rectangle"
                 android:orientation="vertical">
 
                 <ImageView
                     android:id="@+id/imageView4"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    app:srcCompat="@drawable/bookmark" />
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    app:srcCompat="@drawable/ic_bookmarks"
+                    app:tint="@color/browne"/>
 
                 <TextView
                     android:id="@+id/textView2"
@@ -77,16 +80,18 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="5dp"
                 android:layout_marginRight="5dp"
+                android:padding="6dp"
                 android:layout_weight="1"
+                android:gravity="center"
                 android:background="@drawable/custom_shape_rounded_rectangle"
                 android:orientation="vertical">
 
                 <ImageView
                     android:id="@+id/imageView5"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    app:srcCompat="@drawable/settings" />
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    app:srcCompat="@drawable/ic_settings"
+                    app:tint="@color/browne"/>
 
                 <TextView
                     android:id="@+id/textView3"
@@ -102,15 +107,18 @@
                 android:layout_height="match_parent"
                 android:layout_marginLeft="5dp"
                 android:layout_marginRight="5dp"
+                android:padding="6dp"
                 android:layout_weight="1"
+                android:gravity="center"
                 android:background="@drawable/custom_shape_rounded_rectangle"
                 android:orientation="vertical">
 
                 <ImageView
                     android:id="@+id/imageView6"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    app:srcCompat="@drawable/rank" />
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    app:srcCompat="@drawable/ic_rank"
+                    app:tint="@color/browne"/>
 
                 <TextView
                     android:id="@+id/textView4"
