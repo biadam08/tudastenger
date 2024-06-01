@@ -1,7 +1,5 @@
 package com.szte.tudastenger.activities;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.util.Pair;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -17,25 +15,18 @@ import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.android.material.datepicker.MaterialDatePicker;
-import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
-import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.szte.tudastenger.R;
-import com.szte.tudastenger.adapters.SavedQuestionAdapter;
 import com.szte.tudastenger.adapters.UserLeaderboardAdapter;
 import com.szte.tudastenger.databinding.ActivityLeaderboardBinding;
-import com.szte.tudastenger.databinding.ActivityMainBinding;
 import com.szte.tudastenger.models.Category;
-import com.szte.tudastenger.models.User;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -47,6 +38,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 
 public class LeaderboardActivity extends DrawerBaseActivity {
     private ActivityLeaderboardBinding activityLeaderboardBinding;
@@ -69,9 +61,7 @@ public class LeaderboardActivity extends DrawerBaseActivity {
     private Date endDateFromDialog;
     private String selectedCategory;
     private ImageView clearDateRangeImageView;
-    private List<Map.Entry<String, Integer>> sortedList = new ArrayList<>();
-
-
+    private List<Map.Entry<String, Integer>> sortedListWithUsernames = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,7 +96,7 @@ public class LeaderboardActivity extends DrawerBaseActivity {
         mRecyclerView = findViewById(R.id.recyclerView);
         mRecyclerView.setLayoutManager(new GridLayoutManager(this, 1));
 
-        mAdapter = new UserLeaderboardAdapter(this, sortedList);
+        mAdapter = new UserLeaderboardAdapter(this, sortedListWithUsernames);
         mRecyclerView.setAdapter(mAdapter);
 
         Locale locale = new Locale("hu", "HU");
@@ -157,7 +147,6 @@ public class LeaderboardActivity extends DrawerBaseActivity {
     }
 
     private void displayLeaderboard() {
-        sortedList.clear();
         Query query = mAnsweredQuestions;
 
         Log.d("dátum", String.valueOf(startDateFromDialog));
@@ -190,50 +179,61 @@ public class LeaderboardActivity extends DrawerBaseActivity {
                     String userId = document.getString("userId");
                     boolean correct = document.getBoolean("correct");
 
-                    // Lekérdezzük a username-t a Users táblából a userId alapján
-                    DocumentReference userRef = mUsers.document(userId);
-                    userRef.get().addOnSuccessListener(userDocument -> {
-                        if (userDocument.exists()) {
-                            String username = userDocument.getString("username");
+                    if (correct) {
+                        userPoints.put(userId, userPoints.getOrDefault(userId, 0) + 25);
+                    } else {
+                        userPoints.put(userId, userPoints.getOrDefault(userId, 0) - 25);
+                    }
+                }
 
-                            // Frissítjük a pontokat a username alapján
-                            if (correct) {
-                                userPoints.put(username, userPoints.getOrDefault(username, 0) + 25);
-                            } else {
-                                userPoints.put(username, userPoints.getOrDefault(username, 0) - 25);
+                List<Map.Entry<String, Integer>> userList = new ArrayList<>(userPoints.entrySet());
+                Collections.sort(userList, (entry1, entry2) -> entry2.getValue().compareTo(entry1.getValue()));
+
+                final CountDownLatch latch = new CountDownLatch(userList.size());
+                HashMap <String, Integer> sortedMapWithUsernames = new HashMap <>();
+
+                for (Map.Entry<String, Integer> entry : userList) {
+                    mUsers.document(entry.getKey()).get().addOnCompleteListener(userTask -> {
+                        if (userTask.isSuccessful()) {
+                            DocumentSnapshot userDocument = userTask.getResult();
+                            if (userDocument.exists()) {
+                                String username = userDocument.getString("username");
+                                sortedMapWithUsernames.put(username, sortedMapWithUsernames.getOrDefault(username, 0) + entry.getValue());
                             }
-
-                            sortedList.addAll(userPoints.entrySet());
                         }
+                        latch.countDown();
                     });
                 }
-            }
 
-            // Sorbarendezzük a megkapott listát
-            Collections.sort(sortedList, (entry1, entry2) -> entry2.getValue().compareTo(entry1.getValue()));
+                // A fő szálra váltás a UI frissítéséhez
+                new Thread(() -> {
+                    try {
+                        latch.await();
+                        runOnUiThread(() -> {
+                            sortedListWithUsernames.clear();
+                            sortedListWithUsernames.addAll(sortedMapWithUsernames.entrySet());
 
-            HashMap<String, Integer> sortedMapWithUsernames = new HashMap<>();
+                            Collections.sort(sortedListWithUsernames, (entry1, entry2) -> entry2.getValue().compareTo(entry1.getValue()));
 
-            for (Map.Entry<String, Integer> entry : sortedList) {
-                mUsers.document(entry.getKey()).get().addOnCompleteListener(userTask -> {
-                    if (userTask.isSuccessful()) {
-                        DocumentSnapshot userDocument2 = userTask.getResult();
-                        if (userDocument2.exists()) {
-                            String username2 = userDocument2.getString("username");
-                            sortedMapWithUsernames.put(username2, entry.getValue());
-                        }
+                            Log.d("FONTOS", String.valueOf(sortedListWithUsernames));
+
+                            if (sortedListWithUsernames.isEmpty()) {
+                                noDataForThisFilter.setVisibility(View.VISIBLE);
+                            } else {
+                                noDataForThisFilter.setVisibility(View.GONE);
+                            }
+
+                            mAdapter.notifyDataSetChanged();
+                        });
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
-                });
+                }).start();
+
             }
 
-            if (sortedList.isEmpty()) {
-                noDataForThisFilter.setVisibility(View.VISIBLE);
-            } else {
-                noDataForThisFilter.setVisibility(View.GONE);
-            }
-
-            mAdapter.notifyDataSetChanged();
         });
+
     }
 
 
