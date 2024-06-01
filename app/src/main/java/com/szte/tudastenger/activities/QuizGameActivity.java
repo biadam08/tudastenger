@@ -397,8 +397,6 @@ public class QuizGameActivity extends DrawerBaseActivity {
                     isSelectedAnswer = false; // új kérdésnél még nem válaszolt
                     savedNow = false;
                     queryRandomQuestion();
-                } else{
-                    startActivity(new Intent(QuizGameActivity.this, SavedQuestionsActivity.class));
                 }
             }
         });
