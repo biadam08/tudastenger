@@ -33,7 +33,7 @@
                     android:title="@string/history"
                     android:icon="@drawable/ic_history" />
                 <item
-                    android:id="@+id/nav_rankings"
+                    android:id="@+id/nav_leaderboard"
                     android:title="@string/rankings"
                     android:icon="@drawable/ic_rankings" />
                 <item

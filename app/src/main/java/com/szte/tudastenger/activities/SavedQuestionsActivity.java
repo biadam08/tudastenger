@@ -43,6 +43,7 @@ public class SavedQuestionsActivity extends DrawerBaseActivity {
     private SavedQuestionAdapter mAdapter;
 
     private TextView noSavedQuestionTextView;
+    private Spinner spinner;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +65,8 @@ public class SavedQuestionsActivity extends DrawerBaseActivity {
 
         noSavedQuestionTextView = findViewById(R.id.noSavedQuestion);
         noSavedQuestionTextView.setVisibility(View.VISIBLE);
+        spinner = findViewById(R.id.spinner);
+
 
         mUsers.whereEqualTo("email", user.getEmail()).get().addOnSuccessListener(queryDocumentSnapshots -> {
             for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
@@ -74,7 +77,6 @@ public class SavedQuestionsActivity extends DrawerBaseActivity {
     }
 
     private void displayQuestions() {
-        Spinner spinner = findViewById(R.id.spinner);
         ArrayList<String> categories = new ArrayList<>();
         categories.add("Összes kategória");
 

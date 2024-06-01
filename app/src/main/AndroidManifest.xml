@@ -22,6 +22,9 @@
         android:theme="@style/Theme.Tudastenger"
         tools:targetApi="31">
         <activity
+            android:name=".activities.LeaderboardActivity"
+            android:exported="false" />
+        <activity
             android:name=".activities.SavedQuestionGameActivity"
             android:exported="false" />
         <activity

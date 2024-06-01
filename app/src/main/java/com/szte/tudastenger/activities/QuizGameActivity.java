@@ -117,13 +117,9 @@ public class QuizGameActivity extends DrawerBaseActivity {
                 currentUser = doc.toObject(User.class);
                 userRef = mUsers.document(currentUser.getId());
                 userGold.setText(currentUser.getGold().toString());
-                startGame();
+                queryRandomQuestion();
             }
         });
-    }
-
-    private void startGame() {
-        queryRandomQuestion();
     }
 
     private void queryRandomQuestion() {

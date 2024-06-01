@@ -3,7 +3,10 @@ package com.szte.tudastenger.activities;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -32,6 +35,7 @@ public class MainActivity extends DrawerBaseActivity {
     private RecyclerView mRecyclerView;
 
     private CategoryAdapter mAdapter;
+    private Button startMixedGameButton;
 
 
 
@@ -46,6 +50,15 @@ public class MainActivity extends DrawerBaseActivity {
 
         mFirestore = FirebaseFirestore.getInstance();
         mCategories = mFirestore.collection("Categories");
+
+        startMixedGameButton = findViewById(R.id.startMixedGameButton);
+        startMixedGameButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MainActivity.this, QuizGameActivity.class);
+                startActivity(intent);
+            }
+        });
 
         mRecyclerView = findViewById(R.id.recyclerView);
         mRecyclerView.setLayoutManager(new GridLayoutManager(this, 2));

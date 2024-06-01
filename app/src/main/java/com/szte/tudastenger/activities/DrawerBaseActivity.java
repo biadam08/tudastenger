@@ -73,7 +73,7 @@ public class DrawerBaseActivity extends AppCompatActivity implements NavigationV
             menu.findItem(R.id.nav_logout).setVisible(false);
             menu.findItem(R.id.nav_profile).setVisible(false);
             menu.findItem(R.id.nav_history).setVisible(false);
-            menu.findItem(R.id.nav_rankings).setVisible(false);
+            menu.findItem(R.id.nav_leaderboard).setVisible(false);
         } else {
             menu.findItem(R.id.nav_login).setVisible(false);
             menu.findItem(R.id.nav_registration).setVisible(false);
@@ -133,6 +133,11 @@ public class DrawerBaseActivity extends AppCompatActivity implements NavigationV
         if(itemId == R.id.nav_registration){
             startActivity(new Intent(DrawerBaseActivity.this, RegistrationActivity.class));
         }
+
+        if(itemId == R.id.nav_leaderboard){
+            startActivity(new Intent(DrawerBaseActivity.this, LeaderboardActivity.class));
+        }
+
         if(itemId == R.id.nav_add_a_category){
             if(user != null && currentUserRole.equals("admin")) {
                 startActivity(new Intent(DrawerBaseActivity.this, CategoryUploadActivity.class));

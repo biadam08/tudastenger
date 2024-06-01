@@ -55,6 +55,7 @@ public class SavedQuestionGameActivity extends DrawerBaseActivity {
     private FirebaseAuth mAuth;
     private FirebaseUser user;
     private User currentUser;
+    private DocumentReference userRef;
     private StorageReference storageReference;
     private CollectionReference mUsers;
     private CollectionReference mQuestions;
