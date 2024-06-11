@@ -8,7 +8,6 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -40,7 +39,6 @@ import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
 import java.util.ArrayList;
-import java.util.Locale;
 import java.util.UUID;
 
 
@@ -124,15 +122,15 @@ public class ProfileActivity extends DrawerBaseActivity {
             }
         });
 
-       /*
+
         settingsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(ProfileActivity.this, SettingsActivity.class);
+                Intent intent = new Intent(ProfileActivity.this, FriendsActivity.class);
                 startActivity(intent);
             }
         });
-*/
+
         leaderBoardButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

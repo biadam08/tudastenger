@@ -28,6 +28,10 @@
             android:name=".activities.SavedQuestionGameActivity"
             android:exported="false" />
         <activity
+            android:name=".activities.FriendsActivity"
+            android:exported="false"
+            android:label="Barátok" />
+        <activity
             android:name=".activities.HistoryActivity"
             android:exported="false"
             android:label="Előzmények" />
