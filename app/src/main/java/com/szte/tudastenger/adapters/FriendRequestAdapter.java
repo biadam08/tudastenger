@@ -74,6 +74,13 @@ public class FriendRequestAdapter extends RecyclerView.Adapter<FriendRequestAdap
 
         public void bindTo(User currentUser) {
             mUsernameText.setText(currentUser.getUsername());
+            mDeclineFriendRequestImageButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    declineFriendRequest(currentUser);
+                }
+            });
+
             mFirestore.collection("FriendRequests")
                     .whereEqualTo("user_uid1", currentUser.getId())
                     .whereEqualTo("user_uid2", mCurrentUserId)
@@ -89,58 +96,7 @@ public class FriendRequestAdapter extends RecyclerView.Adapter<FriendRequestAdap
                                     mApproveFriendRequestImageButton.setOnClickListener(new View.OnClickListener() {
                                         @Override
                                         public void onClick(View v) {
-                                            // Töröljük a FriendRequests kollekcióból az adott adatot
-                                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                                mFirestore.collection("FriendRequests")
-                                                        .document(document.getId())
-                                                        .delete();
-                                            }
-
-                                            // Adjuk hozzá a Friends kollekcióba az adott uid-jú felhasználóhoz a barátságot
-                                            Map<String, Object> friend = new HashMap<>();
-                                            friend.put(currentUser.getId(), true);
-                                            mFirestore.collection("Friends")
-                                                    .document(mCurrentUserId)
-                                                    .get()
-                                                    .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                                                        @Override
-                                                        public void onSuccess(DocumentSnapshot documentSnapshot) {
-                                                            if (documentSnapshot.exists()) {
-                                                                mFirestore.collection("Friends")
-                                                                        .document(mCurrentUserId)
-                                                                        .update(friend);
-                                                            } else {
-                                                                mFirestore.collection("Friends")
-                                                                        .document(mCurrentUserId)
-                                                                        .set(friend);
-                                                            }
-                                                        }
-                                                    });
-
-                                            // Frissítjük a barátságot a meghívó felhasználónál is
-                                            Map<String, Object> friend2 = new HashMap<>();
-                                            friend2.put(mCurrentUserId, true);
-                                            mFirestore.collection("Friends")
-                                                    .document(currentUser.getId())
-                                                    .get()
-                                                    .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                                                        @Override
-                                                        public void onSuccess(DocumentSnapshot documentSnapshot) {
-                                                            if (documentSnapshot.exists()) {
-                                                                mFirestore.collection("Friends")
-                                                                        .document(currentUser.getId())
-                                                                        .update(friend2);
-                                                            } else {
-                                                                mFirestore.collection("Friends")
-                                                                        .document(currentUser.getId())
-                                                                        .set(friend2);
-                                                            }
-                                                        }
-                                                    });
-
-                                            mOnFriendAddedListener.onFriendAdded(currentUser);
-                                            mOnFriendRequestRemovedListener.onFriendRequestRemoved(currentUser);
-                                            mApproveFriendRequestImageButton.setVisibility(View.GONE);
+                                            approveFriendRequest(currentUser);
                                         }
                                     });
                                 }
@@ -148,6 +104,91 @@ public class FriendRequestAdapter extends RecyclerView.Adapter<FriendRequestAdap
                         }
                     });
         }
+    }
+
+    private void approveFriendRequest(User currentUser) {
+        // Töröljük a FriendRequests kollekcióból az adott adatot
+        declineFriendRequest(currentUser);
+
+        // Adjuk hozzá a Friends kollekcióba az adott uid-jú felhasználóhoz a barátságot
+        Map<String, Object> friend = new HashMap<>();
+        friend.put(currentUser.getId(), true);
+        mFirestore.collection("Friends")
+                .document(mCurrentUserId)
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                    @Override
+                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+                        if (documentSnapshot.exists()) {
+                            mFirestore.collection("Friends")
+                                    .document(mCurrentUserId)
+                                    .update(friend);
+                        } else {
+                            mFirestore.collection("Friends")
+                                    .document(mCurrentUserId)
+                                    .set(friend);
+                        }
+                    }
+                });
+
+        // Frissítjük a barátságot a meghívó felhasználónál is
+        Map<String, Object> friend2 = new HashMap<>();
+        friend2.put(mCurrentUserId, true);
+        mFirestore.collection("Friends")
+                .document(currentUser.getId())
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                    @Override
+                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+                        if (documentSnapshot.exists()) {
+                            mFirestore.collection("Friends")
+                                    .document(currentUser.getId())
+                                    .update(friend2);
+                        } else {
+                            mFirestore.collection("Friends")
+                                    .document(currentUser.getId())
+                                    .set(friend2);
+                        }
+                    }
+                });
+
+        mOnFriendAddedListener.onFriendAdded(currentUser);
+        mOnFriendRequestRemovedListener.onFriendRequestRemoved(currentUser);
+       // mApproveFriendRequestImageButton.setVisibility(View.GONE);
+    }
+
+    private void declineFriendRequest(User currentUser) {
+        mFirestore.collection("FriendRequests")
+                .whereEqualTo("user_uid1", mCurrentUserId)
+                .whereEqualTo("user_uid2", currentUser.getId())
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                mFirestore.collection("FriendRequests").document(document.getId()).delete();
+                            }
+                        }
+                    }
+                });
+
+        mFirestore.collection("FriendRequests")
+                .whereEqualTo("user_uid1", currentUser.getId())
+                .whereEqualTo("user_uid2", mCurrentUserId)
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                mFirestore.collection("FriendRequests").document(document.getId()).delete();
+                            }
+                        }
+                    }
+                });
+
+        mOnFriendRequestRemovedListener.onFriendRequestRemoved(currentUser);
     }
 }
 

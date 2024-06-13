@@ -14,7 +14,7 @@
         <LinearLayout
             android:id="@+id/linearLayout2"
             android:layout_width="match_parent"
-            android:layout_height="220dp"
+            android:layout_height="240dp"
             android:background="@drawable/profile"
             android:gravity="center"
             android:orientation="vertical">
@@ -46,7 +46,7 @@
             android:id="@+id/linearLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="-12dp"
+            android:layout_marginTop="-8dp"
             android:orientation="horizontal">
 
             <LinearLayout
@@ -78,7 +78,7 @@
             </LinearLayout>
 
             <LinearLayout
-                android:id="@+id/settingsLinearLayout"
+                android:id="@+id/friendsLinearLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="5dp"
@@ -93,7 +93,7 @@
                     android:id="@+id/imageView5"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
-                    app:srcCompat="@drawable/ic_settings"
+                    app:srcCompat="@drawable/ic_friends"
                     app:tint="@color/browne"/>
 
                 <TextView
@@ -101,7 +101,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    android:text="Beállítások" />
+                    android:text="Barátok" />
             </LinearLayout>
 
             <LinearLayout

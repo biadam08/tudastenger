@@ -1,7 +1,18 @@
 package com.szte.tudastenger.activities;
 
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.PopupWindow;
 import android.widget.SearchView;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -18,6 +29,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.szte.tudastenger.interfaces.OnFriendAdded;
+import com.szte.tudastenger.interfaces.OnFriendRemoved;
 import com.szte.tudastenger.interfaces.OnFriendRequestRemoved;
 import com.szte.tudastenger.interfaces.OnFriendRequestAdded;
 import com.szte.tudastenger.R;
@@ -31,7 +43,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
 
-public class FriendsActivity extends DrawerBaseActivity implements OnFriendRequestAdded, OnFriendAdded, OnFriendRequestRemoved {
+public class FriendsActivity extends DrawerBaseActivity implements OnFriendRequestAdded, OnFriendAdded, OnFriendRequestRemoved, OnFriendRemoved {
     private ActivityFriendsBinding activityFriendsBinding;
     private FirebaseFirestore mFirestore;
     private FirebaseUser user;
@@ -48,6 +60,7 @@ public class FriendsActivity extends DrawerBaseActivity implements OnFriendReque
     private UserAdapter mUserAdapter;
     private FriendAdapter mFriendAdapter;
     private FriendRequestAdapter mFriendRequestAdapter;
+    private Button popUpShowUsersButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,62 +78,35 @@ public class FriendsActivity extends DrawerBaseActivity implements OnFriendReque
         mFirestore = FirebaseFirestore.getInstance();
         mUsers = mFirestore.collection("Users");
 
-        mUserListRecyclerView = findViewById(R.id.userListRecyclerView);
-        mUserListRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        mUsersData = new ArrayList<>();
-
         mFriendListRecyclerView = findViewById(R.id.friendListRecyclerView);
         mFriendListRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         mFriendsData = new ArrayList<>();
-        mFriendAdapter = new FriendAdapter(this, mFriendsData);
-        mFriendListRecyclerView.setAdapter(mFriendAdapter);
 
         mFriendRequestListRecyclerView = findViewById(R.id.friendRequestListRecyclerView);
         mFriendRequestListRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         mFriendRequestsData = new ArrayList<>();
 
+        popUpShowUsersButton = findViewById(R.id.popUpShowUsersButton);
 
         mUsers.whereEqualTo("email", user.getEmail()).get().addOnSuccessListener(queryDocumentSnapshots -> {
             for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
                 currentUser = doc.toObject(User.class);
 
-                mUserAdapter = new UserAdapter(this, mUsersData, currentUser.getId(), this);
-                mUserListRecyclerView.setAdapter(mUserAdapter);
-
                 mFriendRequestAdapter = new FriendRequestAdapter(this, mFriendRequestsData, currentUser.getId(), this::onFriendAdded, this::onFriendRequestRemoved);
                 mFriendRequestListRecyclerView.setAdapter(mFriendRequestAdapter);
+
+                mFriendAdapter = new FriendAdapter(this, mFriendsData, currentUser.getId(), this::onFriendRemoved);
+                mFriendListRecyclerView.setAdapter(mFriendAdapter);
 
                 queryData();
             }
         });
 
 
-        SearchView searchView = findViewById(R.id.searchByName);
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String s) {
-                return false;
-            }
 
-            @Override
-            public boolean onQueryTextChange(String s) {
-                mUserAdapter.getFilter().filter(s);
-                return false;
-            }
-        });
     }
 
     private void queryData() {
-        mFirestore.collection("Users").orderBy("username").limit(10).get().addOnSuccessListener(queryDocumentSnapshots -> {
-            for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                User user = document.toObject(User.class);
-                if(!Objects.equals(user.getId(), currentUser.getId())) {
-                    mUsersData.add(user);
-                    mUserAdapter.notifyDataSetChanged();
-                }
-            }
-        });
-
         mFirestore.collection("Friends").document(currentUser.getId()).get()
                 .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
                     @Override
@@ -203,6 +189,79 @@ public class FriendsActivity extends DrawerBaseActivity implements OnFriendReque
                     }
                 });
 
+        popUpShowUsersButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showUsers();
+            }
+        });
+
+    }
+
+    public void showUsers() {
+        LayoutInflater inflater = (LayoutInflater)
+                getSystemService(LAYOUT_INFLATER_SERVICE);
+        View popupView = inflater.inflate(R.layout.popup_show_users, null);
+
+        int width = LinearLayout.LayoutParams.WRAP_CONTENT;
+        int height = LinearLayout.LayoutParams.WRAP_CONTENT;
+        final PopupWindow popupWindow = new PopupWindow(popupView, width, height, false);
+
+        popupWindow.setTouchable(true);
+        popupWindow.setFocusable(true);
+
+
+        mUserListRecyclerView = popupView.findViewById(R.id.userListRecyclerView);
+        Button mPopUpCloseButton = popupView.findViewById(R.id.popUpCloseButton);
+
+        mUserListRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        mUsersData = new ArrayList<>();
+        mUserAdapter = new UserAdapter(this, mUsersData, currentUser.getId(), this);
+        mUserListRecyclerView.setAdapter(mUserAdapter);
+
+        mPopUpCloseButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                popupWindow.dismiss();
+            }
+        });
+
+        mFirestore.collection("Users").orderBy("username").limit(10).get().addOnSuccessListener(queryDocumentSnapshots -> {
+            for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
+                User user = document.toObject(User.class);
+                if(!Objects.equals(user.getId(), currentUser.getId())) {
+                    mUsersData.add(user);
+                    mUserAdapter.notifyDataSetChanged();
+                }
+            }
+        });
+
+        SearchView searchView = popupView.findViewById(R.id.searchByName);
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String s) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String s) {
+                mUserAdapter.getFilter().filter(s);
+                return false;
+            }
+        });
+
+        popupWindow.showAtLocation(findViewById(android.R.id.content), Gravity.CENTER, 0, 0);
+        dimBehind(popupWindow);
+    }
+
+    public static void dimBehind(PopupWindow popupWindow) {
+        View container = popupWindow.getContentView().getRootView();
+        Context context = popupWindow.getContentView().getContext();
+        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        WindowManager.LayoutParams p = (WindowManager.LayoutParams) container.getLayoutParams();
+        p.flags |= WindowManager.LayoutParams.FLAG_DIM_BEHIND;
+        p.dimAmount = 0.5f;
+        wm.updateViewLayout(container, p);
     }
 
     @Override
@@ -221,5 +280,11 @@ public class FriendsActivity extends DrawerBaseActivity implements OnFriendReque
     public void onFriendRequestRemoved(User user) {
         mFriendRequestsData.remove(user);
         mFriendRequestAdapter.notifyItemRemoved(mFriendRequestsData.size() - 1);
+    }
+
+    @Override
+    public void onFriendRemoved(User user) {
+        mFriendsData.remove(user);
+        mFriendAdapter.notifyItemRemoved(mFriendsData.size() - 1);
     }
 }

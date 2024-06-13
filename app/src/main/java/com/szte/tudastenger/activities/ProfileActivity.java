@@ -68,7 +68,7 @@ public class ProfileActivity extends DrawerBaseActivity {
     private CategoryProfileAdapter mAdapter;
 
     private LinearLayout bookmarkButton;
-    private LinearLayout settingsButton;
+    private LinearLayout friendsButton;
     private LinearLayout leaderBoardButton;
 
 
@@ -111,7 +111,7 @@ public class ProfileActivity extends DrawerBaseActivity {
 
     private void initializeButtons() {
         bookmarkButton = findViewById(R.id.bookmarkLinearLayout);
-        settingsButton = findViewById(R.id.settingsLinearLayout);
+        friendsButton = findViewById(R.id.friendsLinearLayout);
         leaderBoardButton = findViewById(R.id.leaderboardLinearLayout);
 
         bookmarkButton.setOnClickListener(new View.OnClickListener() {
@@ -123,7 +123,7 @@ public class ProfileActivity extends DrawerBaseActivity {
         });
 
 
-        settingsButton.setOnClickListener(new View.OnClickListener() {
+        friendsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(ProfileActivity.this, FriendsActivity.class);

@@ -14,6 +14,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.DocumentReference;
@@ -204,8 +205,14 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> im
                                                                                                     .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                                                                                                         @Override
                                                                                                         public void onSuccess(DocumentReference documentReference) {
-                                                                                                            mAddFriendButton.setVisibility(View.GONE);
                                                                                                             mListener.onFriendRequestAdded(currentUser);
+                                                                                                            mAddFriendButton.setVisibility(View.GONE);
+                                                                                                        }
+                                                                                                    })
+                                                                                                    .addOnFailureListener(new OnFailureListener() {
+                                                                                                        @Override
+                                                                                                        public void onFailure(@NonNull Exception e) {
+                                                                                                            mAddFriendButton.setVisibility(View.VISIBLE);
                                                                                                         }
                                                                                                     });
                                                                                         } else {
@@ -221,8 +228,6 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> im
                                                         }
                                                     });
                                         }
-                                    } else {
-                                        Log.d("barathozzaad", "get failed with ", task.getException());
                                     }
                                 }
                             });

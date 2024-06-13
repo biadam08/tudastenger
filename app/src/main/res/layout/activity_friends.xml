@@ -50,29 +50,14 @@
 
     </androidx.recyclerview.widget.RecyclerView>
 
-    <TextView
-        android:id="@+id/searchTextView"
+    <Button
+        android:id="@+id/popUpShowUsersButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Összes felhasználó"
-        android:textSize="20sp"
+        android:text="Felhasználók keresése"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/friendRequestListRecyclerView" />
-
-    <SearchView
-        android:id="@+id/searchByName"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/searchTextView" />
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/userListRecyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:scrollbars="vertical"
-        app:layout_constraintTop_toBottomOf="@+id/searchByName" />
+        app:layout_constraintTop_toBottomOf="@+id/friendRequestListRecyclerView"
+        android:background="@drawable/custom_shape_rectangle_button"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
