@@ -70,6 +70,8 @@ public class DrawerBaseActivity extends AppCompatActivity implements NavigationV
         menu.findItem(R.id.nav_admin).setVisible(false);
 
         if(user == null) {
+            menu.findItem(R.id.nav_home).setVisible(false);
+            menu.findItem(R.id.nav_newgame).setVisible(false);
             menu.findItem(R.id.nav_logout).setVisible(false);
             menu.findItem(R.id.nav_profile).setVisible(false);
             menu.findItem(R.id.nav_history).setVisible(false);
@@ -154,7 +156,7 @@ public class DrawerBaseActivity extends AppCompatActivity implements NavigationV
                 public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                     if (firebaseAuth.getCurrentUser() == null){
                         user = null;
-                        startActivity(new Intent(DrawerBaseActivity.this, MainActivity.class));
+                        startActivity(new Intent(DrawerBaseActivity.this, LoginActivity.class));
                     }
                 }
             };

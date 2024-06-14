@@ -69,7 +69,6 @@ public class LoginActivity extends DrawerBaseActivity {
                 if(task.isSuccessful()){
                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                     startActivity(intent);
-                    Toast.makeText(LoginActivity.this, "Sikeres belépés!", Toast.LENGTH_SHORT).show();
                 } else{
                     Toast.makeText(LoginActivity.this, "Sikertelen belépés!", Toast.LENGTH_SHORT).show();
                 }
