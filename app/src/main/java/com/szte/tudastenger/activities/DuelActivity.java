@@ -72,6 +72,7 @@ public class DuelActivity extends DrawerBaseActivity{
     private CollectionReference mUsers;
     private String challengerUserId;
     private String challengedUserId;
+    private String duelId; // ha a kihívott játszik
     private CollectionReference mQuestions;
     private Button saveQuestionButton;
     private ImageView questionImageView;
@@ -124,6 +125,10 @@ public class DuelActivity extends DrawerBaseActivity{
 
         if (intent != null && intent.hasExtra("challengedUserId")) {
             challengedUserId = intent.getStringExtra("challengedUserId");
+        }
+
+        if (intent != null && intent.hasExtra("duelId")) {
+            duelId = intent.getStringExtra("duelId");
         }
 
         mFirestore = FirebaseFirestore.getInstance();
@@ -438,8 +443,9 @@ public class DuelActivity extends DrawerBaseActivity{
                                     .update("id", documentId);
                         }
                     });
-        } else{
-
+        } else {
+            mFirestore.collection("Duels").document(duelId)
+                    .update("challengedUserResults", challengedUserResults);
         }
     }
 
