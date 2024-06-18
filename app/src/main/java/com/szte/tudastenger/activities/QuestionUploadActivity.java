@@ -61,10 +61,6 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
 
     private StorageReference storageReference;
 
-
-
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

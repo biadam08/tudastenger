@@ -1,6 +1,7 @@
 package com.szte.tudastenger.adapters;
 
 import android.content.Context;
+import android.content.Intent;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,6 +22,9 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.szte.tudastenger.R;
+import com.szte.tudastenger.activities.DrawerBaseActivity;
+import com.szte.tudastenger.activities.DuelActivity;
+import com.szte.tudastenger.activities.QuizGameActivity;
 import com.szte.tudastenger.interfaces.OnFriendAdded;
 import com.szte.tudastenger.interfaces.OnFriendRemoved;
 import com.szte.tudastenger.models.User;
@@ -64,10 +68,13 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
         private TextView mUsernameText;
         private ImageButton deleteFriendImageButton;
 
+        private ImageButton challangeFriendImageButton;
+
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             mUsernameText = itemView.findViewById(R.id.listFriendUsernameTextView);
             deleteFriendImageButton = itemView.findViewById(R.id.deleteFriendImageButton);
+            challangeFriendImageButton = itemView.findViewById(R.id.challangeFriendImageButton);
         }
 
         public void bindTo(User currentUser) {
@@ -78,7 +85,21 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
                     deleteFriend(currentUser);
                 }
             });
+
+            challangeFriendImageButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    challangeFriend(currentUser);     
+                }
+            });
         }
+    }
+
+    private void challangeFriend(User currentUser) {
+        Intent intent = new Intent(mContext, DuelActivity.class);
+        intent.putExtra("challengerUserId", mCurrentUserId);
+        intent.putExtra("challengedUserId", currentUser.getId());
+        mContext.startActivity(intent);
     }
 
     private void deleteFriend(User currentUser) {

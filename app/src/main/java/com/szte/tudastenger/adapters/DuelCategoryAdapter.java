@@ -13,17 +13,20 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.szte.tudastenger.activities.QuizGameActivity;
 import com.szte.tudastenger.R;
+import com.szte.tudastenger.interfaces.OnCategoryClickListener;
 import com.szte.tudastenger.models.Category;
 
 import java.util.ArrayList;
 
-public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHolder> {
+public class DuelCategoryAdapter extends RecyclerView.Adapter<DuelCategoryAdapter.ViewHolder> {
     private ArrayList<Category> mCategoriesData;
     private Context mContext;
+    private OnCategoryClickListener mOnCategoryClickListener;
 
-    public CategoryAdapter(Context context, ArrayList<Category> categoriesData){
+    public DuelCategoryAdapter(Context context, ArrayList<Category> categoriesData, OnCategoryClickListener listener){
         this.mCategoriesData = categoriesData;
         this.mContext = context;
+        this.mOnCategoryClickListener = listener;
     }
 
     @NonNull
@@ -35,6 +38,15 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHo
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Category currentCategory = mCategoriesData.get(position);
+
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String categoryName = mCategoriesData.get(holder.getAdapterPosition()).getName();
+                mOnCategoryClickListener.onCategoryClicked(categoryName);
+            }
+        });
+
         holder.bindTo(currentCategory);
     }
 
@@ -49,18 +61,6 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHo
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             mCategoryName = itemView.findViewById(R.id.categoryName);
-            itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    int position = getAdapterPosition();
-                    if (position != RecyclerView.NO_POSITION) {
-                        Category clickedCategory = mCategoriesData.get(position);
-                        Intent intent = new Intent(mContext, QuizGameActivity.class);
-                        intent.putExtra("CategoryName", clickedCategory.getName());
-                        mContext.startActivity(intent);
-                    }
-                }
-            });
         }
 
         public void bindTo(Category currentCategory) {
