@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.szte.tudastenger.R;
+import com.szte.tudastenger.activities.DuelActivity;
 import com.szte.tudastenger.models.Duel;
 
 import java.util.ArrayList;
@@ -47,16 +48,18 @@ public class DuelAdapter extends RecyclerView.Adapter<DuelAdapter.ViewHolder> {
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             mDuelName = itemView.findViewById(R.id.duelName);
-            itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-
-                }
-            });
         }
 
         public void bindTo(Duel currentDuel) {
             mDuelName.setText(currentDuel.getId());
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent intent = new Intent(mContext, DuelActivity.class);
+                    intent.putExtra("duelId", currentDuel.getId());
+                    mContext.startActivity(intent);
+                }
+            });
         }
     }
 }

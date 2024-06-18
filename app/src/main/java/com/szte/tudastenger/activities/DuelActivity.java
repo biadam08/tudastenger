@@ -29,6 +29,8 @@ import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
@@ -102,6 +104,7 @@ public class DuelActivity extends DrawerBaseActivity{
     private String correctAnswer;
     private boolean isSelectedAnswer;
     private TextView questionNumberTextView;
+    private Duel actualDuel; //ha a kihívott játszik, amúgy null
 
 
     @Override
@@ -147,19 +150,23 @@ public class DuelActivity extends DrawerBaseActivity{
 
         challengerUserResults = new ArrayList<>();
         challengedUserResults = new ArrayList<>();
-
+        questionsList = new ArrayList<>();
+        questionIdsList = new ArrayList<>();
 
         mUsers.whereEqualTo("email", user.getEmail()).get().addOnSuccessListener(queryDocumentSnapshots -> {
             for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
                 currentUser = doc.toObject(User.class);
                 userRef = mUsers.document(currentUser.getId());
             }
-            if(currentUser.getId().equals(challengerUserId)){
+            if(currentUser != null && currentUser.getId().equals(challengerUserId)){
                 makeDuel();
             } else{
-                startDuel();
+                buttonsLinearLayout.setVisibility(View.GONE);
+                loadDuelData();
             }
         });
+
+
 
         configureDuelButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -177,6 +184,40 @@ public class DuelActivity extends DrawerBaseActivity{
                 startActivity(intent);
             }
         });
+    }
+
+    private void loadDuelData() {
+        mFirestore.collection("Duels").document(duelId)
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                    @Override
+                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+                        if (documentSnapshot.exists()) {
+                            actualDuel = documentSnapshot.toObject(Duel.class);
+                            questionIdsList = actualDuel.getQuestionIds();
+                            Log.d("questionIdsList", questionIdsList.toString());
+                            List<Task<DocumentSnapshot>> tasks = new ArrayList<>();
+
+                            for (String questionId : questionIdsList) {
+                                Task<DocumentSnapshot> task = mFirestore.collection("Questions").document(questionId).get();
+                                tasks.add(task);
+                            }
+
+                            Tasks.whenAllSuccess(tasks).addOnSuccessListener(new OnSuccessListener<List<Object>>() {
+                                @Override
+                                public void onSuccess(List<Object> list) {
+                                    for (Object object : list) {
+                                        DocumentSnapshot document = (DocumentSnapshot) object;
+                                        Question question = document.toObject(Question.class);
+                                        Log.d("questions", question.getId());
+                                        questionsList.add(question);
+                                    }
+                                    startDuel();
+                                }
+                            });
+                        }
+                    }
+                });
     }
 
     private void makeDuel() {
@@ -252,8 +293,6 @@ public class DuelActivity extends DrawerBaseActivity{
     }
 
     private void initializeQuestions() {
-        questionsList = new ArrayList<>();
-        questionIdsList = new ArrayList<>();
         buttonsLinearLayout.setVisibility(View.GONE);
 
         Query query = mQuestions;
@@ -351,14 +390,14 @@ public class DuelActivity extends DrawerBaseActivity{
                     if (clickedIndex == correctAnswerIndex) {
                         isCorrect = true;
                         popUpResult();
-                        if(currentUser.getId().equals(challengerUserId)){
+                        if(currentUser != null && currentUser.getId().equals(challengerUserId)) {
                             challengerUserResults.add(true);
                         } else{
                             challengedUserResults.add(true);
                         }
                     } else {
                         popUpResult();
-                        if(currentUser.getId().equals(challengerUserId)){
+                        if(currentUser != null && currentUser.getId().equals(challengerUserId)) {
                             challengerUserResults.add(false);
                         } else{
                             challengedUserResults.add(false);
@@ -426,7 +465,7 @@ public class DuelActivity extends DrawerBaseActivity{
     }
 
     private void finishDuel() {
-        if(currentUser.getId().equals(challengerUserId)){
+        if(currentUser != null && currentUser.getId().equals(challengerUserId)) {
             Duel duel = new Duel(null, challengerUserId, challengedUserId, questionIdsList, challengerUserResults, null);
             Log.d("duel", duel.getChallengerUid());
             Log.d("duel", duel.getChallengedUid());
