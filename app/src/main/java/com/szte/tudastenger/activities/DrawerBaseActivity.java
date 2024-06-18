@@ -129,6 +129,9 @@ public class DrawerBaseActivity extends AppCompatActivity implements NavigationV
         if(itemId == R.id.nav_profile){
             startActivity(new Intent(DrawerBaseActivity.this, ProfileActivity.class));
         }
+        if(itemId == R.id.nav_duels){
+            startActivity(new Intent(DrawerBaseActivity.this, DuelListingActivity.class));
+        }
         if(itemId == R.id.nav_history){
             startActivity(new Intent(DrawerBaseActivity.this, HistoryActivity.class));
         }
