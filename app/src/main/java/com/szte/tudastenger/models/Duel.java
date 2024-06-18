@@ -3,6 +3,7 @@ package com.szte.tudastenger.models;
 import java.util.ArrayList;
 
 public class Duel {
+    private String id;
     private String challengerUid;
     private String challengedUid;
     private ArrayList<String> questionIds;
@@ -12,12 +13,21 @@ public class Duel {
     public Duel() {
     }
 
-    public Duel(String challengerUid, String challengedUid, ArrayList<String> questionIds, ArrayList<Boolean> challengerUserResults, ArrayList<Boolean> challengedUserResults) {
+    public Duel(String id, String challengerUid, String challengedUid, ArrayList<String> questionIds, ArrayList<Boolean> challengerUserResults, ArrayList<Boolean> challengedUserResults) {
+        this.id = id;
         this.challengerUid = challengerUid;
         this.challengedUid = challengedUid;
         this.questionIds = questionIds;
         this.challengerUserResults = challengerUserResults;
         this.challengedUserResults = challengedUserResults;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getChallengerUid() {

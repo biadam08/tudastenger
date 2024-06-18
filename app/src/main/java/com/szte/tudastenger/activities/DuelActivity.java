@@ -48,8 +48,11 @@ import com.szte.tudastenger.databinding.ActivityDuelBinding;
 import com.szte.tudastenger.interfaces.OnCategoryClickListener;
 import com.szte.tudastenger.models.AnsweredQuestion;
 import com.szte.tudastenger.models.Category;
+import com.szte.tudastenger.models.Duel;
 import com.szte.tudastenger.models.Question;
 import com.szte.tudastenger.models.User;
+
+import org.checkerframework.checker.units.qual.A;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -89,6 +92,9 @@ public class DuelActivity extends DrawerBaseActivity{
     private Button backToFriendsButton;
     private LinearLayout buttonsLinearLayout;
     private ArrayList<Question> questionsList;
+    private ArrayList<String> questionIdsList;
+    private ArrayList<Boolean> challengerUserResults;
+    private ArrayList<Boolean> challengedUserResults;
     private Integer actualQuestionNumber = 0;
     private boolean isCorrect = false; // helyes választ adott-e a felhasználó
     private String userAnswer;
@@ -133,6 +139,9 @@ public class DuelActivity extends DrawerBaseActivity{
         configureDuelButton = findViewById(R.id.configureDuelButton);
         backToFriendsButton = findViewById(R.id.backToFriendsActivityButton);
         buttonsLinearLayout = findViewById(R.id.buttonsLinearLayout);
+
+        challengerUserResults = new ArrayList<>();
+        challengedUserResults = new ArrayList<>();
 
 
         mUsers.whereEqualTo("email", user.getEmail()).get().addOnSuccessListener(queryDocumentSnapshots -> {
@@ -207,7 +216,6 @@ public class DuelActivity extends DrawerBaseActivity{
             @Override
             public void onCategoryClicked(String categoryName) {
                 category = categoryName;
-                Log.d("cattt", category);
             }
         });
         mRecyclerView.setAdapter(mAdapter);
@@ -215,7 +223,6 @@ public class DuelActivity extends DrawerBaseActivity{
         mCategories.orderBy("name").get().addOnSuccessListener(queryDocumentSnapshots -> {
             for(QueryDocumentSnapshot document : queryDocumentSnapshots){
                 Category category = document.toObject(Category.class);
-                Log.d("cat", category.getName());
                 mCategoriesData.add(category);
             }
             mAdapter.notifyDataSetChanged();
@@ -241,8 +248,8 @@ public class DuelActivity extends DrawerBaseActivity{
 
     private void initializeQuestions() {
         questionsList = new ArrayList<>();
+        questionIdsList = new ArrayList<>();
         buttonsLinearLayout.setVisibility(View.GONE);
-        questionTextView.setText("párbaj elindul " + questionNumber + " kérdéssel " + category + " kategóriában");
 
         Query query = mQuestions;
 
@@ -256,15 +263,13 @@ public class DuelActivity extends DrawerBaseActivity{
                     List<DocumentSnapshot> documents = questions.getDocuments();
                     if (documents.size() >= questionNumber) {
                         Random random = new Random();
-                        Set<String> addedQuestionIds = new HashSet<>();
 
                         while (questionsList.size() < questionNumber) {
                             DocumentSnapshot randomDoc = documents.get(random.nextInt(documents.size()));
                             Question question = randomDoc.toObject(Question.class);
-                            if (question != null && !addedQuestionIds.contains(question.getId())) {
+                            if (question != null && !questionIdsList.contains(question.getId())) {
                                 questionsList.add(question);
-                                addedQuestionIds.add(question.getId());
-                                Log.d("questions", question.getId());
+                                questionIdsList.add(question.getId());
                             }
                         }
 
@@ -341,8 +346,18 @@ public class DuelActivity extends DrawerBaseActivity{
                     if (clickedIndex == correctAnswerIndex) {
                         isCorrect = true;
                         popUpResult();
+                        if(currentUser.getId().equals(challengerUserId)){
+                            challengerUserResults.add(true);
+                        } else{
+                            challengedUserResults.add(true);
+                        }
                     } else {
                         popUpResult();
+                        if(currentUser.getId().equals(challengerUserId)){
+                            challengerUserResults.add(false);
+                        } else{
+                            challengedUserResults.add(false);
+                        }
                     }
                 } else {
                     //lekezelni, hogyha nem jött fel az új ablak és már nem kattinthat újat
@@ -406,7 +421,26 @@ public class DuelActivity extends DrawerBaseActivity{
     }
 
     private void finishDuel() {
-        //mentés
+        if(currentUser.getId().equals(challengerUserId)){
+            Duel duel = new Duel(null, challengerUserId, challengedUserId, questionIdsList, challengerUserResults, null);
+            Log.d("duel", duel.getChallengerUid());
+            Log.d("duel", duel.getChallengedUid());
+            Log.d("duel", duel.getQuestionIds().toString());
+            Log.d("duel", duel.getChallengerUserResults().toString());
+            mFirestore.collection("Duels").add(duel)
+                    .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                        @Override
+                        public void onSuccess(DocumentReference documentReference) {
+                            String documentId = documentReference.getId();
+                            duel.setId(documentId);
+
+                            mFirestore.collection("Duels").document(documentId)
+                                    .update("id", documentId);
+                        }
+                    });
+        } else{
+
+        }
     }
 
     public static void dimBehind(PopupWindow popupWindow) {
