@@ -22,6 +22,9 @@
         android:theme="@style/Theme.Tudastenger"
         tools:targetApi="31">
         <activity
+            android:name=".activities.DuelListingActivity"
+            android:exported="false" />
+        <activity
             android:name=".activities.DuelActivity"
             android:exported="false" />
         <activity

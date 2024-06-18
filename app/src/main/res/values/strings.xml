@@ -31,4 +31,5 @@
     <string name="history_your_answer">Válaszod: %1$s</string>
     <string name="history_correct_answer">Helyes válasz: %1$s</string>
     <string name="start_a_mixed_game">Vegyes játék indítása</string>
+    <string name="duels">Párbajok</string>
 </resources>
