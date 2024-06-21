@@ -262,17 +262,18 @@ public class DuelActivity extends DrawerBaseActivity{
         mAdapter = new DuelCategoryAdapter(this, mCategoriesData, new OnCategoryClickListener() {
             @Override
             public void onCategoryClicked(String categoryName) {
-                mFirestore.collection("Users")
-                        .document(categoryName)
+                mFirestore.collection("Categories")
+                        .whereEqualTo("name", categoryName)
                         .get()
-                        .addOnSuccessListener(documentSnapshot -> {
-                            if (documentSnapshot.exists()) {
+                        .addOnSuccessListener(queryDocumentSnapshots -> {
+                            for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
                                 categoryId = documentSnapshot.getId();
                             }
                         });
                 category = categoryName;
             }
         });
+
         mRecyclerView.setAdapter(mAdapter);
 
         mCategories.orderBy("name").get().addOnSuccessListener(queryDocumentSnapshots -> {
@@ -302,6 +303,10 @@ public class DuelActivity extends DrawerBaseActivity{
     }
 
     private void initializeQuestions() {
+        if(categoryId == null){
+            categoryId = "mixed";
+        }
+
         buttonsLinearLayout.setVisibility(View.GONE);
 
         Query query = mQuestions;
@@ -329,6 +334,7 @@ public class DuelActivity extends DrawerBaseActivity{
                         startDuel();
 
                     } else {
+                        makeDuel();
                         Toast.makeText(getApplicationContext(), "Nincs elég kérdés ebben a kategóriában!", Toast.LENGTH_LONG).show();
                     }
                 })
