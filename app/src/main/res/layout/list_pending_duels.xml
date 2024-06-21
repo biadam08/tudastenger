@@ -14,16 +14,38 @@
         android:padding="16dp"
         android:background="?attr/selectableItemBackground">
 
-        <TextView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/duelName"
-            android:gravity="center_vertical"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="#000000"
-            android:padding="8dp"
-            />
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/playersUsernameTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textColor="#000000"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/categoryAndQuestionNumberTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textColor="#000000"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/duelDateTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:padding="8dp"
+                android:textColor="#000000"
+                android:textSize="14sp" />
+        </LinearLayout>
 
     </RelativeLayout>
 

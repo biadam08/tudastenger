@@ -90,6 +90,7 @@ public class DuelActivity extends DrawerBaseActivity{
     private Button startMixedGameButton;
     private Button startDuelButton;
     private String category;
+    private String categoryId;
     private Integer questionNumber;
     private Button configureDuelButton;
     private Button backToFriendsButton;
@@ -261,6 +262,14 @@ public class DuelActivity extends DrawerBaseActivity{
         mAdapter = new DuelCategoryAdapter(this, mCategoriesData, new OnCategoryClickListener() {
             @Override
             public void onCategoryClicked(String categoryName) {
+                mFirestore.collection("Users")
+                        .document(categoryName)
+                        .get()
+                        .addOnSuccessListener(documentSnapshot -> {
+                            if (documentSnapshot.exists()) {
+                                categoryId = documentSnapshot.getId();
+                            }
+                        });
                 category = categoryName;
             }
         });
@@ -466,11 +475,8 @@ public class DuelActivity extends DrawerBaseActivity{
 
     private void finishDuel() {
         if(currentUser != null && currentUser.getId().equals(challengerUserId)) {
-            Duel duel = new Duel(null, challengerUserId, challengedUserId, questionIdsList, challengerUserResults, null);
-            Log.d("duel", duel.getChallengerUid());
-            Log.d("duel", duel.getChallengedUid());
-            Log.d("duel", duel.getQuestionIds().toString());
-            Log.d("duel", duel.getChallengerUserResults().toString());
+            Duel duel = new Duel(null, challengerUserId, challengedUserId, categoryId, questionIdsList, challengerUserResults, null);
+
             mFirestore.collection("Duels").add(duel)
                     .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                         @Override

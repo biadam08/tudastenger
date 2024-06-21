@@ -79,7 +79,10 @@ public class DuelListingActivity extends DrawerBaseActivity{
     private void queryData() {
         mDuelsData.clear();
 
-        mFirestore.collection("Duels").whereEqualTo("challengedUid", currentUser.getId()).get().addOnSuccessListener(queryDocumentSnapshots -> {
+        mFirestore.collection("Duels")
+                .whereEqualTo("challengedUid", currentUser.getId())
+                .whereEqualTo("challengedUserResults", null) //függőben lévő
+                .get().addOnSuccessListener(queryDocumentSnapshots -> {
             for(QueryDocumentSnapshot document : queryDocumentSnapshots){
                 Duel duel = document.toObject(Duel.class);
                 mDuelsData.add(duel);

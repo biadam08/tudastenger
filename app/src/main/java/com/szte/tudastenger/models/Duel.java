@@ -1,25 +1,47 @@
 package com.szte.tudastenger.models;
 
+import com.google.firebase.Timestamp;
+
 import java.util.ArrayList;
 
 public class Duel {
     private String id;
     private String challengerUid;
     private String challengedUid;
+    private String category;
     private ArrayList<String> questionIds;
     private ArrayList<Boolean> challengerUserResults;
     private ArrayList<Boolean> challengedUserResults;
+    private Timestamp date;
 
     public Duel() {
     }
 
-    public Duel(String id, String challengerUid, String challengedUid, ArrayList<String> questionIds, ArrayList<Boolean> challengerUserResults, ArrayList<Boolean> challengedUserResults) {
+    public Duel(String id, String challengerUid, String challengedUid, String category, ArrayList<String> questionIds, ArrayList<Boolean> challengerUserResults, ArrayList<Boolean> challengedUserResults) {
         this.id = id;
         this.challengerUid = challengerUid;
         this.challengedUid = challengedUid;
+        this.category = category;
         this.questionIds = questionIds;
         this.challengerUserResults = challengerUserResults;
         this.challengedUserResults = challengedUserResults;
+        this.date = Timestamp.now();
+    }
+
+    public Timestamp getDate() {
+        return date;
+    }
+
+    public void setDate(Timestamp date) {
+        this.date = date;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
     }
 
     public String getId() {
