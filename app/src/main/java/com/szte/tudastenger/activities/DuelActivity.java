@@ -1,7 +1,5 @@
 package com.szte.tudastenger.activities;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -19,11 +17,9 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
-import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -36,7 +32,6 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -45,23 +40,17 @@ import com.google.firebase.storage.StorageReference;
 import com.szte.tudastenger.InputFilterMinMax;
 import com.szte.tudastenger.R;
 import com.szte.tudastenger.adapters.DuelCategoryAdapter;
-import com.szte.tudastenger.adapters.FriendAdapter;
 import com.szte.tudastenger.databinding.ActivityDuelBinding;
 import com.szte.tudastenger.interfaces.OnCategoryClickListener;
-import com.szte.tudastenger.models.AnsweredQuestion;
 import com.szte.tudastenger.models.Category;
 import com.szte.tudastenger.models.Duel;
 import com.szte.tudastenger.models.Question;
 import com.szte.tudastenger.models.User;
 
-import org.checkerframework.checker.units.qual.A;
-
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Random;
-import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class DuelActivity extends DrawerBaseActivity{
     private ActivityDuelBinding activityDuelBinding;
@@ -106,6 +95,8 @@ public class DuelActivity extends DrawerBaseActivity{
     private boolean isSelectedAnswer;
     private TextView questionNumberTextView;
     private Duel actualDuel; //ha a kihívott játszik, amúgy null
+    private String result;
+
 
 
     @Override
@@ -345,9 +336,9 @@ public class DuelActivity extends DrawerBaseActivity{
     }
 
     private void startDuel() {
-        questionNumberTextView.setText((actualQuestionNumber + 1) + "/" + questionsList.size());
-        displayQuestion(questionsList.get(actualQuestionNumber));
         actualQuestionNumber++;
+        questionNumberTextView.setText(actualQuestionNumber + "/" + questionsList.size());
+        displayQuestion(questionsList.get(actualQuestionNumber - 1));
     }
 
     private void displayQuestion(Question question) {
@@ -361,7 +352,6 @@ public class DuelActivity extends DrawerBaseActivity{
         }
 
         questionTextView.setText(question.getQuestionText());
-
 
         //Ha van kép, megjelenítjük
         if (question.getImage() != null && !question.getImage().isEmpty()) {
@@ -404,19 +394,19 @@ public class DuelActivity extends DrawerBaseActivity{
 
                     if (clickedIndex == correctAnswerIndex) {
                         isCorrect = true;
-                        popUpResult();
                         if(currentUser != null && currentUser.getId().equals(challengerUserId)) {
                             challengerUserResults.add(true);
                         } else{
                             challengedUserResults.add(true);
                         }
-                    } else {
                         popUpResult();
+                    } else {
                         if(currentUser != null && currentUser.getId().equals(challengerUserId)) {
                             challengerUserResults.add(false);
                         } else{
                             challengedUserResults.add(false);
                         }
+                        popUpResult();
                     }
                 } else {
                     //lekezelni, hogyha nem jött fel az új ablak és már nem kattinthat újat
@@ -442,28 +432,66 @@ public class DuelActivity extends DrawerBaseActivity{
         TextView resultTextView = popupView.findViewById(R.id.resultTextView);
         TextView userAnswerTextView = popupView.findViewById(R.id.userAnswerTextView);
         TextView correctAnswerTextView = popupView.findViewById(R.id.correctAnswerTextView);
-
-        if(isCorrect){
-            resultTextView.setText("Helyes választ adtál!");
-            userAnswerTextView.setVisibility(View.GONE);
-            correctAnswerTextView.setVisibility(View.GONE);
-        } else{
-            resultTextView.setText("Hibás választ adtál");
-            userAnswerTextView.setVisibility(View.VISIBLE);
-            correctAnswerTextView.setVisibility(View.VISIBLE);
-            userAnswerTextView.setText("Válaszod:\n" + userAnswer);
-            correctAnswerTextView.setText("Helyes válasz:\n" + correctAnswer);
-        }
-        popupWindow.showAtLocation(findViewById(android.R.id.content), Gravity.CENTER, 0, 0);
-        dimBehind(popupWindow);
-
         Button nextQuestionButton = popupView.findViewById(R.id.nextQuestionButton);
         LinearLayout buttonsLinearLayout = popupView.findViewById(R.id.buttonsLinearLayout);
         buttonsLinearLayout.setVisibility(View.GONE);
 
-        if(actualQuestionNumber == questionsList.size()){
+        if(actualQuestionNumber != questionIdsList.size()) {
+            if (isCorrect) {
+                resultTextView.setText("Helyes választ adtál!");
+                userAnswerTextView.setVisibility(View.GONE);
+                correctAnswerTextView.setVisibility(View.GONE);
+            } else {
+                resultTextView.setText("Hibás választ adtál");
+                userAnswerTextView.setVisibility(View.VISIBLE);
+                correctAnswerTextView.setVisibility(View.VISIBLE);
+                userAnswerTextView.setText("Válaszod:\n" + userAnswer);
+                correctAnswerTextView.setText("Helyes válasz:\n" + correctAnswer);
+            }
+        } else{
+            if(currentUser.getId().equals(challengerUserId)) {
+                int challengerUserCorrectAnswerNumber = 0;
+                for (int i = 0; i < challengerUserResults.size(); i++) {
+                    if (challengerUserResults.get(i)) {
+                        challengerUserCorrectAnswerNumber++;
+                    }
+                }
+                result = "Eredményed: " + challengerUserCorrectAnswerNumber + "/" + questionIdsList.size();
+                resultTextView.setText(result);
+            } else{
+                AtomicInteger challengerUserCorrectAnswerNumber = new AtomicInteger();
+                AtomicInteger challengedUserCorrectAnswerNumber = new AtomicInteger();
+
+                mFirestore.collection("Duels")
+                        .document(duelId)
+                        .get()
+                        .addOnCompleteListener(task -> {
+                                    if (task.isSuccessful()) {
+                                        DocumentSnapshot questionDocument = task.getResult();
+                                        if (questionDocument.exists()) {
+                                            challengerUserResults = (ArrayList<Boolean>) questionDocument.get("challengerUserResults");
+                                            for (int i = 0; i < questionIdsList.size(); i++) {
+                                                if (challengerUserResults.get(i)) {
+                                                    challengerUserCorrectAnswerNumber.getAndIncrement();
+                                                }
+                                                if (challengedUserResults.get(i)) {
+                                                    challengedUserCorrectAnswerNumber.getAndIncrement();
+                                                }
+                                            }
+                                            result = "Eredményed: " + challengedUserCorrectAnswerNumber + "/" + questionIdsList.size() + "\n" + "A kihívó eredménye: " + challengerUserCorrectAnswerNumber + "/" + questionIdsList.size();
+                                            resultTextView.setText(result);
+                                        }
+                                    }
+                                }
+                        );
+            }
+            userAnswerTextView.setVisibility(View.GONE);
+            correctAnswerTextView.setVisibility(View.GONE);
             nextQuestionButton.setText("Befejezés");
         }
+
+        popupWindow.showAtLocation(findViewById(android.R.id.content), Gravity.CENTER, 0, 0);
+        dimBehind(popupWindow);
 
         nextQuestionButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -472,6 +500,8 @@ public class DuelActivity extends DrawerBaseActivity{
                 isSelectedAnswer = false;
                 if(actualQuestionNumber == questionsList.size()){
                     finishDuel();
+                    Intent intent = new Intent(DuelActivity.this, DuelListingActivity.class);
+                    startActivity(intent);
                 } else {
                     startDuel();
                 }
