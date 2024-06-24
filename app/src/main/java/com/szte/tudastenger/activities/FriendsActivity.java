@@ -267,24 +267,24 @@ public class FriendsActivity extends DrawerBaseActivity implements OnFriendReque
     @Override
     public void onFriendRequestAdded(User user) {
         mFriendRequestsData.add(user);
-        mFriendRequestAdapter.notifyItemInserted(mFriendRequestsData.size() - 1);
+        mFriendRequestAdapter.notifyDataSetChanged();
     }
 
     @Override
     public void onFriendAdded(User user) {
         mFriendsData.add(user);
-        mFriendAdapter.notifyItemInserted(mFriendsData.size() - 1);
+        mFriendAdapter.notifyDataSetChanged();
     }
 
     @Override
     public void onFriendRequestRemoved(User user) {
         mFriendRequestsData.remove(user);
-        mFriendRequestAdapter.notifyItemRemoved(mFriendRequestsData.size() - 1);
+        mFriendRequestAdapter.notifyDataSetChanged();
     }
 
     @Override
     public void onFriendRemoved(User user) {
         mFriendsData.remove(user);
-        mFriendAdapter.notifyItemRemoved(mFriendsData.size() - 1);
+        mFriendAdapter.notifyDataSetChanged();
     }
 }

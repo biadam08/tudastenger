@@ -1,6 +1,8 @@
 package com.szte.tudastenger.adapters;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -82,7 +84,7 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
             deleteFriendImageButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    deleteFriend(currentUser);
+                    showDeleteConfirmationDialog(currentUser);
                 }
             });
 
@@ -100,6 +102,29 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
         intent.putExtra("challengerUserId", mCurrentUserId);
         intent.putExtra("challengedUserId", currentUser.getId());
         mContext.startActivity(intent);
+    }
+
+    private void showDeleteConfirmationDialog(User currentUser) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+        builder.setTitle("Barát törlése");
+        builder.setMessage("Biztosan törölni szeretnéd a barátaid közül " + currentUser.getUsername() + " felhasználót?");
+
+        builder.setPositiveButton("Igen", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                deleteFriend(currentUser);
+            }
+        });
+
+        builder.setNegativeButton("Nem", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+
+            }
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 
     private void deleteFriend(User currentUser) {

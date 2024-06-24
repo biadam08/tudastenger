@@ -121,8 +121,6 @@ public class SavedQuestionGameActivity extends DrawerBaseActivity {
 
         saveQuestionButton.setText("Eltávolítás");
 
-        Toast.makeText(getApplicationContext(), "Mentett kérdés!", Toast.LENGTH_SHORT).show();
-
         mQuestions
                 .document(savedQuestionId)
                 .get()
