@@ -6,9 +6,11 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -25,12 +27,14 @@ import java.util.TimeZone;
 public class DuelAdapter extends RecyclerView.Adapter<DuelAdapter.ViewHolder> {
     private ArrayList<Duel> mDuelsData;
     private Context mContext;
+    private String mCurrentUserId;
     private FirebaseFirestore mFirestore = FirebaseFirestore.getInstance();
 
 
-    public DuelAdapter(Context context, ArrayList<Duel> duelsData){
+    public DuelAdapter(Context context, ArrayList<Duel> duelsData, String currentUserId){
         this.mDuelsData = duelsData;
         this.mContext = context;
+        this.mCurrentUserId = currentUserId;
     }
 
     @NonNull
@@ -54,12 +58,16 @@ public class DuelAdapter extends RecyclerView.Adapter<DuelAdapter.ViewHolder> {
         private TextView mPlayersUsernameTextView;
         private TextView mCategoryAndQuestionNumberTextView;
         private TextView mDuelDate;
+        private TextView mPointsTextView;
+        private RelativeLayout mDuelRelativeLayout;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             mPlayersUsernameTextView = itemView.findViewById(R.id.playersUsernameTextView);
             mCategoryAndQuestionNumberTextView = itemView.findViewById(R.id.categoryAndQuestionNumberTextView);
             mDuelDate = itemView.findViewById(R.id.duelDateTextView);
+            mPointsTextView = itemView.findViewById(R.id.pointsTextView);
+            mDuelRelativeLayout = itemView.findViewById(R.id.duelRelativeLayout);
         }
 
         public void bindTo(Duel currentDuel) {
@@ -103,14 +111,52 @@ public class DuelAdapter extends RecyclerView.Adapter<DuelAdapter.ViewHolder> {
             String formattedDate = sdf.format(currentDuel.getDate().toDate());
             mDuelDate.setText(formattedDate);
 
-            itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    Intent intent = new Intent(mContext, DuelActivity.class);
-                    intent.putExtra("duelId", currentDuel.getId());
-                    mContext.startActivity(intent);
+            if(mCurrentUserId.equals(currentDuel.getChallengedUid()) && currentDuel.getChallengedUserResults() == null){
+                itemView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Intent intent = new Intent(mContext, DuelActivity.class);
+                        intent.putExtra("duelId", currentDuel.getId());
+                        mContext.startActivity(intent);
+                    }
+                });
+            }
+
+            if(currentDuel.getChallengedUserResults() != null){
+                mPointsTextView.setVisibility(View.VISIBLE);
+                int challengerUserPoints = 0;
+                int challengedUserPoints = 0;
+
+                for(int i = 0; i < currentDuel.getQuestionIds().size(); i++){
+                    if(currentDuel.getChallengedUserResults().get(i)){
+                        challengedUserPoints++;
+                    }
+                    if(currentDuel.getChallengerUserResults().get(i)){
+                        challengerUserPoints++;
+                    }
                 }
-            });
+
+                String points = challengerUserPoints + " : " + challengedUserPoints;
+                mPointsTextView.setText(points);
+
+                if(currentDuel.getChallengerUid().equals(mCurrentUserId)) {
+                    if(challengerUserPoints > challengedUserPoints) {
+                        mDuelRelativeLayout.setBackgroundResource(R.color.correct_green);
+                    } else if(challengerUserPoints < challengedUserPoints){
+                        mDuelRelativeLayout.setBackgroundResource(R.color.wrong_red);
+                    } else {
+                        mDuelRelativeLayout.setBackgroundResource(R.color.draw);
+                    }
+                } else{
+                    if(challengedUserPoints > challengerUserPoints) {
+                        mDuelRelativeLayout.setBackgroundResource(R.color.correct_green);
+                    } else if(challengedUserPoints < challengerUserPoints){
+                        mDuelRelativeLayout.setBackgroundResource(R.color.wrong_red);
+                    } else {
+                        mDuelRelativeLayout.setBackgroundResource(R.color.draw);
+                    }
+                }
+            }
         }
     }
 }

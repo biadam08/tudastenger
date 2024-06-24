@@ -6,4 +6,5 @@
     <color name="lightbrowne">#7C4A19</color>
     <color name="correct_green">#4F6F49</color>
     <color name="wrong_red">#BD5151</color>
+    <color name="draw">#D6BBAE</color>
 </resources>

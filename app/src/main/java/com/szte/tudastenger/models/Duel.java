@@ -13,6 +13,7 @@ public class Duel {
     private ArrayList<Boolean> challengerUserResults;
     private ArrayList<Boolean> challengedUserResults;
     private Timestamp date;
+    private boolean isFinished;
 
     public Duel() {
     }
@@ -26,6 +27,15 @@ public class Duel {
         this.challengerUserResults = challengerUserResults;
         this.challengedUserResults = challengedUserResults;
         this.date = Timestamp.now();
+        this.isFinished = false;
+    }
+
+    public boolean isFinished() {
+        return isFinished;
+    }
+
+    public void setFinished(boolean finished) {
+        isFinished = finished;
     }
 
     public Timestamp getDate() {

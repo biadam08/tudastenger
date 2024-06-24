@@ -526,7 +526,10 @@ public class DuelActivity extends DrawerBaseActivity{
                     });
         } else {
             mFirestore.collection("Duels").document(duelId)
-                    .update("challengedUserResults", challengedUserResults);
+                    .update(
+                            "challengedUserResults", challengedUserResults,
+                            "finished", true
+                    );
         }
     }
 
