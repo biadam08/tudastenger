@@ -2,7 +2,6 @@ package com.szte.tudastenger.adapters;
 
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,7 +9,6 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -40,7 +38,7 @@ public class DuelAdapter extends RecyclerView.Adapter<DuelAdapter.ViewHolder> {
     @NonNull
     @Override
     public DuelAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new DuelAdapter.ViewHolder(LayoutInflater.from(mContext).inflate(R.layout.list_pending_duels, parent, false));
+        return new DuelAdapter.ViewHolder(LayoutInflater.from(mContext).inflate(R.layout.list_duels, parent, false));
     }
 
     @Override
