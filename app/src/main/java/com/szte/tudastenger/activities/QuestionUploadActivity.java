@@ -7,6 +7,7 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -101,13 +102,6 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
 
     }
 
-    private void removeLastAnswerEditText() {
-        if (answerCounter > 2) {
-            container.removeViewAt(container.getChildCount() - 3);
-            answerCounter--;
-        }
-    }
-
     private void openImageChooser() {
         Intent intent = new Intent();
         intent.setType("image/*");
@@ -126,11 +120,11 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
         }
     }
 
-    // UploadImage method
     public void uploadImage(View view)
     {
         String questionText = ((EditText) findViewById(R.id.questionName)).getText().toString();
         String category = ((Spinner) findViewById(R.id.questionCategory)).getSelectedItem().toString();
+        ArrayList<Boolean> answerInputHasValue = new ArrayList<>();
         ArrayList<String> answers = new ArrayList<>();
 
         for (int i = 0; i < radioGroup.getChildCount(); i++){
@@ -146,6 +140,13 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
                 correctAnswerIndex = i;
             }
 
+            //ennek segítségével fogjuk ellenőrizni, hogy van-e olyan mező, ami üres, de a következő mezőbe már van válaszlehetőség írva
+            if(!answer.getText().toString().isEmpty()) {
+                answerInputHasValue.add(true);
+            } else {
+                answerInputHasValue.add(false);
+            }
+
             if(!answer.getText().toString().isEmpty()) {
                 answers.add(answer.getText().toString());
             }
@@ -156,6 +157,13 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
             return;
         }
 
+        boolean isValid = true;
+        for(int i = 0; i < answerInputHasValue.size() - 1; i++){
+            if(!answerInputHasValue.get(i) && answerInputHasValue.get(i+1)){
+                isValid = false;
+            }
+        }
+
         if (imageUri != null) {
 
             ProgressDialog progressDialog  = new ProgressDialog(this);
@@ -164,6 +172,7 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
 
             StorageReference ref = storageReference.child("images/" + UUID.randomUUID().toString());
 
+            boolean finalIsValid = isValid;
             ref.putFile(imageUri)
                     .addOnSuccessListener(
                             new OnSuccessListener<UploadTask.TaskSnapshot>() {
@@ -174,7 +183,11 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
 
                                     progressDialog.dismiss();
                                     String fileName = taskSnapshot.getMetadata().getReference().getName();
-                                    saveQuestion(questionText, category, answers, correctAnswerIndex, fileName);
+                                    if(finalIsValid) {
+                                        saveQuestion(questionText, category, answers, correctAnswerIndex, fileName);
+                                    } else {
+                                        showErrorDialog();
+                                    }
                                 }
                             })
 
@@ -208,7 +221,11 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
                                 }
                             });
         } else{
-            saveQuestion(questionText, category, answers, correctAnswerIndex, null);
+            if(isValid) {
+                saveQuestion(questionText, category, answers, correctAnswerIndex, null);
+            } else {
+                showErrorDialog();
+            }
         }
     }
 
@@ -256,6 +273,14 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Sikeres feltöltés")
                 .setMessage("A kérdés sikeresen feltöltve!")
+                .setPositiveButton("Rendben", null)
+                .show();
+    }
+
+    private void showErrorDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Sikertelen feltöltés!")
+                .setMessage("A kérdést nem sikerült feltölteni, mert az egyik válaszlehetőség üres, miközben utána lévő mezőben van válaszlehetőség!")
                 .setPositiveButton("Rendben", null)
                 .show();
     }
