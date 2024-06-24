@@ -2,6 +2,7 @@ package com.szte.tudastenger.activities;
 
 import androidx.annotation.NonNull;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
@@ -44,9 +45,7 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
 
     private LinearLayout container;
     private LinearLayout answerContainer;
-    private Button addAnswerButton;
-
-    private Button removeLastAnswerButton;
+    private Spinner spinner;
 
     private RadioGroup radioGroup;
     private int answerCounter = 2;
@@ -70,7 +69,7 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
         mFirestore = FirebaseFirestore.getInstance();
         mStorage = FirebaseStorage.getInstance();
         storageReference = mStorage.getReference();
-        Spinner spinner = findViewById(R.id.questionCategory);
+        spinner = findViewById(R.id.questionCategory);
 
         mFirestore.collection("Categories").get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
             @Override
@@ -89,22 +88,6 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
         container = findViewById(R.id.container);
         answerContainer = findViewById(R.id.answerContainer);
         radioGroup = findViewById(R.id.radioGroup);
-       // addAnswerButton = findViewById(R.id.add_answer_button);
-      //  removeLastAnswerButton = findViewById(R.id.remove_last_answer_button);
-
-        /*addAnswerButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                addNewAnswerEditText();
-            }
-        });*/
-
-       /* removeLastAnswerButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                removeLastAnswerEditText();
-            }
-        });*/
 
         questionImagePreview = findViewById(R.id.question_image_preview);
         Button uploadImageButton = findViewById(R.id.upload_image_button);
@@ -190,11 +173,6 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
                                 {
 
                                     progressDialog.dismiss();
-                                    Toast
-                                            .makeText(QuestionUploadActivity.this,
-                                                    "Sikeresen feltöltve!",
-                                                    Toast.LENGTH_SHORT)
-                                            .show();
                                     String fileName = taskSnapshot.getMetadata().getReference().getName();
                                     saveQuestion(questionText, category, answers, correctAnswerIndex, fileName);
                                 }
@@ -215,9 +193,6 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
                     })
                     .addOnProgressListener(
                             new OnProgressListener<UploadTask.TaskSnapshot>() {
-
-                                // Progress Listener for loading
-                                // percentage on the dialog box
                                 @Override
                                 public void onProgress(
                                         UploadTask.TaskSnapshot taskSnapshot)
@@ -235,47 +210,7 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
         } else{
             saveQuestion(questionText, category, answers, correctAnswerIndex, null);
         }
-}
-
-    /*private void addNewAnswerEditText() {
-        LinearLayout answerLayout = new LinearLayout(this);
-        answerLayout.setOrientation(LinearLayout.HORIZONTAL);
-        answerLayout.setLayoutParams(new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT));
-
-        EditText newAnswerEditText = new EditText(this);
-        newAnswerEditText.setId(View.generateViewId());
-        LinearLayout.LayoutParams editTextParams = new LinearLayout.LayoutParams(
-                0,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                0.8f
-        );
-
-        newAnswerEditText.setLayoutParams(editTextParams);
-        answerLayout.setPadding(12, 12, 12, 12);
-        newAnswerEditText.setBackgroundResource(R.drawable.custom_shape_edittext);
-        newAnswerEditText.setHint((answerCounter + 1) + ". válaszlehetőség");
-        newAnswerEditText.setInputType(InputType.TYPE_CLASS_TEXT);
-
-        RadioButton newAnswerRadioButton = new RadioButton(this);
-        newAnswerRadioButton.setId(View.generateViewId());
-        LinearLayout.LayoutParams radioButtonParams = new LinearLayout.LayoutParams(
-                0,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                0.2f
-        );
-
-        newAnswerRadioButton.setLayoutParams(radioButtonParams);
-
-        answerLayout.addView(newAnswerEditText);
-        answerLayout.addView(newAnswerRadioButton);
-
-        // Hozzáadás a RadioGroup-hoz
-        radioGroup.addView(answerLayout);
-
-        answerCounter++;
-    }*/
+    }
 
     public void saveQuestion(String questionText, String category, ArrayList<String> answers, int correctAnswerIndex, String fileName) {
         Question question = new Question(null, questionText, category, answers, correctAnswerIndex, fileName);
@@ -290,7 +225,8 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
                         mFirestore.collection("Questions").document(documentId)
                                 .update("id", documentId);
 
-                        Toast.makeText(QuestionUploadActivity.this, "Kérdés sikeresen mentve!", Toast.LENGTH_SHORT).show();
+                        clearInputFields();
+                        showSuccessDialog();
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
@@ -302,5 +238,26 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
 
     }
 
+    private void clearInputFields() {
+        ((EditText) findViewById(R.id.questionName)).setText("");
+        for (int i = 0; i < radioGroup.getChildCount(); i++) {
+            ((EditText) answerContainer.getChildAt(i)).setText("");
+            RadioButton radioButton = (RadioButton) radioGroup.getChildAt(i);
+            radioButton.setChecked(false);
+        }
+
+        spinner.setSelection(0);
+
+        imageUri = null;
+        questionImagePreview.setVisibility(View.GONE);
+    }
+
+    private void showSuccessDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Sikeres feltöltés")
+                .setMessage("A kérdés sikeresen feltöltve!")
+                .setPositiveButton("Rendben", null)
+                .show();
+    }
 
 }
