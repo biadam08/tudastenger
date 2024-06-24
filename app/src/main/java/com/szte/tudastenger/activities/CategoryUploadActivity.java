@@ -1,8 +1,10 @@
 package com.szte.tudastenger.activities;
 
+import android.app.AlertDialog;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.RadioButton;
 import android.widget.Toast;
 
 import com.google.firebase.firestore.CollectionReference;
@@ -40,10 +42,23 @@ public class CategoryUploadActivity extends DrawerBaseActivity {
         String categoryName = categoryNameEditText.getText().toString();
         Category category = new Category(categoryName);
         mCategories.add(category).addOnSuccessListener(documentReference -> {
-            Toast.makeText(CategoryUploadActivity.this, "Sikeres kategória hozzáadás!", Toast.LENGTH_SHORT).show();
+            clearInputField();
+            showSuccessDialog();
         }).addOnFailureListener(e -> {
             Toast.makeText(CategoryUploadActivity.this, "Sikertelen kategória hozzáadás!", Toast.LENGTH_SHORT).show();
 
         });
+    }
+
+    private void clearInputField() {
+        categoryNameEditText.setText("");
+    }
+
+    private void showSuccessDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Sikeres feltöltés")
+                .setMessage("A kategória sikeresen létrehozva!")
+                .setPositiveButton("Rendben", null)
+                .show();
     }
 }
