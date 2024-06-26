@@ -76,6 +76,7 @@ public class DrawerBaseActivity extends AppCompatActivity implements NavigationV
             menu.findItem(R.id.nav_profile).setVisible(false);
             menu.findItem(R.id.nav_history).setVisible(false);
             menu.findItem(R.id.nav_leaderboard).setVisible(false);
+            menu.findItem(R.id.nav_duels).setVisible(false);
         } else {
             menu.findItem(R.id.nav_login).setVisible(false);
             menu.findItem(R.id.nav_registration).setVisible(false);
