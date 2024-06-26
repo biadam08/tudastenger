@@ -392,12 +392,10 @@ public class QuizGameActivity extends DrawerBaseActivity {
         nextQuestionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(!savedNow){
-                    popupWindow.dismiss();
-                    isSelectedAnswer = false; // új kérdésnél még nem válaszolt
-                    savedNow = false;
-                    queryRandomQuestion();
-                }
+                popupWindow.dismiss();
+                isSelectedAnswer = false; // új kérdésnél még nem válaszolt
+                savedNow = false;
+                queryRandomQuestion();
             }
         });
     }

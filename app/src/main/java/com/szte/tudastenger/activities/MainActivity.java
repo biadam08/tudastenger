@@ -56,6 +56,7 @@ public class MainActivity extends DrawerBaseActivity {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(MainActivity.this, QuizGameActivity.class);
+                intent.putExtra("mixed", "true");
                 startActivity(intent);
             }
         });
