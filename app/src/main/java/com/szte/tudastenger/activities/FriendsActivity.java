@@ -61,6 +61,10 @@ public class FriendsActivity extends DrawerBaseActivity implements OnFriendReque
     private FriendAdapter mFriendAdapter;
     private FriendRequestAdapter mFriendRequestAdapter;
     private Button popUpShowUsersButton;
+    private TextView mNoFriendRequestsTextView;
+    private TextView mNoFriendsYetTextView;
+    private boolean userHasFriend;
+    private boolean userHasFriendRequest;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +81,9 @@ public class FriendsActivity extends DrawerBaseActivity implements OnFriendReque
 
         mFirestore = FirebaseFirestore.getInstance();
         mUsers = mFirestore.collection("Users");
+
+        mNoFriendsYetTextView = findViewById(R.id.noFriendsYetTextView);
+        mNoFriendRequestsTextView = findViewById(R.id.noFriendRequestsTextView);
 
         mFriendListRecyclerView = findViewById(R.id.friendListRecyclerView);
         mFriendListRecyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -127,11 +134,19 @@ public class FriendsActivity extends DrawerBaseActivity implements OnFriendReque
                                                             User friend = documentSnapshot.toObject(User.class);
                                                             mFriendsData.add(friend);
                                                             mFriendAdapter.notifyDataSetChanged();
+
+                                                            // Frissítés után az üzenet elrejtése
+                                                            mNoFriendsYetTextView.setVisibility(View.GONE);
                                                         }
                                                     }
                                                 });
                                     }
                                 }
+                            }
+
+                            if (mFriendsData.isEmpty()) {
+                                mNoFriendsYetTextView.setVisibility(View.VISIBLE);
+                                mNoFriendsYetTextView.setText("Jelenleg nincs barátod");
                             }
                         }
                     }
@@ -155,9 +170,17 @@ public class FriendsActivity extends DrawerBaseActivity implements OnFriendReque
                                                     User friend = documentSnapshot.toObject(User.class);
                                                     mFriendRequestsData.add(friend);
                                                     mFriendRequestAdapter.notifyDataSetChanged();
+
+                                                    // Frissítés után az üzenet elrejtése
+                                                    mNoFriendRequestsTextView.setVisibility(View.GONE);
                                                 }
                                             }
                                         });
+                            }
+
+                            if (mFriendRequestsData.isEmpty()) {
+                                mNoFriendRequestsTextView.setVisibility(View.VISIBLE);
+                                mNoFriendRequestsTextView.setText("Jelenleg nincs függő barátkérelem");
                             }
                         }
                     }
@@ -181,9 +204,17 @@ public class FriendsActivity extends DrawerBaseActivity implements OnFriendReque
                                                     User friend = documentSnapshot.toObject(User.class);
                                                     mFriendRequestsData.add(friend);
                                                     mFriendRequestAdapter.notifyDataSetChanged();
+
+                                                    // Frissítés után az üzenet elrejtése
+                                                    mNoFriendRequestsTextView.setVisibility(View.GONE);
                                                 }
                                             }
                                         });
+                            }
+
+                            if (mFriendRequestsData.isEmpty()) {
+                                mNoFriendRequestsTextView.setVisibility(View.VISIBLE);
+                                mNoFriendRequestsTextView.setText("Jelenleg nincs függő barátkérelem");
                             }
                         }
                     }
@@ -195,8 +226,8 @@ public class FriendsActivity extends DrawerBaseActivity implements OnFriendReque
                 showUsers();
             }
         });
-
     }
+
 
     public void showUsers() {
         LayoutInflater inflater = (LayoutInflater)
@@ -268,23 +299,40 @@ public class FriendsActivity extends DrawerBaseActivity implements OnFriendReque
     public void onFriendRequestAdded(User user) {
         mFriendRequestsData.add(user);
         mFriendRequestAdapter.notifyDataSetChanged();
-    }
 
+        if (!mFriendRequestsData.isEmpty()) {
+            mNoFriendRequestsTextView.setVisibility(View.GONE);
+        }
+    }
     @Override
     public void onFriendAdded(User user) {
         mFriendsData.add(user);
         mFriendAdapter.notifyDataSetChanged();
+
+        if (!mFriendsData.isEmpty()) {
+            mNoFriendsYetTextView.setVisibility(View.GONE);
+        }
     }
 
     @Override
     public void onFriendRequestRemoved(User user) {
         mFriendRequestsData.remove(user);
         mFriendRequestAdapter.notifyDataSetChanged();
+
+        if (mFriendRequestsData.isEmpty()) {
+            mNoFriendRequestsTextView.setVisibility(View.VISIBLE);
+            mNoFriendRequestsTextView.setText("Jelenleg nincs függő barátkérelem");
+        }
     }
 
     @Override
     public void onFriendRemoved(User user) {
         mFriendsData.remove(user);
         mFriendAdapter.notifyDataSetChanged();
+
+        if (mFriendsData.isEmpty()) {
+            mNoFriendsYetTextView.setVisibility(View.VISIBLE);
+            mNoFriendsYetTextView.setText("Jelenleg nincs barátod");
+        }
     }
 }

@@ -16,6 +16,17 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"  />
 
+    <TextView
+        android:id="@+id/noFriendsYetTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Még nincsenek barátaid"
+        android:textSize="18sp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/friendsTextView" />
+
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/friendListRecyclerView"
@@ -24,7 +35,7 @@
         android:scrollbars="vertical"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/friendsTextView">
+        app:layout_constraintTop_toBottomOf="@+id/noFriendsYetTextView">
 
     </androidx.recyclerview.widget.RecyclerView>
 
@@ -34,9 +45,21 @@
         android:layout_height="wrap_content"
         android:text="Függőben lévő jelölések"
         android:textSize="20sp"
+        android:layout_margin="12dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/friendListRecyclerView" />
+
+    <TextView
+        android:id="@+id/noFriendRequestsTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Nincs függőben lévő barátkérelem"
+        android:textSize="18sp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/friendRequestTextView" />
 
 
     <androidx.recyclerview.widget.RecyclerView
@@ -46,7 +69,7 @@
         android:scrollbars="vertical"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/friendRequestTextView">
+        app:layout_constraintTop_toBottomOf="@+id/noFriendRequestsTextView">
 
     </androidx.recyclerview.widget.RecyclerView>
 
@@ -55,6 +78,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Felhasználók keresése"
+        android:layout_marginTop="12dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/friendRequestListRecyclerView"
