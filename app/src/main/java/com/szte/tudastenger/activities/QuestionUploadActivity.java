@@ -1,21 +1,28 @@
 package com.szte.tudastenger.activities;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.PopupWindow;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.SearchView;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -30,11 +37,14 @@ import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.szte.tudastenger.R;
+import com.szte.tudastenger.adapters.UserAdapter;
 import com.szte.tudastenger.databinding.ActivityQuestionUploadBinding;
 import com.szte.tudastenger.models.Question;
+import com.szte.tudastenger.models.User;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 
@@ -60,6 +70,7 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
     private static final int PICK_IMAGE_REQUEST = 1;
 
     private StorageReference storageReference;
+    private EditText editExplanationTextMultiLine;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,6 +101,8 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
         answerContainer = findViewById(R.id.answerContainer);
         radioGroup = findViewById(R.id.radioGroup);
 
+        EditText editExplanationTextMultiLine = findViewById(R.id.editExplanationTextMultiLine);
+
         questionImagePreview = findViewById(R.id.question_image_preview);
         Button uploadImageButton = findViewById(R.id.upload_image_button);
 
@@ -97,6 +110,14 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
             @Override
             public void onClick(View v) {
                 openImageChooser();
+            }
+        });
+
+        Button addExplanationButton = findViewById(R.id.addExplanationButton);
+        addExplanationButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showAddExplanationPopup();
             }
         });
 
@@ -283,6 +304,44 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
                 .setMessage("A kérdést nem sikerült feltölteni, mert az egyik válaszlehetőség üres, miközben utána lévő mezőben van válaszlehetőség!")
                 .setPositiveButton("Rendben", null)
                 .show();
+    }
+
+    public void showAddExplanationPopup() {
+        LayoutInflater inflater = (LayoutInflater)
+                getSystemService(LAYOUT_INFLATER_SERVICE);
+        View popupView = inflater.inflate(R.layout.popup_add_explanation, null);
+
+        int width = LinearLayout.LayoutParams.WRAP_CONTENT;
+        int height = LinearLayout.LayoutParams.WRAP_CONTENT;
+        final PopupWindow popupWindow = new PopupWindow(popupView, width, height, false);
+
+        popupWindow.setTouchable(true);
+        popupWindow.setFocusable(true);
+
+        Button mPopUpCloseButton = popupView.findViewById(R.id.popUpCloseButton);
+        Button mGenerateTextButton = popupView.findViewById(R.id.generateTextButton);
+        Button mSaveExplanationButton = popupView.findViewById(R.id.saveExplanationText);
+
+        mPopUpCloseButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                popupWindow.dismiss();
+            }
+        });
+
+
+        popupWindow.showAtLocation(findViewById(android.R.id.content), Gravity.CENTER, 0, 0);
+        dimBehind(popupWindow);
+    }
+
+    public static void dimBehind(PopupWindow popupWindow) {
+        View container = popupWindow.getContentView().getRootView();
+        Context context = popupWindow.getContentView().getContext();
+        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        WindowManager.LayoutParams p = (WindowManager.LayoutParams) container.getLayoutParams();
+        p.flags |= WindowManager.LayoutParams.FLAG_DIM_BEHIND;
+        p.dimAmount = 0.5f;
+        wm.updateViewLayout(container, p);
     }
 
 }

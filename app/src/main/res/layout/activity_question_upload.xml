@@ -176,10 +176,29 @@
                     </LinearLayout>-->
 
             <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/add_explanation_text"
+                android:id="@+id/addExplanationButton"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                android:paddingLeft="20dp"
+                android:paddingRight="20dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp"
+                android:backgroundTint="@color/browne"
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                android:background="@drawable/custom_shape_rounded_button"
+                android:layout_gravity="center_horizontal"
+                />
+
+
+            <Button
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/hozzaadas"
-                android:id="@+id/add_question_button"
+                android:text="@string/upload_question"
+                android:id="@+id/addQuestionButton"
                 android:layout_marginTop="16dp"
                 android:backgroundTint="@color/browne"
                 android:textColor="@color/white"
