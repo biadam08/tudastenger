@@ -42,10 +42,23 @@ import com.szte.tudastenger.databinding.ActivityQuestionUploadBinding;
 import com.szte.tudastenger.models.Question;
 import com.szte.tudastenger.models.User;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 
 public class QuestionUploadActivity extends DrawerBaseActivity{
@@ -66,11 +79,14 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
 
     private FirebaseStorage mStorage;
 
-    private int correctAnswerIndex = -1;
     private static final int PICK_IMAGE_REQUEST = 1;
 
     private StorageReference storageReference;
     private EditText editExplanationTextMultiLine;
+    private String questionText;
+    private String category;
+    private ArrayList<String> answers;
+    private int correctAnswerIndex = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,8 +116,6 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
         container = findViewById(R.id.container);
         answerContainer = findViewById(R.id.answerContainer);
         radioGroup = findViewById(R.id.radioGroup);
-
-        EditText editExplanationTextMultiLine = findViewById(R.id.editExplanationTextMultiLine);
 
         questionImagePreview = findViewById(R.id.question_image_preview);
         Button uploadImageButton = findViewById(R.id.upload_image_button);
@@ -141,116 +155,94 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
         }
     }
 
-    public void uploadImage(View view)
-    {
-        String questionText = ((EditText) findViewById(R.id.questionName)).getText().toString();
-        String category = ((Spinner) findViewById(R.id.questionCategory)).getSelectedItem().toString();
+    private boolean validateQuestionInput() {
+        questionText = ((EditText) findViewById(R.id.questionName)).getText().toString();
+        category = ((Spinner) findViewById(R.id.questionCategory)).getSelectedItem().toString();
         ArrayList<Boolean> answerInputHasValue = new ArrayList<>();
-        ArrayList<String> answers = new ArrayList<>();
+        answers = new ArrayList<>();
 
-        for (int i = 0; i < radioGroup.getChildCount(); i++){
+        for (int i = 0; i < radioGroup.getChildCount(); i++) {
             EditText answer = (EditText) answerContainer.getChildAt(i);
             RadioButton radioButton = (RadioButton) radioGroup.getChildAt(i);
 
-            if(answer.getText().toString().isEmpty() && radioButton.isChecked()){
+            if (answer.getText().toString().isEmpty() && radioButton.isChecked()) {
                 answer.setError("Nem lehet üres válasz a helyes");
-                return;
+                return false;
             }
 
-            if(radioButton.isChecked()){
+            if (radioButton.isChecked()) {
                 correctAnswerIndex = i;
             }
 
-            //ennek segítségével fogjuk ellenőrizni, hogy van-e olyan mező, ami üres, de a következő mezőbe már van válaszlehetőség írva
-            if(!answer.getText().toString().isEmpty()) {
+            if (!answer.getText().toString().isEmpty()) {
                 answerInputHasValue.add(true);
             } else {
                 answerInputHasValue.add(false);
             }
 
-            if(!answer.getText().toString().isEmpty()) {
+            if (!answer.getText().toString().isEmpty()) {
                 answers.add(answer.getText().toString());
             }
         }
 
         if (correctAnswerIndex == -1) {
             Toast.makeText(this, "Kérjük, jelöljön meg egy helyes választ!", Toast.LENGTH_SHORT).show();
-            return;
+            return false;
         }
 
-        boolean isValid = true;
-        for(int i = 0; i < answerInputHasValue.size() - 1; i++){
-            if(!answerInputHasValue.get(i) && answerInputHasValue.get(i+1)){
-                isValid = false;
+        for (int i = 0; i < answerInputHasValue.size() - 1; i++) {
+            if (!answerInputHasValue.get(i) && answerInputHasValue.get(i + 1)) {
+                showErrorDialog("Az egyik válaszlehetőség üres, miközben utána az lévő mezőben meg van adva egy válaszlehetőség!");
+                return false;
             }
         }
 
-        if (imageUri != null) {
-
-            ProgressDialog progressDialog  = new ProgressDialog(this);
-            progressDialog.setTitle("Feltöltés...");
-            progressDialog.show();
-
-            StorageReference ref = storageReference.child("images/" + UUID.randomUUID().toString());
-
-            boolean finalIsValid = isValid;
-            ref.putFile(imageUri)
-                    .addOnSuccessListener(
-                            new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                                @Override
-                                public void onSuccess(
-                                        UploadTask.TaskSnapshot taskSnapshot)
-                                {
-
-                                    progressDialog.dismiss();
-                                    String fileName = taskSnapshot.getMetadata().getReference().getName();
-                                    if(finalIsValid) {
-                                        saveQuestion(questionText, category, answers, correctAnswerIndex, fileName);
-                                    } else {
-                                        showErrorDialog();
-                                    }
-                                }
-                            })
-
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e)
-                        {
-                            // Error, Image not uploaded
-                            progressDialog.dismiss();
-                            Toast
-                                    .makeText(QuestionUploadActivity.this,
-                                            "Failed " + e.getMessage(),
-                                            Toast.LENGTH_SHORT)
-                                    .show();
-                        }
-                    })
-                    .addOnProgressListener(
-                            new OnProgressListener<UploadTask.TaskSnapshot>() {
-                                @Override
-                                public void onProgress(
-                                        UploadTask.TaskSnapshot taskSnapshot)
-                                {
-                                    double progress
-                                            = (100.0
-                                            * taskSnapshot.getBytesTransferred()
-                                            / taskSnapshot.getTotalByteCount());
-                                    progressDialog.setMessage(
-                                            "Feltöltve: "
-                                                    + (int)progress + "%");
-
-                                }
-                            });
-        } else{
-            if(isValid) {
-                saveQuestion(questionText, category, answers, correctAnswerIndex, null);
+        return true;
+    }
+    public void uploadQuestion(View view) {
+        if (validateQuestionInput()) {
+            if (imageUri != null) {
+                uploadImage();
             } else {
-                showErrorDialog();
+                saveQuestion(null);
             }
         }
     }
 
-    public void saveQuestion(String questionText, String category, ArrayList<String> answers, int correctAnswerIndex, String fileName) {
+    private void uploadImage() {
+        ProgressDialog progressDialog = new ProgressDialog(this);
+        progressDialog.setTitle("Feltöltés...");
+        progressDialog.show();
+
+        StorageReference ref = storageReference.child("images/" + UUID.randomUUID().toString());
+
+        ref.putFile(imageUri)
+                .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        progressDialog.dismiss();
+                        String fileName = taskSnapshot.getMetadata().getReference().getName();
+                        saveQuestion(fileName);  // Kérdés mentése a feltöltött kép nevével
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        progressDialog.dismiss();
+                        Toast.makeText(QuestionUploadActivity.this, "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                        double progress = (100.0 * taskSnapshot.getBytesTransferred() / taskSnapshot.getTotalByteCount());
+                        progressDialog.setMessage("Feltöltve: " + (int) progress + "%");
+                    }
+                });
+    }
+
+    private void saveQuestion(String fileName) {
+
         Question question = new Question(null, questionText, category, answers, correctAnswerIndex, fileName);
 
         mFirestore.collection("Questions").add(question)
@@ -273,7 +265,6 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
                         Toast.makeText(QuestionUploadActivity.this, "Hiba történt a mentés során.", Toast.LENGTH_SHORT).show();
                     }
                 });
-
     }
 
     private void clearInputFields() {
@@ -298,10 +289,10 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
                 .show();
     }
 
-    private void showErrorDialog() {
+    private void showErrorDialog(String message) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Sikertelen feltöltés!")
-                .setMessage("A kérdést nem sikerült feltölteni, mert az egyik válaszlehetőség üres, miközben utána lévő mezőben van válaszlehetőség!")
+        builder.setTitle("Hiba")
+                .setMessage(message)
                 .setPositiveButton("Rendben", null)
                 .show();
     }
@@ -318,9 +309,21 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
         popupWindow.setTouchable(true);
         popupWindow.setFocusable(true);
 
+        editExplanationTextMultiLine = popupView.findViewById(R.id.editExplanationTextMultiLine);
+
         Button mPopUpCloseButton = popupView.findViewById(R.id.popUpCloseButton);
         Button mGenerateTextButton = popupView.findViewById(R.id.generateTextButton);
         Button mSaveExplanationButton = popupView.findViewById(R.id.saveExplanationText);
+
+        mGenerateTextButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (validateQuestionInput()) {
+                    generateExplanationWithOkHttp();
+                }
+            }
+        });
+
 
         mPopUpCloseButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -343,5 +346,90 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
         p.dimAmount = 0.5f;
         wm.updateViewLayout(container, p);
     }
+
+    private void generateExplanationWithOkHttp() {
+        String apiKey = "Bearer ";
+
+        String prompt = "Adj egy rövid 3-5 mondatos ismeretterjesztő választ az alábbi kérdésre és a hozzátartozó helyes válaszra. \nKérdés: " + questionText + "\nHelyes válasz: " + answers.get(correctAnswerIndex);
+
+        OkHttpClient client = new OkHttpClient();
+
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("model", "gpt-4o-mini");
+
+            // Create the messages array
+            JSONArray messages = new JSONArray();
+
+            // Add user message
+            JSONObject userMessage = new JSONObject();
+            userMessage.put("role", "user");
+            userMessage.put("content", prompt);
+
+            // Add the message to the array
+            messages.put(userMessage);
+
+            jsonObject.put("messages", messages);
+            jsonObject.put("max_tokens", 350);
+            jsonObject.put("temperature", 0.7);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        RequestBody body = RequestBody.create(
+                jsonObject.toString(), MediaType.get("application/json; charset=utf-8"));
+
+        Request request = new Request.Builder()
+                .url("https://api.openai.com/v1/chat/completions")
+                .header("Authorization", apiKey)
+                .post(body)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                runOnUiThread(() ->
+                        Toast.makeText(QuestionUploadActivity.this, "Failed to generate explanation",  Toast.LENGTH_SHORT).show()
+                );
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    if (response.body() != null) {
+                        String responseBody = response.body().string();
+                        Log.d("API_RESPONSE", responseBody); // Itt írasd ki a teljes választ a Logcat-be
+                        String explanation = extractExplanationFromResponse(responseBody);
+
+                        runOnUiThread(() -> {
+                            editExplanationTextMultiLine.setText(explanation);
+                        });
+                    }
+                } else {
+                    String errorBody = response.body() != null ? response.body().string() : "Unknown error";
+                    runOnUiThread(() -> {
+                        Log.d("ERRORAPI", errorBody);
+                        Toast.makeText(QuestionUploadActivity.this, "Error generating explanation: " + errorBody, Toast.LENGTH_LONG).show();
+                    });
+                }
+            }
+
+        });
+    }
+
+    private String extractExplanationFromResponse(String responseBody) {
+        try {
+            JSONObject jsonObject = new JSONObject(responseBody);
+            JSONArray choices = jsonObject.getJSONArray("choices");
+            if (choices.length() > 0) {
+                JSONObject message = choices.getJSONObject(0).getJSONObject("message");
+                return message.getString("content").trim();
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return "Nincs elérhető magyarázat.";
+    }
+
 
 }

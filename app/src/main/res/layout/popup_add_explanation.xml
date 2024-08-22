@@ -25,7 +25,7 @@
         android:layout_height="wrap_content"
         android:ems="100"
         android:gravity="start|top"
-        android:lines="4"
+        android:lines="8"
         android:inputType="textMultiLine"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
