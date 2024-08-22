@@ -1,7 +1,6 @@
 package com.szte.tudastenger.activities;
 
 import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.LinearLayoutManager;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -22,7 +21,6 @@ import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
-import android.widget.SearchView;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -37,10 +35,8 @@ import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.szte.tudastenger.R;
-import com.szte.tudastenger.adapters.UserAdapter;
 import com.szte.tudastenger.databinding.ActivityQuestionUploadBinding;
 import com.szte.tudastenger.models.Question;
-import com.szte.tudastenger.models.User;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -49,7 +45,6 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 import okhttp3.Call;
@@ -82,7 +77,8 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
     private static final int PICK_IMAGE_REQUEST = 1;
 
     private StorageReference storageReference;
-    private EditText editExplanationTextMultiLine;
+    private EditText explanationEditText;
+    private String explanationText;
     private String questionText;
     private String category;
     private ArrayList<String> answers;
@@ -243,7 +239,7 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
 
     private void saveQuestion(String fileName) {
 
-        Question question = new Question(null, questionText, category, answers, correctAnswerIndex, fileName);
+        Question question = new Question(null, questionText, category, answers, correctAnswerIndex, fileName, explanationText);
 
         mFirestore.collection("Questions").add(question)
                 .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
@@ -309,7 +305,7 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
         popupWindow.setTouchable(true);
         popupWindow.setFocusable(true);
 
-        editExplanationTextMultiLine = popupView.findViewById(R.id.editExplanationTextMultiLine);
+        explanationEditText = popupView.findViewById(R.id.editExplanationTextMultiLine);
 
         Button mPopUpCloseButton = popupView.findViewById(R.id.popUpCloseButton);
         Button mGenerateTextButton = popupView.findViewById(R.id.generateTextButton);
@@ -329,6 +325,14 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
             @Override
             public void onClick(View view) {
                 popupWindow.dismiss();
+            }
+        });
+
+        mSaveExplanationButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                explanationText = explanationEditText.getText().toString();
+                Toast.makeText(QuestionUploadActivity.this, "Sikeresen elmentve!", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -402,7 +406,8 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
                         String explanation = extractExplanationFromResponse(responseBody);
 
                         runOnUiThread(() -> {
-                            editExplanationTextMultiLine.setText(explanation);
+                            explanationEditText.setText(explanation);
+                            explanationText = explanation;
                         });
                     }
                 } else {

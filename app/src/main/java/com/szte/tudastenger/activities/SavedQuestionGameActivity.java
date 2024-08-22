@@ -133,7 +133,8 @@ public class SavedQuestionGameActivity extends DrawerBaseActivity {
                             int correctAnswerIndex = questionDocument.getLong("correctAnswerIndex").intValue();
                             String category = questionDocument.getString("category");
                             String image = questionDocument.getString("image");
-                            Question question = new Question(savedQuestionId, questionText, category, answers, correctAnswerIndex, image);
+                            String explanationText = questionDocument.getString("explanationText");
+                            Question question = new Question(savedQuestionId, questionText, category, answers, correctAnswerIndex, image, explanationText);
                             displayQuestion(question);
                         }
                     }

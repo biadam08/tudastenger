@@ -9,18 +9,28 @@ public class Question {
     private ArrayList<String> answers;
     private int correctAnswerIndex;
     private String image;
+    private String explanationText;
 
 
     public Question() {
     }
 
-    public Question(String id, String questionText, String category, ArrayList<String> answers, int correctAnswerIndex, String image) {
+    public Question(String id, String questionText, String category, ArrayList<String> answers, int correctAnswerIndex, String image, String explanationText) {
         this.id = id;
         this.questionText = questionText;
         this.category = category;
         this.answers = answers;
         this.correctAnswerIndex = correctAnswerIndex;
         this.image = image;
+        this.explanationText = explanationText;
+    }
+
+    public String getExplanationText() {
+        return explanationText;
+    }
+
+    public void setExplanationText(String explanationText) {
+        this.explanationText = explanationText;
     }
 
     public String getId() {

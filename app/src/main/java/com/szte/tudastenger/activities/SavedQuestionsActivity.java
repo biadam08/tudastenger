@@ -134,8 +134,9 @@ public class SavedQuestionsActivity extends DrawerBaseActivity {
                                                 int correctAnswerIndex = questionDocument.getLong("correctAnswerIndex").intValue();
                                                 String category = questionDocument.getString("category");
                                                 String image = questionDocument.getString("image");
+                                                String explanationText = questionDocument.getString("explanationText");
                                                 if(sortCategory.equals("Összes kategória") || sortCategory.equals(category)) {
-                                                    Question question = new Question(questionId, questionText, category, answers, correctAnswerIndex, image);
+                                                    Question question = new Question(questionId, questionText, category, answers, correctAnswerIndex, image, explanationText);
                                                     mQuestionsData.add(question);
                                                 }
                                             }
