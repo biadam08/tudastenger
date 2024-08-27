@@ -141,7 +141,7 @@ public class DuelAdapter extends RecyclerView.Adapter<DuelAdapter.ViewHolder> {
                     if(challengerUserPoints > challengedUserPoints) {
                         mDuelRelativeLayout.setBackgroundResource(R.color.correct_green);
                     } else if(challengerUserPoints < challengedUserPoints){
-                        mDuelRelativeLayout.setBackgroundResource(R.color.wrong_red);
+                        mDuelRelativeLayout.setBackgroundResource(R.color.incorrect_red);
                     } else {
                         mDuelRelativeLayout.setBackgroundResource(R.color.draw);
                     }
@@ -149,7 +149,7 @@ public class DuelAdapter extends RecyclerView.Adapter<DuelAdapter.ViewHolder> {
                     if(challengedUserPoints > challengerUserPoints) {
                         mDuelRelativeLayout.setBackgroundResource(R.color.correct_green);
                     } else if(challengedUserPoints < challengerUserPoints){
-                        mDuelRelativeLayout.setBackgroundResource(R.color.wrong_red);
+                        mDuelRelativeLayout.setBackgroundResource(R.color.incorrect_red);
                     } else {
                         mDuelRelativeLayout.setBackgroundResource(R.color.draw);
                     }

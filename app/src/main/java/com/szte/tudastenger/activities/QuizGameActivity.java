@@ -1,6 +1,7 @@
 package com.szte.tudastenger.activities;
 
 import androidx.annotation.NonNull;
+import androidx.cardview.widget.CardView;
 
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -232,6 +233,9 @@ public class QuizGameActivity extends DrawerBaseActivity {
             TextView answerTextView = answerCardView.findViewById(R.id.answerTextView);
             answerTextView.setText(answer);
 
+            CardView cardView = answerCardView.findViewById(R.id.cardView);
+            cardView.setCardBackgroundColor(getResources().getColor(R.color.lightbrowne));
+
             final int correctAnswerIndex = question.getCorrectAnswerIndex();
             final int clickedIndex = i;
 
@@ -240,14 +244,20 @@ public class QuizGameActivity extends DrawerBaseActivity {
                     isSelectedAnswer = true;
                     userAnswer = question.getAnswers().get(clickedIndex);
                     correctAnswer = question.getAnswers().get(correctAnswerIndex);
-                    isCorrect = false;
+                    isCorrect = clickedIndex == correctAnswerIndex;
 
-                    if (clickedIndex == correctAnswerIndex) {
-                        isCorrect = true;
-                        popUpResult();
+                    popUpResult();
+
+                    if (isCorrect) {
+                        cardView.setCardBackgroundColor(getResources().getColor(R.color.correct_green));
                     } else {
-                        popUpResult();
+                        cardView.setCardBackgroundColor(getResources().getColor(R.color.incorrect_red));
+
+                        View correctAnswerView = answersLayout.getChildAt(correctAnswerIndex);
+                        CardView correctCardView = correctAnswerView.findViewById(R.id.cardView);
+                        correctCardView.setCardBackgroundColor(getResources().getColor(R.color.correct_green));
                     }
+
 
                     int goldChange = isCorrect ? 25 : -25;
 

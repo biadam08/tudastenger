@@ -72,7 +72,7 @@ public class AnsweredQuestionAdapter extends RecyclerView.Adapter<AnsweredQuesti
             if (currentQuestion.isCorrect()) {
                 linearLayoutAQ.setBackgroundResource(R.color.correct_green);
             } else {
-                linearLayoutAQ.setBackgroundResource(R.color.wrong_red);
+                linearLayoutAQ.setBackgroundResource(R.color.incorrect_red);
             }
             Question question = new Question();
             mFirestore.collection("Questions")
