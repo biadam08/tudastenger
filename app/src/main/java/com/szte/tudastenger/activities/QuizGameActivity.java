@@ -72,6 +72,11 @@ public class QuizGameActivity extends DrawerBaseActivity {
     private TextView questionTextView;
     private String userAnswer;
     private String correctAnswer;
+    private String explanationText;
+    private Button nextQuestionButton;
+    private Button showExplanationButton;
+    private Button goToHomeButton;
+    private LinearLayout buttonsLayout;
 
 
     @Override
@@ -112,6 +117,11 @@ public class QuizGameActivity extends DrawerBaseActivity {
         questionTextView = findViewById(R.id.questionTextView);
         saveQuestionButton = findViewById(R.id.saveQuestionButton);
         questionImageView = findViewById(R.id.questionImage);
+
+        nextQuestionButton = findViewById(R.id.nextQuestionButton);
+        showExplanationButton = findViewById(R.id.showExplanationButton);
+        goToHomeButton = findViewById(R.id.goToHomeButton);
+        buttonsLayout = findViewById(R.id.buttonsLinearLayout);
 
         mUsers.whereEqualTo("email", user.getEmail()).get().addOnSuccessListener(queryDocumentSnapshots -> {
             for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
@@ -159,6 +169,7 @@ public class QuizGameActivity extends DrawerBaseActivity {
                                     // Véletlenszerű dokumentum kiválasztása
                                     DocumentSnapshot randomDoc = documents.get(new Random().nextInt(documents.size()));
                                     Question question = randomDoc.toObject(Question.class);
+                                    explanationText = question.getExplanationText();
                                     questionDocId = randomDoc.getId();
                                     displayQuestion(question);
                                 } else{
@@ -246,8 +257,6 @@ public class QuizGameActivity extends DrawerBaseActivity {
                     correctAnswer = question.getAnswers().get(correctAnswerIndex);
                     isCorrect = clickedIndex == correctAnswerIndex;
 
-                    popUpResult();
-
                     if (isCorrect) {
                         cardView.setCardBackgroundColor(getResources().getColor(R.color.correct_green));
                     } else {
@@ -258,6 +267,7 @@ public class QuizGameActivity extends DrawerBaseActivity {
                         correctCardView.setCardBackgroundColor(getResources().getColor(R.color.correct_green));
                     }
 
+                    buttonsLayout.setVisibility(View.VISIBLE);
 
                     int goldChange = isCorrect ? 25 : -25;
 
@@ -276,6 +286,24 @@ public class QuizGameActivity extends DrawerBaseActivity {
                     //lekezelni, hogyha nem jött fel az új ablak és már nem kattinthat újat
                 }
             });
+
+
+            nextQuestionButton.setOnClickListener(v -> {
+                isSelectedAnswer = false; // új kérdésnél még nem válaszolt
+                savedNow = false;
+                buttonsLayout.setVisibility(View.GONE);
+                queryRandomQuestion();
+            });
+
+            showExplanationButton.setOnClickListener(v -> {
+                popUpExplanation();
+            });
+
+            goToHomeButton.setOnClickListener(v -> {
+                Intent intent = new Intent(QuizGameActivity.this, MainActivity.class);
+                startActivity(intent);
+            });
+
             answersLayout.addView(answerCardView);
         }
     }
@@ -336,10 +364,10 @@ public class QuizGameActivity extends DrawerBaseActivity {
         }
     }
 
-    public void popUpResult() {
+    public void popUpExplanation() {
         LayoutInflater inflater = (LayoutInflater)
                 getSystemService(LAYOUT_INFLATER_SERVICE);
-        View popupView = inflater.inflate(R.layout.popup_quiz_result, null);
+        View popupView = inflater.inflate(R.layout.popup_correct_answer_explanation, null);
 
         int width = LinearLayout.LayoutParams.WRAP_CONTENT;
         int height = LinearLayout.LayoutParams.WRAP_CONTENT;
@@ -349,63 +377,18 @@ public class QuizGameActivity extends DrawerBaseActivity {
         popupWindow.setFocusable(false);
         popupWindow.setOutsideTouchable(false);
 
-        TextView resultTextView = popupView.findViewById(R.id.resultTextView);
-        TextView userAnswerTextView = popupView.findViewById(R.id.userAnswerTextView);
-        TextView correctAnswerTextView = popupView.findViewById(R.id.correctAnswerTextView);
+        TextView explanationTextView = popupView.findViewById(R.id.explanationTextView);
+        Button closeButton = popupView.findViewById(R.id.closeButton);
 
-        if(isCorrect){
-            resultTextView.setText("Helyes választ adtál!");
-            userAnswerTextView.setVisibility(View.GONE);
-            correctAnswerTextView.setVisibility(View.GONE);
-        } else{
-            resultTextView.setText("Hibás választ adtál");
-            userAnswerTextView.setVisibility(View.VISIBLE);
-            correctAnswerTextView.setVisibility(View.VISIBLE);
-            userAnswerTextView.setText("Válaszod:\n" + userAnswer);
-            correctAnswerTextView.setText("Helyes válasz:\n" + correctAnswer);
-        }
+        explanationTextView.setText(explanationText);
+
         popupWindow.showAtLocation(findViewById(android.R.id.content), Gravity.CENTER, 0, 0);
         dimBehind(popupWindow);
 
-        ImageButton homepageButton = popupView.findViewById(R.id.homepageButton);
-        ImageButton bookmarkButton = popupView.findViewById(R.id.bookmarkButton);
-        Button nextQuestionButton = popupView.findViewById(R.id.nextQuestionButton);
-
-        if(savedNow){
-            bookmarkButton.setImageResource(R.drawable.ic_remove_bookmark);
-            bookmarkButton.setTag("bookmarked");
-        } else{
-            bookmarkButton.setTag("not_bookmarked");
-        }
-
-        homepageButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startActivity(new Intent(QuizGameActivity.this, MainActivity.class));
-            }
-        });
-
-        bookmarkButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                saveQuestion();
-                if(bookmarkButton.getTag().equals("bookmarked")) {
-                    bookmarkButton.setImageResource(R.drawable.ic_add_bookmark);
-                    bookmarkButton.setTag("not_bookmarked");
-                } else {
-                    bookmarkButton.setImageResource(R.drawable.ic_remove_bookmark);
-                    bookmarkButton.setTag("bookmarked");
-                }
-            }
-        });
-
-        nextQuestionButton.setOnClickListener(new View.OnClickListener() {
+        closeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 popupWindow.dismiss();
-                isSelectedAnswer = false; // új kérdésnél még nem válaszolt
-                savedNow = false;
-                queryRandomQuestion();
             }
         });
     }
