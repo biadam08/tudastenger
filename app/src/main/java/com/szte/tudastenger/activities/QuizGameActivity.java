@@ -176,7 +176,11 @@ public class QuizGameActivity extends DrawerBaseActivity {
                         if (!filteredDocuments.isEmpty()) {
                             DocumentSnapshot randomDoc = filteredDocuments.get(new Random().nextInt(filteredDocuments.size()));
                             Question question = randomDoc.toObject(Question.class);
-                            explanationText = question.getExplanationText();
+                            if(question.getExplanationText() != null) {
+                                explanationText = question.getExplanationText();
+                            } else{
+                                explanationText = "Sajnos nincs megjelenítendő magyarázat ehhez a kérdéshez";
+                            }
                             questionDocId = randomDoc.getId();
                             displayQuestion(question);
                         } else {

@@ -1,5 +1,6 @@
 package com.szte.tudastenger.activities;
 
+import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -96,6 +97,11 @@ public class DuelActivity extends DrawerBaseActivity{
     private TextView questionNumberTextView;
     private Duel actualDuel; //ha a kihívott játszik, amúgy null
     private String result;
+    private LinearLayout navigationButtonsLayout;
+    private String explanationText;
+    private Button nextQuestionButton;
+    private Button showExplanationButton;
+    private boolean isLastQuestion;
 
 
 
@@ -138,7 +144,11 @@ public class DuelActivity extends DrawerBaseActivity{
 
         configureDuelButton = findViewById(R.id.configureDuelButton);
         backToFriendsButton = findViewById(R.id.backToFriendsActivityButton);
+        nextQuestionButton = findViewById(R.id.nextQuestionButton);
+        showExplanationButton = findViewById(R.id.showExplanationButton);
+
         buttonsLinearLayout = findViewById(R.id.buttonsLinearLayout);
+        navigationButtonsLayout = findViewById(R.id.navigationButtonsLayout);
 
         challengerUserResults = new ArrayList<>();
         challengedUserResults = new ArrayList<>();
@@ -157,8 +167,6 @@ public class DuelActivity extends DrawerBaseActivity{
                 loadDuelData();
             }
         });
-
-
 
         configureDuelButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -338,6 +346,9 @@ public class DuelActivity extends DrawerBaseActivity{
     private void startDuel() {
         actualQuestionNumber++;
         questionNumberTextView.setText(actualQuestionNumber + "/" + questionsList.size());
+        if(actualQuestionNumber == questionIdsList.size()){
+            isLastQuestion = true;
+        }
         displayQuestion(questionsList.get(actualQuestionNumber - 1));
     }
 
@@ -352,6 +363,12 @@ public class DuelActivity extends DrawerBaseActivity{
         }
 
         questionTextView.setText(question.getQuestionText());
+
+        if(question.getExplanationText() != null) {
+            explanationText = question.getExplanationText();
+        } else{
+            explanationText = "Sajnos nincs megjelenítendő magyarázat ehhez a kérdéshez";
+        }
 
         //Ha van kép, megjelenítjük
         if (question.getImage() != null && !question.getImage().isEmpty()) {
@@ -382,6 +399,9 @@ public class DuelActivity extends DrawerBaseActivity{
             TextView answerTextView = answerCardView.findViewById(R.id.answerTextView);
             answerTextView.setText(answer);
 
+            CardView cardView = answerCardView.findViewById(R.id.cardView);
+            cardView.setCardBackgroundColor(getResources().getColor(R.color.lightbrowne));
+
             final int correctAnswerIndex = question.getCorrectAnswerIndex();
             final int clickedIndex = i;
 
@@ -399,19 +419,47 @@ public class DuelActivity extends DrawerBaseActivity{
                         } else{
                             challengedUserResults.add(true);
                         }
-                        popUpResult();
                     } else {
                         if(currentUser != null && currentUser.getId().equals(challengerUserId)) {
                             challengerUserResults.add(false);
                         } else{
                             challengedUserResults.add(false);
                         }
-                        popUpResult();
+                    }
+
+                    if (isCorrect) {
+                        cardView.setCardBackgroundColor(getResources().getColor(R.color.correct_green));
+                    } else {
+                        cardView.setCardBackgroundColor(getResources().getColor(R.color.incorrect_red));
+
+                        View correctAnswerView = answersLayout.getChildAt(correctAnswerIndex);
+                        CardView correctCardView = correctAnswerView.findViewById(R.id.cardView);
+                        correctCardView.setCardBackgroundColor(getResources().getColor(R.color.correct_green));
+                    }
+
+                    navigationButtonsLayout.setVisibility(View.VISIBLE);
+                    if(isLastQuestion){
+                        nextQuestionButton.setText("Befejezés");
                     }
                 } else {
                     //lekezelni, hogyha nem jött fel az új ablak és már nem kattinthat újat
                 }
             });
+
+            nextQuestionButton.setOnClickListener(v -> {
+                navigationButtonsLayout.setVisibility(View.GONE);
+                isSelectedAnswer = false;
+                if(actualQuestionNumber == questionsList.size()){
+                    finishDuel();
+                } else {
+                    startDuel();
+                }
+            });
+
+            showExplanationButton.setOnClickListener(v -> {
+                popUpExplanation();
+            });
+
             answersLayout.addView(answerCardView);
         }
     }
@@ -430,25 +478,8 @@ public class DuelActivity extends DrawerBaseActivity{
         popupWindow.setOutsideTouchable(false);
 
         TextView resultTextView = popupView.findViewById(R.id.resultTextView);
-        TextView userAnswerTextView = popupView.findViewById(R.id.userAnswerTextView);
-        TextView correctAnswerTextView = popupView.findViewById(R.id.correctAnswerTextView);
-        Button nextQuestionButton = popupView.findViewById(R.id.nextQuestionButton);
-        LinearLayout buttonsLinearLayout = popupView.findViewById(R.id.buttonsLinearLayout);
-        buttonsLinearLayout.setVisibility(View.GONE);
 
-        if(actualQuestionNumber != questionIdsList.size()) {
-            if (isCorrect) {
-                resultTextView.setText("Helyes választ adtál!");
-                userAnswerTextView.setVisibility(View.GONE);
-                correctAnswerTextView.setVisibility(View.GONE);
-            } else {
-                resultTextView.setText("Hibás választ adtál");
-                userAnswerTextView.setVisibility(View.VISIBLE);
-                correctAnswerTextView.setVisibility(View.VISIBLE);
-                userAnswerTextView.setText("Válaszod:\n" + userAnswer);
-                correctAnswerTextView.setText("Helyes válasz:\n" + correctAnswer);
-            }
-        } else{
+        if(actualQuestionNumber == questionIdsList.size()) {
             if(currentUser.getId().equals(challengerUserId)) {
                 int challengerUserCorrectAnswerNumber = 0;
                 for (int i = 0; i < challengerUserResults.size(); i++) {
@@ -485,28 +516,17 @@ public class DuelActivity extends DrawerBaseActivity{
                                 }
                         );
             }
-            userAnswerTextView.setVisibility(View.GONE);
-            correctAnswerTextView.setVisibility(View.GONE);
-            nextQuestionButton.setText("Befejezés");
         }
+
+        Button finishDuelButton  = popupView.findViewById(R.id.finishDuelButton);
+
+        finishDuelButton.setOnClickListener(v -> {
+            Intent intent = new Intent(DuelActivity.this, DuelListingActivity.class);
+            startActivity(intent);
+        });
 
         popupWindow.showAtLocation(findViewById(android.R.id.content), Gravity.CENTER, 0, 0);
         dimBehind(popupWindow);
-
-        nextQuestionButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                popupWindow.dismiss();
-                isSelectedAnswer = false;
-                if(actualQuestionNumber == questionsList.size()){
-                    finishDuel();
-                    Intent intent = new Intent(DuelActivity.this, DuelListingActivity.class);
-                    startActivity(intent);
-                } else {
-                    startDuel();
-                }
-            }
-        });
     }
 
     private void finishDuel() {
@@ -531,7 +551,38 @@ public class DuelActivity extends DrawerBaseActivity{
                             "finished", true
                     );
         }
+        popUpResult();
     }
+
+    public void popUpExplanation() {
+        LayoutInflater inflater = (LayoutInflater)
+                getSystemService(LAYOUT_INFLATER_SERVICE);
+        View popupView = inflater.inflate(R.layout.popup_correct_answer_explanation, null);
+
+        int width = LinearLayout.LayoutParams.WRAP_CONTENT;
+        int height = LinearLayout.LayoutParams.WRAP_CONTENT;
+        final PopupWindow popupWindow = new PopupWindow(popupView, width, height, false);
+
+        popupWindow.setTouchable(true);
+        popupWindow.setFocusable(false);
+        popupWindow.setOutsideTouchable(false);
+
+        TextView explanationTextView = popupView.findViewById(R.id.explanationTextView);
+        Button closeButton = popupView.findViewById(R.id.closeButton);
+
+        explanationTextView.setText(explanationText);
+
+        popupWindow.showAtLocation(findViewById(android.R.id.content), Gravity.CENTER, 0, 0);
+        dimBehind(popupWindow);
+
+        closeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                popupWindow.dismiss();
+            }
+        });
+    }
+
 
     public static void dimBehind(PopupWindow popupWindow) {
         View container = popupWindow.getContentView().getRootView();

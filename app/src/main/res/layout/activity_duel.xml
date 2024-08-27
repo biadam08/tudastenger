@@ -91,6 +91,36 @@
                 android:orientation="vertical"
                 android:layout_marginBottom="15dp"/>
         </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/navigationButtonsLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_gravity="center_horizontal"
+            android:visibility="gone">
+
+            <Button
+                android:id="@+id/showExplanationButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="6dp"
+                android:background="@drawable/custom_shape_rectangle_button"
+                android:text="Magyarázat"
+                android:drawableLeft="@drawable/ic_eye"
+                android:textSize="18sp" />
+            <Button
+                android:id="@+id/nextQuestionButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="6dp"
+                android:background="@drawable/custom_shape_rectangle_button"
+                android:text="Következő"
+                android:drawableLeft="@drawable/ic_next"
+                android:textSize="18sp" />
+
+        </LinearLayout>
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

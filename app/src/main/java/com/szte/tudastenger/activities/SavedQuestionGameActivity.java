@@ -2,6 +2,7 @@ package com.szte.tudastenger.activities;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -69,9 +70,11 @@ public class SavedQuestionGameActivity extends DrawerBaseActivity {
     private String userAnswer;
     private String correctAnswer;
     private boolean isCorrect = false; // helyes választ adott-e a felhasználó
+    private LinearLayout navigationButtonsLayout;
 
-
-
+    private Button showExplanationButton;
+    private Button backButton;
+    private String explanationText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,6 +106,10 @@ public class SavedQuestionGameActivity extends DrawerBaseActivity {
         questionTextView = findViewById(R.id.questionTextView);
         saveQuestionButton = findViewById(R.id.saveQuestionButton);
         questionImageView = findViewById(R.id.questionImage);
+
+        navigationButtonsLayout = findViewById(R.id.navigationButtonsLayout);
+        showExplanationButton = findViewById(R.id.showExplanationButton);
+        backButton = findViewById(R.id.backButton);
 
         mUsers.whereEqualTo("email", user.getEmail()).get().addOnSuccessListener(queryDocumentSnapshots -> {
             for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
@@ -153,6 +160,12 @@ public class SavedQuestionGameActivity extends DrawerBaseActivity {
 
         questionTextView.setText(question.getQuestionText());
 
+        if(question.getExplanationText() != null) {
+            explanationText = question.getExplanationText();
+        } else{
+            explanationText = "Sajnos nincs megjelenítendő magyarázat ehhez a kérdéshez";
+        }
+
         //Kérdés elmentése a Mentés gombbal
         saveQuestionButton.setOnClickListener(v -> {
             saveQuestion();
@@ -188,26 +201,42 @@ public class SavedQuestionGameActivity extends DrawerBaseActivity {
             TextView answerTextView = answerCardView.findViewById(R.id.answerTextView);
             answerTextView.setText(answer);
 
+            CardView cardView = answerCardView.findViewById(R.id.cardView);
+            cardView.setCardBackgroundColor(getResources().getColor(R.color.lightbrowne));
+
             final int correctAnswerIndex = question.getCorrectAnswerIndex();
             final int clickedIndex = i;
+            isCorrect = clickedIndex == correctAnswerIndex;
 
             answerCardView.setOnClickListener(v -> {
                 if(!isSelectedAnswer) {
                     isSelectedAnswer = true;
                     userAnswer = question.getAnswers().get(clickedIndex);
                     correctAnswer = question.getAnswers().get(correctAnswerIndex);
-                    isCorrect = false;
+                    isCorrect = clickedIndex == correctAnswerIndex;
 
-                    if (clickedIndex == correctAnswerIndex) {
-                        isCorrect = true;
-                        popUpResult();
+                    if (isCorrect) {
+                        cardView.setCardBackgroundColor(getResources().getColor(R.color.correct_green));
                     } else {
-                        popUpResult();
+                        cardView.setCardBackgroundColor(getResources().getColor(R.color.incorrect_red));
+
+                        View correctAnswerView = answersLayout.getChildAt(correctAnswerIndex);
+                        CardView correctCardView = correctAnswerView.findViewById(R.id.cardView);
+                        correctCardView.setCardBackgroundColor(getResources().getColor(R.color.correct_green));
                     }
-                } else {
-                    //lekezelni, hogyha nem jött fel az új ablak és már nem kattinthat újat
+
+                    navigationButtonsLayout.setVisibility(View.VISIBLE);
                 }
             });
+
+            backButton.setOnClickListener(v -> {
+                startActivity(new Intent(SavedQuestionGameActivity.this, SavedQuestionsActivity.class));
+            });
+
+            showExplanationButton.setOnClickListener(v -> {
+                popUpExplanation();
+            });
+
             answersLayout.addView(answerCardView);
         }
     }
@@ -268,10 +297,10 @@ public class SavedQuestionGameActivity extends DrawerBaseActivity {
         }
     }
 
-    public void popUpResult() {
+    public void popUpExplanation() {
         LayoutInflater inflater = (LayoutInflater)
                 getSystemService(LAYOUT_INFLATER_SERVICE);
-        View popupView = inflater.inflate(R.layout.popup_quiz_result, null);
+        View popupView = inflater.inflate(R.layout.popup_correct_answer_explanation, null);
 
         int width = LinearLayout.LayoutParams.WRAP_CONTENT;
         int height = LinearLayout.LayoutParams.WRAP_CONTENT;
@@ -281,66 +310,20 @@ public class SavedQuestionGameActivity extends DrawerBaseActivity {
         popupWindow.setFocusable(false);
         popupWindow.setOutsideTouchable(false);
 
-        TextView resultTextView = popupView.findViewById(R.id.resultTextView);
-        TextView userAnswerTextView = popupView.findViewById(R.id.userAnswerTextView);
-        TextView correctAnswerTextView = popupView.findViewById(R.id.correctAnswerTextView);
+        TextView explanationTextView = popupView.findViewById(R.id.explanationTextView);
+        Button closeButton = popupView.findViewById(R.id.closeButton);
 
-        if(isCorrect){
-            resultTextView.setText("Helyes választ adtál!");
-            userAnswerTextView.setVisibility(View.GONE);
-            correctAnswerTextView.setVisibility(View.GONE);
-        } else{
-            resultTextView.setText("Hibás választ adtál");
-            userAnswerTextView.setVisibility(View.VISIBLE);
-            correctAnswerTextView.setVisibility(View.VISIBLE);
-            userAnswerTextView.setText("Válaszod:\n" + userAnswer);
-            correctAnswerTextView.setText("Helyes válasz:\n" + correctAnswer);
-        }
+        explanationTextView.setText(explanationText);
+
         popupWindow.showAtLocation(findViewById(android.R.id.content), Gravity.CENTER, 0, 0);
         dimBehind(popupWindow);
 
-        ImageButton homepageButton = popupView.findViewById(R.id.homepageButton);
-        ImageButton bookmarkButton = popupView.findViewById(R.id.bookmarkButton);
-        Button savedQuestionsButton = popupView.findViewById(R.id.nextQuestionButton);
-
-        savedQuestionsButton.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_bookmarks,0,0,0);
-        savedQuestionsButton.setText("Mentett kérdések");
-
-        if(isQuestionSavedNow){
-            bookmarkButton.setImageResource(R.drawable.ic_remove_bookmark);
-            bookmarkButton.setTag("bookmarked");
-        } else{
-            bookmarkButton.setTag("not_bookmarked");
-        }
-
-        savedQuestionsButton.setOnClickListener(new View.OnClickListener() {
+        closeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(SavedQuestionGameActivity.this, SavedQuestionsActivity.class));
+                popupWindow.dismiss();
             }
         });
-
-        homepageButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startActivity(new Intent(SavedQuestionGameActivity.this, MainActivity.class));
-            }
-        });
-
-        bookmarkButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                saveQuestion();
-                if(bookmarkButton.getTag().equals("bookmarked")) {
-                    bookmarkButton.setImageResource(R.drawable.ic_add_bookmark);
-                    bookmarkButton.setTag("not_bookmarked");
-                } else {
-                    bookmarkButton.setImageResource(R.drawable.ic_remove_bookmark);
-                    bookmarkButton.setTag("bookmarked");
-                }
-            }
-        });
-
     }
 
     public static void dimBehind(PopupWindow popupWindow) {
