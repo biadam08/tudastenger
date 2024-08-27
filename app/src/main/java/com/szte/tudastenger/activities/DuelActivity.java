@@ -353,6 +353,8 @@ public class DuelActivity extends DrawerBaseActivity{
     }
 
     private void displayQuestion(Question question) {
+        navigationButtonsLayout.setVisibility(View.GONE);
+
         LinearLayout answersLayout = findViewById(R.id.answersLayout);
         answersLayout.removeAllViews();
 
@@ -447,7 +449,6 @@ public class DuelActivity extends DrawerBaseActivity{
             });
 
             nextQuestionButton.setOnClickListener(v -> {
-                navigationButtonsLayout.setVisibility(View.GONE);
                 isSelectedAnswer = false;
                 if(actualQuestionNumber == questionsList.size()){
                     finishDuel();

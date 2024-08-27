@@ -213,6 +213,8 @@ public class QuizGameActivity extends DrawerBaseActivity {
     }
 
     private void displayQuestion(Question question) {
+        buttonsLayout.setVisibility(View.GONE);
+
         LinearLayout answersLayout = findViewById(R.id.answersLayout);
         answersLayout.removeAllViews();
 
@@ -306,7 +308,6 @@ public class QuizGameActivity extends DrawerBaseActivity {
             nextQuestionButton.setOnClickListener(v -> {
                 isSelectedAnswer = false; // új kérdésnél még nem válaszolt
                 savedNow = false;
-                buttonsLayout.setVisibility(View.GONE);
                 queryRandomQuestion();
             });
 
