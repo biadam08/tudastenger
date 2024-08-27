@@ -134,9 +134,9 @@ public class QuizGameActivity extends DrawerBaseActivity {
     }
 
     private void queryRandomQuestion() {
-        if(savedNow){
+        if (savedNow) {
             saveQuestionButton.setText("Eltávolítás");
-        } else{
+        } else {
             saveQuestionButton.setText("Mentés");
         }
 
@@ -153,49 +153,60 @@ public class QuizGameActivity extends DrawerBaseActivity {
                         answeredQuestionIds.add(answeredQuestion.getString("questionId"));
                     }
 
+                    // Összes kérdés lekérdezése
                     Query query = mQuestions;
-                    if (!answeredQuestionIds.isEmpty()) {
-                        query = query.whereNotIn("id", answeredQuestionIds);
-                    }
+
+                    // Ha van kategória kiválasztva, akkor csak azon belül szűrünk
                     if (!isMixed) {
-                        query = query.whereEqualTo("category", categoryName);  // Firestore index létrehozás volt szükséges hozzá
+                        query = query.whereEqualTo("category", categoryName);
                     }
 
-                    query
-                            .get()
-                            .addOnSuccessListener(questions -> {
-                                List<DocumentSnapshot> documents = questions.getDocuments();
-                                if (documents.size() > 0) {
-                                    // Véletlenszerű dokumentum kiválasztása
-                                    DocumentSnapshot randomDoc = documents.get(new Random().nextInt(documents.size()));
-                                    Question question = randomDoc.toObject(Question.class);
-                                    explanationText = question.getExplanationText();
-                                    questionDocId = randomDoc.getId();
-                                    displayQuestion(question);
-                                } else{
-                                    questionImageView = findViewById(R.id.questionImage);
-                                    LinearLayout answersLayout = findViewById(R.id.answersLayout);
-                                    questionImageView.setVisibility(View.GONE);
-                                    answersLayout.setVisibility(View.GONE);
+                    query.get().addOnSuccessListener(questions -> {
+                        List<DocumentSnapshot> documents = questions.getDocuments();
+                        List<DocumentSnapshot> filteredDocuments = new ArrayList<>();
 
-                                    if(categoryName != null) {
-                                        questionTextView.setText("Sajnos nincs több kérdés ebben a kategóriában!");
-                                    } else{
-                                        questionTextView.setText("Sajnos nincs több megválaszolatlan kérdés!");
-                                    }
-                                    saveQuestionButton.setClickable(false);
-                                    helpButton.setClickable(false);
+                        // Szűrés a megválaszolt kérdések alapján
+                        for (DocumentSnapshot document : documents) {
+                            if (!answeredQuestionIds.contains(document.getId())) {
+                                filteredDocuments.add(document);
+                            }
+                        }
 
-                                    Toast.makeText(getApplicationContext(), "Nincs több kérdés ebben a kategóriában!", Toast.LENGTH_LONG).show();
-                                }
-                            })
-                            .addOnFailureListener(e -> {
-                                Toast.makeText(getApplicationContext(), "Nincs több kérdés ebben a kategóriában!", Toast.LENGTH_LONG).show();
-                            });
+                        // Ha van még megválaszolatlan kérdés
+                        if (!filteredDocuments.isEmpty()) {
+                            DocumentSnapshot randomDoc = filteredDocuments.get(new Random().nextInt(filteredDocuments.size()));
+                            Question question = randomDoc.toObject(Question.class);
+                            explanationText = question.getExplanationText();
+                            questionDocId = randomDoc.getId();
+                            displayQuestion(question);
+                        } else {
+                            handleNoMoreQuestions();
+                        }
+                    }).addOnFailureListener(e -> {
+                        Toast.makeText(getApplicationContext(), "Kérdés lekérése sikertelen!", Toast.LENGTH_LONG).show();
+                    });
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(getApplicationContext(), "Megválaszolt kérdések lekérése sikertelen!", Toast.LENGTH_LONG).show();
                 });
     }
 
+    private void handleNoMoreQuestions() {
+        questionImageView = findViewById(R.id.questionImage);
+        LinearLayout answersLayout = findViewById(R.id.answersLayout);
+        questionImageView.setVisibility(View.GONE);
+        answersLayout.setVisibility(View.GONE);
 
+        if (categoryName != null) {
+            questionTextView.setText("Sajnos nincs több kérdés ebben a kategóriában!");
+        } else {
+            questionTextView.setText("Sajnos nincs több megválaszolatlan kérdés!");
+        }
+        saveQuestionButton.setClickable(false);
+        helpButton.setClickable(false);
+
+        Toast.makeText(getApplicationContext(), "Nincs több kérdés ebben a kategóriában!", Toast.LENGTH_LONG).show();
+    }
 
     private void displayQuestion(Question question) {
         LinearLayout answersLayout = findViewById(R.id.answersLayout);
