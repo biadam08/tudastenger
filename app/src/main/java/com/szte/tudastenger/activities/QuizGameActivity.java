@@ -200,6 +200,7 @@ public class QuizGameActivity extends DrawerBaseActivity {
         LinearLayout answersLayout = findViewById(R.id.answersLayout);
         questionImageView.setVisibility(View.GONE);
         answersLayout.setVisibility(View.GONE);
+        buttonsLayout.setVisibility(View.GONE);
 
         if (categoryName != null) {
             questionTextView.setText("Sajnos nincs több kérdés ebben a kategóriában!");
