@@ -101,7 +101,6 @@ public class HistoryActivity extends DrawerBaseActivity {
 
     private void queryData(String sortCategory) {
         mRecyclerView = findViewById(R.id.recyclerView);
-
         mRecyclerView.setLayoutManager(new GridLayoutManager(this, 1));
 
         mAnsweredQuestionsData = new ArrayList<>();
@@ -112,7 +111,7 @@ public class HistoryActivity extends DrawerBaseActivity {
 
         mAnsweredQuestions
                 .whereEqualTo("userId", currentUser.getId())
-                .orderBy("date", Query.Direction.ASCENDING) // firestore összetett index kellett hozzá
+                .orderBy("date", Query.Direction.DESCENDING) // firestore összetett index kellett hozzá
                 .get()
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
@@ -129,17 +128,22 @@ public class HistoryActivity extends DrawerBaseActivity {
                                                 boolean correct = document.getBoolean("correct");
                                                 Timestamp timestamp = document.getTimestamp("date");
                                                 String category = questionDocument.getString("category");
-                                                if(sortCategory.equals("Összes kategória") || sortCategory.equals(category)) {
+                                                if (sortCategory.equals("Összes kategória") || sortCategory.equals(category)) {
                                                     AnsweredQuestion answeredQuestion = new AnsweredQuestion(questionId, category, currentUser.getId(), timestamp, answer, correct);
                                                     mAnsweredQuestionsData.add(answeredQuestion);
                                                 }
                                             }
-                                        }
-                                        mAdapter.notifyDataSetChanged();
-                                        if(mAnsweredQuestionsData.isEmpty()){
-                                            noSolvedQuestionTextView.setVisibility(View.VISIBLE);
-                                        } else{
-                                            noSolvedQuestionTextView.setVisibility(View.GONE);
+
+                                            // A legújabb kitöltés legyen legfelül
+                                            mAnsweredQuestionsData.sort((q1, q2) -> q2.getDate().compareTo(q1.getDate()));
+
+                                            mAdapter.notifyDataSetChanged();
+
+                                            if (mAnsweredQuestionsData.isEmpty()) {
+                                                noSolvedQuestionTextView.setVisibility(View.VISIBLE);
+                                            } else {
+                                                noSolvedQuestionTextView.setVisibility(View.GONE);
+                                            }
                                         }
                                     });
                         }
@@ -147,7 +151,5 @@ public class HistoryActivity extends DrawerBaseActivity {
                         Log.d("Error", task.getException().getMessage());
                     }
                 });
-
-
     }
 }
