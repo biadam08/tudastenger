@@ -2,6 +2,8 @@ package com.szte.tudastenger.activities;
 
 import androidx.annotation.NonNull;
 
+import android.Manifest;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -37,6 +39,8 @@ import com.google.firebase.storage.UploadTask;
 import com.szte.tudastenger.R;
 import com.szte.tudastenger.databinding.ActivityQuestionUploadBinding;
 import com.szte.tudastenger.models.Question;
+import com.theartofdev.edmodo.cropper.CropImage;
+import com.theartofdev.edmodo.cropper.CropImageView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -119,7 +123,8 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
         uploadImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                openImageChooser();
+                Intent pickIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                startActivityForResult(pickIntent, CropImage.PICK_IMAGE_CHOOSER_REQUEST_CODE);
             }
         });
 
@@ -132,25 +137,6 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
         });
 
     }
-
-    private void openImageChooser() {
-        Intent intent = new Intent();
-        intent.setType("image/*");
-        intent.setAction(Intent.ACTION_GET_CONTENT);
-        startActivityForResult(Intent.createChooser(intent, "Válassz képet"), PICK_IMAGE_REQUEST);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
-            imageUri = data.getData();
-            questionImagePreview.setImageURI(imageUri);
-            questionImagePreview.setVisibility(View.VISIBLE);
-        }
-    }
-
     private boolean validateQuestionInput() {
         questionText = ((EditText) findViewById(R.id.questionName)).getText().toString();
         category = ((Spinner) findViewById(R.id.questionCategory)).getSelectedItem().toString();
@@ -198,43 +184,73 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
     public void uploadQuestion(View view) {
         if (validateQuestionInput()) {
             if (imageUri != null) {
-                uploadImage();
+                uploadImage(imageUri);
             } else {
                 saveQuestion(null);
             }
         }
     }
 
-    private void uploadImage() {
-        ProgressDialog progressDialog = new ProgressDialog(this);
-        progressDialog.setTitle("Feltöltés...");
-        progressDialog.show();
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == CropImage.PICK_IMAGE_CHOOSER_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+            Uri imageUri = CropImage.getPickImageResultUri(this, data);
+            if(CropImage.isReadExternalStoragePermissionsRequired(this, imageUri)){
+                requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},0);
+            } else {
+                startCrop(imageUri);
+            }
+        }
 
-        StorageReference ref = storageReference.child("images/" + UUID.randomUUID().toString());
+        if(requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
+            CropImage.ActivityResult result = CropImage.getActivityResult(data);
+            if(resultCode == RESULT_OK) {
+                imageUri = result.getUri();
+                questionImagePreview.setImageURI(imageUri);
+                questionImagePreview.setVisibility(View.VISIBLE);
+            }
+        }
+    }
 
-        ref.putFile(imageUri)
-                .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                    @Override
-                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                        progressDialog.dismiss();
-                        String fileName = taskSnapshot.getMetadata().getReference().getName();
-                        saveQuestion(fileName);  // Kérdés mentése a feltöltött kép nevével
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        progressDialog.dismiss();
-                        Toast.makeText(QuestionUploadActivity.this, "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                })
-                .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
-                    @Override
-                    public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                        double progress = (100.0 * taskSnapshot.getBytesTransferred() / taskSnapshot.getTotalByteCount());
-                        progressDialog.setMessage("Feltöltve: " + (int) progress + "%");
-                    }
-                });
+    private void startCrop(Uri imageUri) {
+        CropImage.activity(imageUri)
+                .setGuidelines(CropImageView.Guidelines.ON)
+                .setMultiTouchEnabled(true)
+                .start(this);
+    }
+    private void uploadImage(Uri imageUri) {
+        if(imageUri != null) {
+            ProgressDialog progressDialog = new ProgressDialog(this);
+            progressDialog.setTitle("Feltöltés...");
+            progressDialog.show();
+
+            StorageReference ref = storageReference.child("images/" + UUID.randomUUID().toString());
+
+            ref.putFile(imageUri)
+                    .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                            progressDialog.dismiss();
+                            String fileName = taskSnapshot.getMetadata().getReference().getName();
+                            saveQuestion(fileName);  // Kérdés mentése a feltöltött kép nevével
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            progressDialog.dismiss();
+                            Toast.makeText(QuestionUploadActivity.this, "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    })
+                    .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                            double progress = (100.0 * taskSnapshot.getBytesTransferred() / taskSnapshot.getTotalByteCount());
+                            progressDialog.setMessage("Feltöltve: " + (int) progress + "%");
+                        }
+                    });
+        }
     }
 
     private void saveQuestion(String fileName) {
