@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -96,14 +96,15 @@
             android:id="@+id/navigationButtonsLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
+            android:layout_marginBottom="30dp"
+            android:orientation="vertical"
             android:gravity="center"
             android:layout_gravity="center_horizontal"
-            android:visibility="gone">
+            android:visibility="visible">
 
             <Button
                 android:id="@+id/showExplanationButton"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="6dp"
                 android:background="@drawable/custom_shape_rectangle_button"
@@ -112,7 +113,7 @@
                 android:textSize="18sp" />
             <Button
                 android:id="@+id/nextQuestionButton"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="6dp"
                 android:background="@drawable/custom_shape_rectangle_button"
@@ -122,5 +123,4 @@
 
         </LinearLayout>
     </LinearLayout>
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.core.widget.NestedScrollView>
