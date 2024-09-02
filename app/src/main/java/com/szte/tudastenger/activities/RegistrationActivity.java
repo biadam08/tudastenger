@@ -10,6 +10,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
@@ -81,25 +82,34 @@ public class RegistrationActivity extends DrawerBaseActivity {
         mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
             @Override
             public void onComplete(@NonNull Task<AuthResult> task) {
-                if(task.isSuccessful()){
+                if (task.isSuccessful()) {
                     String uid = task.getResult().getUser().getUid();
-                    User user = new User(uid, username, email);
+                    FirebaseMessaging.getInstance().getToken()
+                            .addOnCompleteListener(new OnCompleteListener<String>() {
+                                @Override
+                                public void onComplete(@NonNull Task<String> task) {
+                                    if (!task.isSuccessful()) {
+                                        Toast.makeText(RegistrationActivity.this, "FCM token lekérése sikertelen!", Toast.LENGTH_SHORT).show();
+                                        return;
+                                    }
 
-                    mUsers.document(uid).set(user)
-                            .addOnSuccessListener(documentReference -> {
-                                Intent intent = new Intent(RegistrationActivity.this, LoginActivity.class);
-                                startActivity(intent);
-                                Toast.makeText(RegistrationActivity.this, "Sikeres!", Toast.LENGTH_SHORT).show();
-                            })
-                            .addOnFailureListener(e -> {
-                                Toast.makeText(RegistrationActivity.this, "Sikertelen1!", Toast.LENGTH_SHORT).show();
+                                    String fcmToken = task.getResult();
+                                    User user = new User(uid, username, email, fcmToken);
+
+                                    mUsers.document(uid).set(user)
+                                            .addOnSuccessListener(documentReference -> {
+                                                Intent intent = new Intent(RegistrationActivity.this, LoginActivity.class);
+                                                startActivity(intent);
+                                            })
+                                            .addOnFailureListener(e -> {
+                                                Toast.makeText(RegistrationActivity.this, "Sikertelen regisztráció!", Toast.LENGTH_SHORT).show();
+                                            });
+                                }
                             });
-                } else{
-                    Toast.makeText(RegistrationActivity.this, "Sikertelen2!", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(RegistrationActivity.this, "Regisztráció sikertelen!", Toast.LENGTH_SHORT).show();
                 }
             }
         });
-
     }
-
 }

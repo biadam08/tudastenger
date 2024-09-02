@@ -6,6 +6,7 @@ public class User {
     private String username;
     private String email;
 
+    private String fcmToken;
     private String profilePicture;
 
     private String role;
@@ -15,13 +16,22 @@ public class User {
     public User() {
     }
 
-    public User(String id, String username, String email) {
+    public User(String id, String username, String email, String fcmToken) {
         this.id = id;
         this.username = username;
         this.email = email;
+        this.fcmToken = fcmToken;
         this.profilePicture = "";
         this.gold = 100;
         this.role = "user";
+    }
+
+    public String getFcmToken() {
+        return fcmToken;
+    }
+
+    public void setFcmToken(String fcmToken) {
+        this.fcmToken = fcmToken;
     }
 
     public String getId() {
