@@ -30,6 +30,7 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.szte.tudastenger.EditProfileActivity;
 import com.szte.tudastenger.R;
 import com.szte.tudastenger.adapters.CategoryProfileAdapter;
 import com.szte.tudastenger.databinding.ActivityProfileBinding;
@@ -70,7 +71,7 @@ public class ProfileActivity extends DrawerBaseActivity {
     private LinearLayout bookmarkButton;
     private LinearLayout friendsButton;
     private LinearLayout leaderBoardButton;
-
+    private ImageView settingsImageView;
 
 
     @Override
@@ -110,9 +111,18 @@ public class ProfileActivity extends DrawerBaseActivity {
     }
 
     private void initializeButtons() {
+        settingsImageView = findViewById(R.id.settingsImageView);
         bookmarkButton = findViewById(R.id.bookmarkLinearLayout);
         friendsButton = findViewById(R.id.friendsLinearLayout);
         leaderBoardButton = findViewById(R.id.leaderboardLinearLayout);
+
+        settingsImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(ProfileActivity.this, EditProfileActivity.class);
+                startActivity(intent);
+            }
+        });
 
         bookmarkButton.setOnClickListener(new View.OnClickListener() {
             @Override

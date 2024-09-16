@@ -9,22 +9,39 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:gravity="center">
+        android:orientation="vertical">
 
         <LinearLayout
             android:id="@+id/linearLayout2"
             android:layout_width="match_parent"
-            android:layout_height="220dp"
-            android:background="@drawable/tudastenger_bg"
+            android:layout_height="240dp"
+            android:background="@drawable/profile"
             android:gravity="center"
             android:orientation="vertical">
 
-            <de.hdodenhof.circleimageview.CircleImageView
-                android:id="@+id/profilePicture"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:layout_marginTop="8dp" />
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <de.hdodenhof.circleimageview.CircleImageView
+                    android:id="@+id/profilePicture"
+                    android:layout_width="120dp"
+                    android:layout_height="120dp"
+                    android:layout_marginTop="8dp"
+                    app:civ_border_width="2dp"
+                    app:civ_border_color="#000000" />
+
+                <ImageView
+                    android:id="@+id/settingsIcon"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_gravity="top|end"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginEnd="4dp"
+                    android:background="@drawable/custom_shape_rounded_button"
+                    android:padding="8dp"
+                    app:srcCompat="@drawable/ic_settings" />
+            </FrameLayout>
 
             <TextView
                 android:id="@+id/userNameTextView"
@@ -44,7 +61,7 @@
             android:id="@+id/linearLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="-12dp"
+            android:layout_marginTop="-8dp"
             android:orientation="horizontal">
 
             <LinearLayout
@@ -61,9 +78,10 @@
 
                 <ImageView
                     android:id="@+id/imageView4"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
                     app:srcCompat="@drawable/ic_bookmarks"
+                    android:layout_gravity="center"
                     app:tint="@color/browne"/>
 
                 <TextView
@@ -75,7 +93,7 @@
             </LinearLayout>
 
             <LinearLayout
-                android:id="@+id/settingsLinearLayout"
+                android:id="@+id/friendsLinearLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="5dp"
@@ -88,9 +106,9 @@
 
                 <ImageView
                     android:id="@+id/imageView5"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
-                    app:srcCompat="@drawable/ic_settings"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    app:srcCompat="@drawable/ic_friends"
                     app:tint="@color/browne"/>
 
                 <TextView
@@ -98,7 +116,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    android:text="Beállítások" />
+                    android:text="Barátok" />
             </LinearLayout>
 
             <LinearLayout
@@ -115,8 +133,8 @@
 
                 <ImageView
                     android:id="@+id/imageView6"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
                     app:srcCompat="@drawable/ic_rank"
                     app:tint="@color/browne"/>
 
