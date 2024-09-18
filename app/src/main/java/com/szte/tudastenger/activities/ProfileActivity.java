@@ -30,7 +30,6 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
-import com.szte.tudastenger.EditProfileActivity;
 import com.szte.tudastenger.R;
 import com.szte.tudastenger.adapters.CategoryProfileAdapter;
 import com.szte.tudastenger.databinding.ActivityProfileBinding;
@@ -104,8 +103,7 @@ public class ProfileActivity extends DrawerBaseActivity {
 
                 initializeButtons();
                 displayCategories();
-                displayProfilePicture();
-                setProfilePicture();
+                displayProfilePicture();  // Csak a profilkép megjelenítése
             }
         });
     }
@@ -177,102 +175,6 @@ public class ProfileActivity extends DrawerBaseActivity {
 
             mAdapter.notifyDataSetChanged();
         });
-
-    }
-
-    private void setProfilePicture() {
-        profilePicture.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent pickIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                startActivityForResult(pickIntent, CropImage.PICK_IMAGE_CHOOSER_REQUEST_CODE);
-            }
-        });
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == CropImage.PICK_IMAGE_CHOOSER_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
-            Uri imageUri = CropImage.getPickImageResultUri(this, data);
-            if(CropImage.isReadExternalStoragePermissionsRequired(this, imageUri)){
-                uri = imageUri;
-                requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},0);
-            } else {
-                startCrop(imageUri);
-            }
-        }
-
-        if(requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
-            CropImage.ActivityResult result = CropImage.getActivityResult(data);
-            if(resultCode == RESULT_OK) {
-                uploadProfilePicture(result.getUri());
-            }
-        }
-    }
-
-    private void startCrop(Uri imageUri) {
-        CropImage.activity(imageUri)
-                .setGuidelines(CropImageView.Guidelines.ON)
-                .setMultiTouchEnabled(true)
-                .start(this);
-    }
-
-
-
-    private void uploadProfilePicture(Uri imageUri) {
-        if (imageUri != null) {
-
-            ProgressDialog progressDialog  = new ProgressDialog(this);
-            progressDialog.setTitle("Feltöltés...");
-            progressDialog.show();
-
-            String fileName = UUID.randomUUID().toString();
-            StorageReference ref = storageReference.child("profile-pictures/" + fileName);
-            Log.d("USERNAME PROFILE", imageUri.toString());
-
-            ref.putFile(imageUri)
-                    .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                        @Override public void onSuccess(UploadTask.TaskSnapshot taskSnapshot){
-                                progressDialog.dismiss();
-                                DocumentReference userDocRef = mUsers.document(user.getUid());
-                                userDocRef.update("profilePicture", fileName);
-                                profilePicture.setImageURI(imageUri);
-                            }
-                        })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e)
-                        {
-                            // Error, Image not uploaded
-                            progressDialog.dismiss();
-                            Toast
-                                    .makeText(ProfileActivity.this,
-                                            "Hiba a feltöltés során",
-                                            Toast.LENGTH_SHORT)
-                                    .show();
-                        }
-                    })
-                    .addOnProgressListener(
-                            new OnProgressListener<UploadTask.TaskSnapshot>() {
-
-                                // Progress Listener for loading
-                                // percentage on the dialog box
-                                @Override
-                                public void onProgress(
-                                        UploadTask.TaskSnapshot taskSnapshot)
-                                {
-                                    double progress
-                                            = (100.0
-                                            * taskSnapshot.getBytesTransferred()
-                                            / taskSnapshot.getTotalByteCount());
-                                    progressDialog.setMessage(
-                                            "Feltöltve: "
-                                                    + (int)progress + "%");
-
-                                }
-                            });
-        }
     }
 
     private void displayProfilePicture() {
