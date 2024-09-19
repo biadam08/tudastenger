@@ -7,6 +7,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -26,8 +27,9 @@ public class LoginActivity extends DrawerBaseActivity {
     private NavigationView navigationView;
     private ActionBarDrawerToggle actionBarDrawerToggle;
 
-    private TextView regRedirectText;
+    private TextView forgotPasswordTextView;
 
+    private TextView regRedirectTextView;
     private EditText emailEditText;
 
     private EditText passwordEditText;
@@ -53,15 +55,26 @@ public class LoginActivity extends DrawerBaseActivity {
             finish();
         }
 
-        regRedirectText = findViewById(R.id.regRedirect);
+        regRedirectTextView = findViewById(R.id.regRedirectTextView);
         emailEditText = findViewById(R.id.emailEditText);
         passwordEditText = findViewById(R.id.passwordEditText);
+        forgotPasswordTextView = findViewById(R.id.forgotPasswordTextView);
 
-        regRedirectText.setOnClickListener(new View.OnClickListener() {
+        regRedirectTextView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(LoginActivity.this, RegistrationActivity.class);
                 startActivity(intent);
+                finish();
+            }
+        });
+
+        forgotPasswordTextView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(LoginActivity.this, ForgotPasswordActivity.class);
+                startActivity(intent);
+                finish();
             }
         });
     }
@@ -75,6 +88,7 @@ public class LoginActivity extends DrawerBaseActivity {
                 if(task.isSuccessful()){
                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                     startActivity(intent);
+                    finish();
                 } else{
                     Toast.makeText(LoginActivity.this, "Sikertelen belépés!", Toast.LENGTH_SHORT).show();
                 }

@@ -27,6 +27,9 @@
         android:theme="@style/Theme.Tudastenger"
         tools:targetApi="31">
         <activity
+            android:name=".activities.ForgotPasswordActivity"
+            android:exported="false" />
+        <activity
             android:name=".activities.EditProfileActivity"
             android:exported="false" />
         <activity

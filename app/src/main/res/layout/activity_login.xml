@@ -84,10 +84,20 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:id="@+id/regRedirect"
+                    android:id="@+id/forgotPasswordTextView"
+                    android:text="Elfelejtettem a jelszam"
+                    android:layout_gravity="center"
+                    android:textSize="18sp"
+                    />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/regRedirectTextView"
                     android:text="@string/not_a_user_yet"
                     android:layout_gravity="center"
                     android:textSize="18sp"
+                    android:layout_marginTop="12dp"
                     />
 
             </LinearLayout>

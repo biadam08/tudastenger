@@ -39,4 +39,6 @@
     <string name="new_password">Új jelsző</string>
     <string name="conf_new_password">Új jelsző megerősítése</string>
     <string name="change_password">Jelszó megváltoztatása</string>
+    <string name="back_to_login_activity">Vissza a bejelentkezéshez</string>
+    <string name="reset_password">Új jelszó beállítása</string>
 </resources>
