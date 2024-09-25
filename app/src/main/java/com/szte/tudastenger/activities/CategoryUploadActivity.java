@@ -35,11 +35,18 @@ public class CategoryUploadActivity extends DrawerBaseActivity {
         mCategories = mFirestore.collection("Categories");
 
         categoryNameEditText = findViewById(R.id.categoryName);
-
     }
 
     public void addNewCategory(View view) {
         String categoryName = categoryNameEditText.getText().toString();
+        
+        // Ellenőrzés, hogy a kategória név mező nem üres-e
+        if (categoryName.isEmpty()) {
+            categoryNameEditText.setError("A kategória neve nem lehet üres");
+            return;
+        }
+
+        // Új kategória hozzáadása Firestore-hoz
         Category category = new Category(categoryName);
         mCategories.add(category).addOnSuccessListener(documentReference -> {
             clearInputField();

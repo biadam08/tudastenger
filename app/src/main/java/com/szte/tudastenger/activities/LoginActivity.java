@@ -82,6 +82,26 @@ public class LoginActivity extends DrawerBaseActivity {
         String email = emailEditText.getText().toString();
         String password = passwordEditText.getText().toString();
 
+        // Ellenőrzés, hogy az email üres-e
+        if (email.isEmpty()) {
+            emailEditText.setError("Az email mező nem lehet üres");
+            return;
+        }
+
+        // Ellenőrzés, hogy az email formátum helyes-e
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            emailEditText.setError("Hibás email formátum");
+            return;
+        }
+
+        // Ellenőrzés, hogy a jelszó üres-e
+        if (password.isEmpty()) {
+            passwordEditText.setError("A jelszó mező nem lehet üres");
+            return;
+        }
+
+
+        // Bejelentkezés
         mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
             @Override
             public void onComplete(@NonNull Task<AuthResult> task) {

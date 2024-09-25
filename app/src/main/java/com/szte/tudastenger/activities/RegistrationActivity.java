@@ -75,10 +75,43 @@ public class RegistrationActivity extends DrawerBaseActivity {
         String password = passwordEditText.getText().toString();
         String passwordAgain = passwordAgainEditText.getText().toString();
 
-        if(!password.equals(passwordAgain)){
-            Toast.makeText(RegistrationActivity.this, "Nem egyezik a két jelszó!", Toast.LENGTH_SHORT).show();
+        // Ellenőrzés, hogy a felhasználónév mező nem üres-e
+        if (username.isEmpty()) {
+            usernameEditText.setError("A felhasználónév mező nem lehet üres");
+            return;
         }
 
+        // Ellenőrzés, hogy az email mező nem üres-e
+        if (email.isEmpty()) {
+            emailEditText.setError("Az email mező nem lehet üres");
+            return;
+        }
+
+        // Ellenőrzés, hogy az email formátum helyes-e
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            emailEditText.setError("Hibás email formátum");
+            return;
+        }
+
+        // Ellenőrzés, hogy a jelszó mező nem üres-e
+        if (password.isEmpty()) {
+            passwordEditText.setError("A jelszó mező nem lehet üres");
+            return;
+        }
+
+        // Ellenőrzés, hogy a megerősítő jelszó mező nem üres-e
+        if (passwordAgain.isEmpty()) {
+            passwordAgainEditText.setError("A megerősítő jelszó mező nem lehet üres");
+            return;
+        }
+
+        // Ellenőrzés, hogy a két jelszó megegyezik-e
+        if (!password.equals(passwordAgain)) {
+            passwordAgainEditText.setError("A két jelszó nem egyezik");
+            return;
+        }
+
+        // Firebase regisztráció
         mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
             @Override
             public void onComplete(@NonNull Task<AuthResult> task) {
