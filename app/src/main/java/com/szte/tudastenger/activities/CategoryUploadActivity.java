@@ -39,7 +39,7 @@ public class CategoryUploadActivity extends DrawerBaseActivity {
 
     public void addNewCategory(View view) {
         String categoryName = categoryNameEditText.getText().toString();
-        
+
         // Ellenőrzés, hogy a kategória név mező nem üres-e
         if (categoryName.isEmpty()) {
             categoryNameEditText.setError("A kategória neve nem lehet üres");
