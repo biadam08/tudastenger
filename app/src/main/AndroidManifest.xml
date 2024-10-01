@@ -30,9 +30,6 @@
             android:name=".activities.QuestionListActivity"
             android:exported="false" />
         <activity
-            android:name=".activities.EditQuestionActivity"
-            android:exported="false" />
-        <activity
             android:name=".activities.ForgotPasswordActivity"
             android:exported="false" />
         <activity

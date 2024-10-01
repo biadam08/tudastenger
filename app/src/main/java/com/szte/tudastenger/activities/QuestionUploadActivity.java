@@ -24,8 +24,10 @@ import android.widget.PopupWindow;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.DocumentReference;
@@ -60,7 +62,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 
-public class QuestionUploadActivity extends DrawerBaseActivity{
+public class QuestionUploadActivity extends DrawerBaseActivity {
     private static final String LOG_TAG = QuestionUploadActivity.class.getName();
 
     private ActivityQuestionUploadBinding activityQuestionUploadBinding;
@@ -82,11 +84,14 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
 
     private StorageReference storageReference;
     private EditText explanationEditText;
+    private TextView addQuestionTextView;
+    private Button addQuestionButton;
     private String explanationText;
     private String questionText;
     private String category;
     private ArrayList<String> answers;
     private int correctAnswerIndex = -1;
+    private String questionId; // Kérdés ID szerkesztés esetén
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,27 +103,33 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
         mStorage = FirebaseStorage.getInstance();
         storageReference = mStorage.getReference();
         spinner = findViewById(R.id.questionCategory);
-
-        mFirestore.collection("Categories").get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
-            @Override
-            public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-                List<String> questionList = new ArrayList<>();
-                for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
-                    questionList.add(documentSnapshot.getString("name"));
-                }
-
-                ArrayAdapter<String> adapter = new ArrayAdapter<>(QuestionUploadActivity.this, android.R.layout.simple_spinner_item, questionList);
-                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                spinner.setAdapter(adapter);
-            }
-        });
-
         container = findViewById(R.id.container);
         answerContainer = findViewById(R.id.answerContainer);
         radioGroup = findViewById(R.id.radioGroup);
+        addQuestionTextView = findViewById(R.id.addQuestionTextView);
+        addQuestionButton = findViewById(R.id.addQuestionButton);
 
-        questionImagePreview = findViewById(R.id.question_image_preview);
-        Button uploadImageButton = findViewById(R.id.upload_image_button);
+        questionImagePreview = findViewById(R.id.questionImagePreview);
+        Button uploadImageButton = findViewById(R.id.uploadImageButton);
+
+        questionId = getIntent().getStringExtra("questionId");
+
+        mFirestore.collection("Categories").get().addOnSuccessListener(queryDocumentSnapshots -> {
+            List<String> categoryList = new ArrayList<>();
+            for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
+                categoryList.add(documentSnapshot.getString("name"));
+            }
+
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(QuestionUploadActivity.this, android.R.layout.simple_spinner_item, categoryList);
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            spinner.setAdapter(adapter);
+
+            if (questionId != null) {
+                loadQuestionData(questionId);
+                addQuestionTextView.setText("Kérdés szerkesztése");
+                addQuestionButton.setText("Kérdés módosítása");
+            }
+        });
 
         uploadImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -137,6 +148,79 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
         });
 
     }
+
+    private void loadQuestionData(String questionId) {
+        mFirestore.collection("Questions").document(questionId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        Question question = documentSnapshot.toObject(Question.class);
+
+                        // kérdés adatainak betöltése
+                        questionText = question.getQuestionText();
+                        answers = question.getAnswers();
+                        correctAnswerIndex = question.getCorrectAnswerIndex();
+                        category = question.getCategory();
+                        explanationText = question.getExplanationText();
+
+                        // UI elemek frissítése
+                        ((EditText) findViewById(R.id.questionName)).setText(questionText);
+                        spinner.setSelection(getSpinnerIndex(spinner, category));
+
+                        for (int i = 0; i < answers.size(); i++) {
+                            EditText answerEditText = (EditText) answerContainer.getChildAt(i);
+                            RadioButton radioButton = (RadioButton) radioGroup.getChildAt(i);
+                            answerEditText.setText(answers.get(i));
+
+                            if (i == correctAnswerIndex) {
+                                radioButton.setChecked(true);
+                            }
+                        }
+
+                        String imageName = question.getImage();
+                        if (imageName != null && !imageName.isEmpty()) {
+                            StorageReference storageRef = FirebaseStorage.getInstance().getReference().child("images/" + imageName);
+                            storageRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                                String imageUrl = uri.toString();
+                                Glide.with(this)
+                                        .load(imageUrl)
+                                        .into(questionImagePreview);
+                                questionImagePreview.setVisibility(View.VISIBLE);
+                            }).addOnFailureListener(e -> {
+                                questionImagePreview.setVisibility(View.GONE);
+                                Toast.makeText(QuestionUploadActivity.this, "Hiba a kép betöltésekor", Toast.LENGTH_SHORT).show();
+                            });
+                        } else {
+                            questionImagePreview.setVisibility(View.GONE);
+                        }
+                    }
+                });
+    }
+
+    private int getSpinnerIndex(Spinner spinner, String category) {
+        for (int i = 0; i < spinner.getCount(); i++) {
+            if (spinner.getItemAtPosition(i).equals(category)) {
+                return i;
+            }
+        }
+        return 0;
+    }
+
+    public void uploadQuestion(View view) {
+        if (validateQuestionInput()) {
+            if (imageUri != null) {
+                uploadImage(imageUri);  // Kép feltöltése és kérdés mentése/frissítése
+            } else {
+                if (questionId != null) {
+                    updateQuestion(null);  // Kép nélkül kérdés frissítése
+                } else {
+                    saveQuestion(null);  // Kép nélkül új kérdés mentése
+                }
+            }
+        }
+    }
+
+
     private boolean validateQuestionInput() {
         questionText = ((EditText) findViewById(R.id.questionName)).getText().toString();
         category = ((Spinner) findViewById(R.id.questionCategory)).getSelectedItem().toString();
@@ -181,16 +265,18 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
 
         return true;
     }
-    public void uploadQuestion(View view) {
-        if (validateQuestionInput()) {
-            if (imageUri != null) {
-                uploadImage(imageUri);
-            } else {
-                saveQuestion(null);
-            }
-        }
-    }
 
+    private void updateQuestion(String fileName) {
+        Question question = new Question(questionId, questionText, category, answers, correctAnswerIndex, fileName, explanationText);
+
+        mFirestore.collection("Questions").document(questionId)
+                .set(question)
+                .addOnSuccessListener(aVoid -> {
+                    clearInputFields();
+                    showSuccessDialog("A kérdés sikeresen módosítva lett!");
+                })
+                .addOnFailureListener(e -> Toast.makeText(QuestionUploadActivity.this, "Hiba történt a frissítés során.", Toast.LENGTH_SHORT).show());
+    }
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -233,7 +319,11 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
                         public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                             progressDialog.dismiss();
                             String fileName = taskSnapshot.getMetadata().getReference().getName();
-                            saveQuestion(fileName);  // Kérdés mentése a feltöltött kép nevével
+                            if (questionId != null) {
+                                updateQuestion(fileName);
+                            } else {
+                                saveQuestion(fileName);  // Új kérdés létrehozása
+                            }
                         }
                     })
                     .addOnFailureListener(new OnFailureListener() {
@@ -268,7 +358,7 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
                                 .update("id", documentId);
 
                         clearInputFields();
-                        showSuccessDialog();
+                        showSuccessDialog("A kérdés sikeresen feltöltve!");
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
@@ -293,10 +383,10 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
         questionImagePreview.setVisibility(View.GONE);
     }
 
-    private void showSuccessDialog() {
+    private void showSuccessDialog(String message) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Sikeres feltöltés")
-                .setMessage("A kérdés sikeresen feltöltve!")
+                .setMessage(message)
                 .setPositiveButton("Rendben", null)
                 .show();
     }
@@ -322,6 +412,10 @@ public class QuestionUploadActivity extends DrawerBaseActivity{
         popupWindow.setFocusable(true);
 
         explanationEditText = popupView.findViewById(R.id.editExplanationTextMultiLine);
+
+        if (explanationText != null && !explanationText.isEmpty()) {
+            explanationEditText.setText(explanationText);
+        }
 
         Button mPopUpCloseButton = popupView.findViewById(R.id.popUpCloseButton);
         Button mGenerateTextButton = popupView.findViewById(R.id.generateTextButton);
