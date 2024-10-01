@@ -41,4 +41,5 @@
     <string name="change_password">Jelszó megváltoztatása</string>
     <string name="back_to_login_activity">Vissza a bejelentkezéshez</string>
     <string name="reset_password">Új jelszó beállítása</string>
+    <string name="edit_questions">Kérdések szerkesztése</string>
 </resources>

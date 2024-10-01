@@ -167,8 +167,11 @@ public class DrawerBaseActivity extends AppCompatActivity implements NavigationV
             mAuth.addAuthStateListener(authStateListener);
             mAuth.signOut();
         }
-
-
+        if(itemId == R.id.nav_list_questions){
+            if(user != null) {
+                startActivity(new Intent(DrawerBaseActivity.this, QuestionListActivity.class));
+            }
+        }
         return false;
     }
 

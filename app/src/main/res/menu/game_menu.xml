@@ -51,6 +51,10 @@
         <menu>
             <group android:checkableBehavior="single">
                 <item
+                    android:id="@+id/nav_list_questions"
+                    android:title="@string/edit_questions"
+                    android:icon="@drawable/ic_edit_question" />
+                <item
                     android:id="@+id/nav_add_a_question"
                     android:title="@string/add_a_question"
                     android:icon="@drawable/ic_add_a_question" />
@@ -58,7 +62,6 @@
                     android:id="@+id/nav_add_a_category"
                     android:title="@string/add_a_category"
                     android:icon="@drawable/ic_add_a_category" />
-
             </group>
         </menu>
     </item>

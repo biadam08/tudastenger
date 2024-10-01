@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".activities.EditQuestionActivity">
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        app:cardCornerRadius="20dp">
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/container"
+            android:orientation="vertical"
+            android:padding="20dp"
+            android:background="@color/cardview_light_background">
+
+            <TextView
+                android:id="@+id/questionText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/add_a_question"
+                android:textSize="36sp"
+                android:textAlignment="center"
+                android:layout_marginBottom="0dp"
+                android:textColor="@color/browne"
+                />
+
+            <Button
+                android:id="@+id/upload_image_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/add_an_image"
+                android:layout_marginTop="16dp"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/custom_shape_rectangle_button"
+                android:textColor="@color/white" />
+
+            <ImageView
+                android:id="@+id/editQuestionImagePreview"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:layout_marginTop="16dp"
+                android:visibility="gone"
+                android:scaleType="centerCrop" />
+
+            <EditText
+                android:id="@+id/editQuestionText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="12dp"
+                android:background="@drawable/custom_shape_edittext"
+                android:hint="@string/question"
+                android:inputType="textMultiLine"
+                android:padding="8dp"/>
+
+            <Spinner
+                android:id="@+id/editCategorySpinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="12dp"
+                android:minHeight="30dp"
+                android:background="@drawable/custom_shape_edittext"
+                />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingRight="20dp"
+                android:orientation="horizontal">
+
+                <RadioGroup
+                    android:id="@+id/editRadioGroup"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
+
+                    <RadioButton
+                        android:id="@+id/radioButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <RadioButton
+                        android:id="@+id/radioButton2"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <RadioButton
+                        android:id="@+id/radioButton3"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <RadioButton
+                        android:id="@+id/radioButton4"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                </RadioGroup>
+
+                <LinearLayout
+                    android:id="@+id/answerContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
+
+                    <EditText
+                        android:id="@+id/answer1"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textMultiLine"
+                        android:hint="Első válaszlehetőség" />
+
+                    <EditText
+                        android:id="@+id/answer2"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textMultiLine"
+                        android:hint="Második válaszlehetőség" />
+
+                    <EditText
+                        android:id="@+id/answer3"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textMultiLine"
+                        android:hint="Harmadik válaszlehetőség" />
+
+                    <EditText
+                        android:id="@+id/answer4"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textMultiLine"
+                        android:hint="Negyedik válaszlehetőség" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+
+            <!--        <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_horizontal"
+                        android:paddingTop="16dp">
+
+                        <Button
+                            android:id="@+id/add_answer_button"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:backgroundTint="@color/browne"
+                            android:textColor="@color/white"
+                            android:layout_gravity="center_horizontal"
+                            android:text="@string/new_answer"
+                            android:background="@drawable/custom_shape_rectangle_button"
+                            />
+
+                        <Button
+                            android:id="@+id/remove_last_answer_button"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:layout_marginLeft="10dp"
+                            android:backgroundTint="@color/browne"
+                            android:textColor="@color/white"
+                            android:layout_gravity="center_horizontal"
+                            android:text="@string/remove_last_answer"
+                            android:background="@drawable/custom_shape_rectangle_button"
+                            />
+
+                    </LinearLayout>-->
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/add_explanation_text"
+                android:id="@+id/addExplanationButton"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                android:paddingLeft="20dp"
+                android:paddingRight="20dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp"
+                android:backgroundTint="@color/browne"
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                android:background="@drawable/custom_shape_rounded_button"
+                android:layout_gravity="center_horizontal"
+                />
+
+
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/upload_question"
+                android:id="@+id/updateQuestionButton"
+                android:layout_marginTop="16dp"
+                android:backgroundTint="@color/browne"
+                android:textColor="@color/white"
+                android:layout_marginBottom="12dp"
+                android:onClick="uploadQuestion"
+                android:background="@drawable/custom_shape_rounded_button"
+                />
+
+        </LinearLayout>
+
+
+
+    </androidx.cardview.widget.CardView>
+
+</ScrollView>
