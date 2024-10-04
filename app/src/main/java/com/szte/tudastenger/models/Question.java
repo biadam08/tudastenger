@@ -10,6 +10,8 @@ public class Question {
     private int correctAnswerIndex;
     private String image;
     private String explanationText;
+    private int numCorrectAnswers;
+    private int numWrongAnswers;
 
 
     public Question() {
@@ -23,6 +25,24 @@ public class Question {
         this.correctAnswerIndex = correctAnswerIndex;
         this.image = image;
         this.explanationText = explanationText;
+        this.numCorrectAnswers = 0;
+        this.numWrongAnswers = 0;
+    }
+
+    public int getNumCorrectAnswers() {
+        return numCorrectAnswers;
+    }
+
+    public void setNumCorrectAnswers(int numCorrectAnswers) {
+        this.numCorrectAnswers = numCorrectAnswers;
+    }
+
+    public int getNumWrongAnswers() {
+        return numWrongAnswers;
+    }
+
+    public void setNumWrongAnswers(int numWrongAnswers) {
+        this.numWrongAnswers = numWrongAnswers;
     }
 
     public String getExplanationText() {

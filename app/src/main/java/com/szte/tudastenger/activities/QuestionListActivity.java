@@ -147,7 +147,11 @@ public class QuestionListActivity extends DrawerBaseActivity {
         String searchText = searchEditText.getText().toString();
         String selectedCategory = categorySpinner.getSelectedItem().toString();
 
-        mQuestionsData.clear();
+        if (mQuestionsData == null) {
+            mQuestionsData = new ArrayList<>();
+        } else {
+            mQuestionsData.clear();
+        }
 
         mQuestions.orderBy("questionText").get().addOnSuccessListener(queryDocumentSnapshots -> {
             for (QueryDocumentSnapshot document : queryDocumentSnapshots) {

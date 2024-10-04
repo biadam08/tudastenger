@@ -78,6 +78,7 @@ public class QuizGameActivity extends DrawerBaseActivity {
     private Button goToHomeButton;
     private LinearLayout buttonsLayout;
 
+    private TextView numCorrectAnswers;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -122,6 +123,8 @@ public class QuizGameActivity extends DrawerBaseActivity {
         showExplanationButton = findViewById(R.id.showExplanationButton);
         goToHomeButton = findViewById(R.id.goToHomeButton);
         buttonsLayout = findViewById(R.id.buttonsLinearLayout);
+
+        numCorrectAnswers = findViewById(R.id.numCorrectAnswersTextView);
 
         mUsers.whereEqualTo("email", user.getEmail()).get().addOnSuccessListener(queryDocumentSnapshots -> {
             for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
@@ -215,6 +218,8 @@ public class QuizGameActivity extends DrawerBaseActivity {
 
     private void displayQuestion(Question question) {
         buttonsLayout.setVisibility(View.GONE);
+        numCorrectAnswers.setText("");
+        numCorrectAnswers.setVisibility(View.GONE);
 
         LinearLayout answersLayout = findViewById(R.id.answersLayout);
         answersLayout.removeAllViews();
@@ -297,6 +302,22 @@ public class QuizGameActivity extends DrawerBaseActivity {
                                     userRef.update("gold", FieldValue.increment(goldChange));
                                     currentUser.setGold(currentUser.getGold() + goldChange);
                                     userGold.setText(currentUser.getGold().toString());
+
+                                    DocumentReference questionRef = mFirestore.collection("Questions").document(questionDocId);
+                                    if (isCorrect) {
+                                        questionRef.update("numCorrectAnswers", FieldValue.increment(1));
+                                    } else {
+                                        questionRef.update("numWrongAnswers", FieldValue.increment(1));
+                                    }
+
+                                    String numCorrectAnswerText = "";
+                                    int totalAnswers = question.getNumCorrectAnswers() + question.getNumWrongAnswers();
+                                    if (totalAnswers > 0) {
+                                        int correctPercentage = Math.round(((float) question.getNumCorrectAnswers() / totalAnswers) * 100);
+                                        numCorrectAnswerText = "A játékosok " + correctPercentage + "%-a válaszolt helyesen erre a kérdésre";
+                                        numCorrectAnswers.setText(numCorrectAnswerText);
+                                        numCorrectAnswers.setVisibility(View.VISIBLE);
+                                    }
                                 }
                             });
 
@@ -326,7 +347,6 @@ public class QuizGameActivity extends DrawerBaseActivity {
     }
 
     private void saveQuestion() {
-        Log.d("Mentés kezdődne", "Mentés kezdődne...");
         HashMap<String, String> questionToSave = new HashMap<String, String>();
         questionToSave.put("userId", currentUser.getId());
         questionToSave.put("questionId", questionDocId);
