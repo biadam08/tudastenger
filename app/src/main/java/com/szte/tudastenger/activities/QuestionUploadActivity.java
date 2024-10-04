@@ -385,7 +385,7 @@ public class QuestionUploadActivity extends DrawerBaseActivity {
 
     private void showSuccessDialog(String message) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Sikeres feltöltés")
+        builder.setTitle("Sikeres feltöltés") /// ezt át kell írni
                 .setMessage(message)
                 .setPositiveButton("Rendben", null)
                 .show();
@@ -472,15 +472,12 @@ public class QuestionUploadActivity extends DrawerBaseActivity {
         try {
             jsonObject.put("model", "gpt-4o-mini");
 
-            // Create the messages array
             JSONArray messages = new JSONArray();
 
-            // Add user message
             JSONObject userMessage = new JSONObject();
             userMessage.put("role", "user");
             userMessage.put("content", prompt);
 
-            // Add the message to the array
             messages.put(userMessage);
 
             jsonObject.put("messages", messages);
