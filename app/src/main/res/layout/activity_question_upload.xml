@@ -16,132 +16,163 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/container"
-            android:orientation="vertical"
-            android:padding="20dp"
-            android:background="@color/cardview_light_background">
-
-            <TextView
-                android:id="@+id/addQuestionTextView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/add_a_question"
-                android:textSize="36sp"
-                android:textAlignment="center"
-                android:layout_marginBottom="0dp"
-                android:textColor="@color/browne"
-                />
-
-            <Button
-                android:id="@+id/uploadImageButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/add_an_image"
-                android:layout_marginTop="16dp"
-                android:layout_gravity="center_horizontal"
-                android:background="@drawable/custom_shape_rectangle_button"
-                android:textColor="@color/white" />
-
-            <ImageView
-                android:id="@+id/questionImagePreview"
-                android:layout_width="match_parent"
-                android:layout_height="200dp"
-                android:layout_marginTop="16dp"
-                android:visibility="gone"
-                android:scaleType="centerCrop" />
-
-            <EditText
-                android:id="@+id/questionName"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="12dp"
-                android:background="@drawable/custom_shape_edittext"
-                android:hint="@string/question"
-                android:inputType="textMultiLine"
-                android:padding="8dp"/>
-
-            <Spinner
-                android:id="@+id/questionCategory"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="12dp"
-                android:minHeight="30dp"
-                android:background="@drawable/custom_shape_edittext"
-                />
+            android:layout_height="match_parent"
+            android:orientation="vertical">
 
             <LinearLayout
+                android:id="@+id/editBarLinearLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingRight="20dp"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:visibility="gone">
 
-                <RadioGroup
-                    android:id="@+id/radioGroup"
+                <Button
+                    android:id="@+id/backButton"
                     android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:orientation="vertical">
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textColor="#FFFFFF"
+                    android:layout_marginRight="1dp"
+                    android:background="@drawable/custom_shape_rectangle_button"
+                    android:text="VISSZA" />
 
-                    <RadioButton
-                        android:id="@+id/radioButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
-
-                    <RadioButton
-                        android:id="@+id/radioButton2"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
-
-                    <RadioButton
-                        android:id="@+id/radioButton3"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
-
-                    <RadioButton
-                        android:id="@+id/radioButton4"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
-                </RadioGroup>
-
-                <LinearLayout
-                    android:id="@+id/answerContainer"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="vertical">
-
-                    <EditText
-                        android:id="@+id/answer1"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="textMultiLine"
-                        android:hint="Első válaszlehetőség" />
-
-                    <EditText
-                        android:id="@+id/answer2"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="textMultiLine"
-                        android:hint="Második válaszlehetőség" />
-
-                    <EditText
-                        android:id="@+id/answer3"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="textMultiLine"
-                        android:hint="Harmadik válaszlehetőség" />
-
-                    <EditText
-                        android:id="@+id/answer4"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="textMultiLine"
-                        android:hint="Negyedik válaszlehetőség" />
-                </LinearLayout>
-
+                <Button
+                    android:id="@+id/deleteButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textColor="#FFFFFF"
+                    android:layout_marginLeft="1dp"
+                    android:background="@drawable/custom_shape_rectangle_button"
+                    android:text="TÖRLÉS" />
             </LinearLayout>
 
+            <LinearLayout
+                android:id="@+id/container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/cardview_light_background"
+                android:orientation="vertical"
+                android:padding="20dp">
 
-            <!--        <LinearLayout
+                <TextView
+                    android:id="@+id/addQuestionTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="0dp"
+                    android:text="@string/add_a_question"
+                    android:textAlignment="center"
+                    android:textColor="@color/browne"
+                    android:textSize="36sp" />
+
+                <Button
+                    android:id="@+id/uploadImageButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="16dp"
+                    android:background="@drawable/custom_shape_rectangle_button"
+                    android:text="@string/add_an_image"
+                    android:textColor="@color/white" />
+
+                <ImageView
+                    android:id="@+id/questionImagePreview"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:layout_marginTop="16dp"
+                    android:scaleType="centerCrop"
+                    android:visibility="gone" />
+
+                <EditText
+                    android:id="@+id/questionName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="12dp"
+                    android:background="@drawable/custom_shape_edittext"
+                    android:hint="@string/question"
+                    android:inputType="textMultiLine"
+                    android:padding="8dp" />
+
+                <Spinner
+                    android:id="@+id/questionCategory"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="12dp"
+                    android:background="@drawable/custom_shape_edittext"
+                    android:minHeight="30dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingRight="20dp">
+
+                    <RadioGroup
+                        android:id="@+id/radioGroup"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical">
+
+                        <RadioButton
+                            android:id="@+id/radioButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" />
+
+                        <RadioButton
+                            android:id="@+id/radioButton2"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" />
+
+                        <RadioButton
+                            android:id="@+id/radioButton3"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" />
+
+                        <RadioButton
+                            android:id="@+id/radioButton4"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" />
+                    </RadioGroup>
+
+                    <LinearLayout
+                        android:id="@+id/answerContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical">
+
+                        <EditText
+                            android:id="@+id/answer1"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="Első válaszlehetőség"
+                            android:inputType="textMultiLine" />
+
+                        <EditText
+                            android:id="@+id/answer2"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="Második válaszlehetőség"
+                            android:inputType="textMultiLine" />
+
+                        <EditText
+                            android:id="@+id/answer3"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="Harmadik válaszlehetőség"
+                            android:inputType="textMultiLine" />
+
+                        <EditText
+                            android:id="@+id/answer4"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="Negyedik válaszlehetőség"
+                            android:inputType="textMultiLine" />
+                    </LinearLayout>
+
+                </LinearLayout>
+
+
+                <!--        <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
@@ -175,40 +206,38 @@
 
                     </LinearLayout>-->
 
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/add_explanation_text"
-                android:id="@+id/addExplanationButton"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                android:paddingLeft="20dp"
-                android:paddingRight="20dp"
-                android:paddingTop="4dp"
-                android:paddingBottom="4dp"
-                android:backgroundTint="@color/browne"
-                android:textColor="@color/white"
-                android:textSize="14sp"
-                android:background="@drawable/custom_shape_rounded_button"
-                android:layout_gravity="center_horizontal"
-                />
+                <Button
+                    android:id="@+id/addExplanationButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:background="@drawable/custom_shape_rounded_button"
+                    android:backgroundTint="@color/browne"
+                    android:paddingLeft="20dp"
+                    android:paddingTop="4dp"
+                    android:paddingRight="20dp"
+                    android:paddingBottom="4dp"
+                    android:text="@string/add_explanation_text"
+                    android:textColor="@color/white"
+                    android:textSize="14sp" />
 
 
-            <Button
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/upload_question"
-                android:id="@+id/addQuestionButton"
-                android:layout_marginTop="16dp"
-                android:backgroundTint="@color/browne"
-                android:textColor="@color/white"
-                android:layout_marginBottom="12dp"
-                android:onClick="uploadQuestion"
-                android:background="@drawable/custom_shape_rounded_button"
-                />
+                <Button
+                    android:id="@+id/addQuestionButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="12dp"
+                    android:background="@drawable/custom_shape_rounded_button"
+                    android:backgroundTint="@color/browne"
+                    android:onClick="uploadQuestion"
+                    android:text="@string/upload_question"
+                    android:textColor="@color/white" />
 
+            </LinearLayout>
         </LinearLayout>
-
 
 
     </androidx.cardview.widget.CardView>

@@ -7,6 +7,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -40,6 +41,7 @@ import com.google.firebase.storage.UploadTask;
 import com.szte.tudastenger.R;
 import com.szte.tudastenger.databinding.ActivityQuestionUploadBinding;
 import com.szte.tudastenger.models.Question;
+import com.szte.tudastenger.models.User;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
@@ -68,6 +70,7 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
     private FirebaseFirestore mFirestore;
 
     private LinearLayout container;
+    private LinearLayout editBarLinearLayout;
     private LinearLayout answerContainer;
     private Spinner spinner;
 
@@ -85,6 +88,9 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
     private EditText explanationEditText;
     private TextView addQuestionTextView;
     private Button addQuestionButton;
+    private Button backButton;
+    private Button deleteButton;
+    private Button addExplanationButton;
     private String explanationText;
     private String questionText;
     private String category;
@@ -104,9 +110,13 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
         spinner = findViewById(R.id.questionCategory);
         container = findViewById(R.id.container);
         answerContainer = findViewById(R.id.answerContainer);
+        editBarLinearLayout = findViewById(R.id.editBarLinearLayout);
         radioGroup = findViewById(R.id.radioGroup);
         addQuestionTextView = findViewById(R.id.addQuestionTextView);
         addQuestionButton = findViewById(R.id.addQuestionButton);
+        backButton = findViewById(R.id.backButton);
+        deleteButton = findViewById(R.id.deleteButton);
+        addExplanationButton = findViewById(R.id.addExplanationButton);
 
         questionImagePreview = findViewById(R.id.questionImagePreview);
         Button uploadImageButton = findViewById(R.id.uploadImageButton);
@@ -124,6 +134,7 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
             spinner.setAdapter(adapter);
 
             if (questionId != null) {
+                editBarLinearLayout.setVisibility(View.VISIBLE);
                 loadQuestionData(questionId);
                 addQuestionTextView.setText("Kérdés szerkesztése");
                 addQuestionButton.setText("Kérdés módosítása");
@@ -138,11 +149,29 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
             }
         });
 
-        Button addExplanationButton = findViewById(R.id.addExplanationButton);
         addExplanationButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 showAddExplanationPopup();
+            }
+        });
+
+        backButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(QuestionEditUploadActivity.this, QuestionListActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        deleteButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(questionId != null) {
+                    showDeleteConfirmationDialog(questionId);
+                } else{
+                    Toast.makeText(QuestionEditUploadActivity.this, "Nincs törlendő kérdés", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
@@ -542,5 +571,44 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
         return "Nincs elérhető magyarázat.";
     }
 
+    private void showDeleteConfirmationDialog(String questionId) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Kérdés törlése");
+        builder.setMessage("Biztosan törölni szeretnéd ezt a kérdést?");
+
+        builder.setPositiveButton("Igen", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                deleteQuestion(questionId);
+            }
+        });
+
+        builder.setNegativeButton("Nem", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+
+            }
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
+    private void deleteQuestion(String questionId) {
+        mFirestore.collection("Questions").document(questionId)
+                .delete()
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Toast.makeText(getApplicationContext(), "Kérdés sikeresen törölve", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(getApplicationContext(), "Hiba történt a törlés közben", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
 
 }
