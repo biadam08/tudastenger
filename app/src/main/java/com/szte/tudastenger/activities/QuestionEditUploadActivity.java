@@ -39,7 +39,7 @@ import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.szte.tudastenger.R;
-import com.szte.tudastenger.databinding.ActivityQuestionUploadBinding;
+import com.szte.tudastenger.databinding.ActivityQuestionEditUploadBinding;
 import com.szte.tudastenger.models.Question;
 import com.szte.tudastenger.models.User;
 import com.theartofdev.edmodo.cropper.CropImage;
@@ -66,12 +66,13 @@ import okhttp3.Response;
 public class QuestionEditUploadActivity extends DrawerBaseActivity {
     private static final String LOG_TAG = QuestionEditUploadActivity.class.getName();
 
-    private ActivityQuestionUploadBinding activityQuestionUploadBinding;
+    private ActivityQuestionEditUploadBinding activityQuestionEditUploadBinding;
     private FirebaseFirestore mFirestore;
 
     private LinearLayout container;
     private LinearLayout editBarLinearLayout;
     private LinearLayout answerContainer;
+    private LinearLayout manageImageLinearLayout;
     private Spinner spinner;
 
     private RadioGroup radioGroup;
@@ -91,6 +92,9 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
     private Button backButton;
     private Button deleteButton;
     private Button addExplanationButton;
+    private Button uploadImageButton;
+    private Button deleteImageButton;
+    private Button modifyImageButton;
     private String explanationText;
     private String questionText;
     private String category;
@@ -101,8 +105,8 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        activityQuestionUploadBinding = ActivityQuestionUploadBinding.inflate(getLayoutInflater());
-        setContentView(activityQuestionUploadBinding.getRoot());
+        activityQuestionEditUploadBinding = ActivityQuestionEditUploadBinding.inflate(getLayoutInflater());
+        setContentView(activityQuestionEditUploadBinding.getRoot());
 
         mFirestore = FirebaseFirestore.getInstance();
         mStorage = FirebaseStorage.getInstance();
@@ -111,6 +115,7 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
         container = findViewById(R.id.container);
         answerContainer = findViewById(R.id.answerContainer);
         editBarLinearLayout = findViewById(R.id.editBarLinearLayout);
+        manageImageLinearLayout = findViewById(R.id.manageImageLinearLayout);
         radioGroup = findViewById(R.id.radioGroup);
         addQuestionTextView = findViewById(R.id.addQuestionTextView);
         addQuestionButton = findViewById(R.id.addQuestionButton);
@@ -119,7 +124,9 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
         addExplanationButton = findViewById(R.id.addExplanationButton);
 
         questionImagePreview = findViewById(R.id.questionImagePreview);
-        Button uploadImageButton = findViewById(R.id.uploadImageButton);
+        uploadImageButton = findViewById(R.id.uploadImageButton);
+        modifyImageButton = findViewById(R.id.modifyImageButton);
+        deleteImageButton = findViewById(R.id.deleteImageButton);
 
         questionId = getIntent().getStringExtra("questionId");
 
@@ -175,6 +182,23 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
             }
         });
 
+        deleteImageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                imageUri = null;
+                questionImagePreview.setVisibility(View.GONE);
+                uploadImageButton.setVisibility(View.VISIBLE);
+                manageImageLinearLayout.setVisibility(View.GONE);
+            }
+        });
+
+        modifyImageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent pickIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                startActivityForResult(pickIntent, CropImage.PICK_IMAGE_CHOOSER_REQUEST_CODE);
+            }
+        });
     }
 
     private void loadQuestionData(String questionId) {
@@ -323,6 +347,8 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
                 imageUri = result.getUri();
                 questionImagePreview.setImageURI(imageUri);
                 questionImagePreview.setVisibility(View.VISIBLE);
+                uploadImageButton.setVisibility(View.GONE);
+                manageImageLinearLayout.setVisibility(View.VISIBLE);
             }
         }
     }
