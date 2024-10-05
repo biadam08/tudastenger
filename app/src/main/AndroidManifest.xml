@@ -71,7 +71,7 @@
             android:name=".activities.CategoryUploadActivity"
             android:exported="false" />
         <activity
-            android:name=".activities.QuestionUploadActivity"
+            android:name=".activities.QuestionEditUploadActivity"
             android:exported="false" />
         <activity
             android:name=".activities.DrawerBaseActivity"

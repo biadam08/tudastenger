@@ -33,7 +33,6 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
@@ -62,8 +61,8 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 
-public class QuestionUploadActivity extends DrawerBaseActivity {
-    private static final String LOG_TAG = QuestionUploadActivity.class.getName();
+public class QuestionEditUploadActivity extends DrawerBaseActivity {
+    private static final String LOG_TAG = QuestionEditUploadActivity.class.getName();
 
     private ActivityQuestionUploadBinding activityQuestionUploadBinding;
     private FirebaseFirestore mFirestore;
@@ -120,7 +119,7 @@ public class QuestionUploadActivity extends DrawerBaseActivity {
                 categoryList.add(documentSnapshot.getString("name"));
             }
 
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(QuestionUploadActivity.this, android.R.layout.simple_spinner_item, categoryList);
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(QuestionEditUploadActivity.this, android.R.layout.simple_spinner_item, categoryList);
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             spinner.setAdapter(adapter);
 
@@ -188,7 +187,7 @@ public class QuestionUploadActivity extends DrawerBaseActivity {
                                 questionImagePreview.setVisibility(View.VISIBLE);
                             }).addOnFailureListener(e -> {
                                 questionImagePreview.setVisibility(View.GONE);
-                                Toast.makeText(QuestionUploadActivity.this, "Hiba a kép betöltésekor", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(QuestionEditUploadActivity.this, "Hiba a kép betöltésekor", Toast.LENGTH_SHORT).show();
                             });
                         } else {
                             questionImagePreview.setVisibility(View.GONE);
@@ -273,9 +272,9 @@ public class QuestionUploadActivity extends DrawerBaseActivity {
                 .set(question)
                 .addOnSuccessListener(aVoid -> {
                     clearInputFields();
-                    showSuccessDialog("A kérdés sikeresen módosítva lett!");
+                    showSuccessDialog("Sikeres módosítás!", "A kérdés sikeresen módosítva lett!");
                 })
-                .addOnFailureListener(e -> Toast.makeText(QuestionUploadActivity.this, "Hiba történt a frissítés során.", Toast.LENGTH_SHORT).show());
+                .addOnFailureListener(e -> Toast.makeText(QuestionEditUploadActivity.this, "Hiba történt a frissítés során.", Toast.LENGTH_SHORT).show());
     }
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -330,7 +329,7 @@ public class QuestionUploadActivity extends DrawerBaseActivity {
                         @Override
                         public void onFailure(@NonNull Exception e) {
                             progressDialog.dismiss();
-                            Toast.makeText(QuestionUploadActivity.this, "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(QuestionEditUploadActivity.this, "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                         }
                     })
                     .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
@@ -358,13 +357,13 @@ public class QuestionUploadActivity extends DrawerBaseActivity {
                                 .update("id", documentId);
 
                         clearInputFields();
-                        showSuccessDialog("A kérdés sikeresen feltöltve!");
+                        showSuccessDialog("Sikeres feltöltés", "A kérdés sikeresen feltöltve!");
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        Toast.makeText(QuestionUploadActivity.this, "Hiba történt a mentés során.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(QuestionEditUploadActivity.this, "Hiba történt a mentés során.", Toast.LENGTH_SHORT).show();
                     }
                 });
     }
@@ -383,9 +382,9 @@ public class QuestionUploadActivity extends DrawerBaseActivity {
         questionImagePreview.setVisibility(View.GONE);
     }
 
-    private void showSuccessDialog(String message) {
+    private void showSuccessDialog(String title, String message) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Sikeres feltöltés") /// ezt át kell írni
+        builder.setTitle(title)
                 .setMessage(message)
                 .setPositiveButton("Rendben", null)
                 .show();
@@ -442,7 +441,7 @@ public class QuestionUploadActivity extends DrawerBaseActivity {
             @Override
             public void onClick(View view) {
                 explanationText = explanationEditText.getText().toString();
-                Toast.makeText(QuestionUploadActivity.this, "Sikeresen elmentve!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(QuestionEditUploadActivity.this, "Sikeresen elmentve!", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -500,7 +499,7 @@ public class QuestionUploadActivity extends DrawerBaseActivity {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 runOnUiThread(() ->
-                        Toast.makeText(QuestionUploadActivity.this, "Failed to generate explanation",  Toast.LENGTH_SHORT).show()
+                        Toast.makeText(QuestionEditUploadActivity.this, "Failed to generate explanation",  Toast.LENGTH_SHORT).show()
                 );
             }
 
@@ -521,7 +520,7 @@ public class QuestionUploadActivity extends DrawerBaseActivity {
                     String errorBody = response.body() != null ? response.body().string() : "Unknown error";
                     runOnUiThread(() -> {
                         Log.d("ERRORAPI", errorBody);
-                        Toast.makeText(QuestionUploadActivity.this, "Error generating explanation: " + errorBody, Toast.LENGTH_LONG).show();
+                        Toast.makeText(QuestionEditUploadActivity.this, "Error generating explanation: " + errorBody, Toast.LENGTH_LONG).show();
                     });
                 }
             }

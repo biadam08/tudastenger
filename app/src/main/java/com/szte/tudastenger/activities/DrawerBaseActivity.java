@@ -151,7 +151,7 @@ public class DrawerBaseActivity extends AppCompatActivity implements NavigationV
         }
         if(itemId == R.id.nav_add_a_question){
             if(user != null && currentUserRole.equals("admin")) {
-                startActivity(new Intent(DrawerBaseActivity.this, QuestionUploadActivity.class));
+                startActivity(new Intent(DrawerBaseActivity.this, QuestionEditUploadActivity.class));
             }
         }
         if(itemId == R.id.nav_logout){

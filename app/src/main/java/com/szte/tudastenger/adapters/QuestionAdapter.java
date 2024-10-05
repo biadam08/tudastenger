@@ -12,7 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.szte.tudastenger.R;
-import com.szte.tudastenger.activities.QuestionUploadActivity;
+import com.szte.tudastenger.activities.QuestionEditUploadActivity;
 import com.szte.tudastenger.models.Question;
 
 import java.util.ArrayList;
@@ -57,7 +57,7 @@ public class QuestionAdapter extends RecyclerView.Adapter<QuestionAdapter.ViewHo
                     int position = getAdapterPosition();
                     if (position != RecyclerView.NO_POSITION) {
                         Question clickedQuestion = mQuestionsData.get(position);
-                        Intent intent = new Intent(mContext, QuestionUploadActivity.class);
+                        Intent intent = new Intent(mContext, QuestionEditUploadActivity.class);
                         intent.putExtra("questionId", clickedQuestion.getId());
                         mContext.startActivity(intent);
                     }
