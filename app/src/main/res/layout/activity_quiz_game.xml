@@ -11,7 +11,8 @@
             android:id="@+id/scrollView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:layout_marginBottom="60dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -119,49 +120,49 @@
                 </LinearLayout>
         </androidx.core.widget.NestedScrollView>
 
-                <LinearLayout
-                    android:id="@+id/buttonsLinearLayout"
-                    android:layout_width="match_parent"
+        <LinearLayout
+            android:id="@+id/buttonsLinearLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="#FFFFFF"
+            android:layout_alignParentBottom="true"
+            android:padding="5dp"
+            android:gravity="center_horizontal"
+            android:visibility="gone">
+
+                <Button
+                    android:id="@+id/goToHomeButton"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:background="#FFFFFF"
-                    android:layout_alignParentBottom="true"
-                    android:padding="5dp"
-                    android:gravity="center_horizontal">
+                    android:layout_margin="2dp"
+                    android:background="@drawable/custom_shape_rectangle_button"
+                    android:text="Főoldal"
+                    android:drawableTop="@drawable/ic_home"
+                    android:gravity="center"
+                    android:textSize="14sp" />
 
-                        <Button
-                            android:id="@+id/goToHomeButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_margin="2dp"
-                            android:background="@drawable/custom_shape_rectangle_button"
-                            android:text="Főoldal"
-                            android:drawableTop="@drawable/ic_home"
-                            android:gravity="center"
-                            android:textSize="14sp" />
+                <Button
+                    android:id="@+id/showExplanationButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="2dp"
+                    android:background="@drawable/custom_shape_rectangle_button"
+                    android:text="Magyarázat"
+                    android:drawableTop="@drawable/ic_eye"
+                    android:gravity="center"
+                    android:textSize="14sp" />
 
-                        <Button
-                            android:id="@+id/showExplanationButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_margin="2dp"
-                            android:background="@drawable/custom_shape_rectangle_button"
-                            android:text="Magyarázat"
-                            android:drawableTop="@drawable/ic_eye"
-                            android:gravity="center"
-                            android:textSize="14sp" />
+                <Button
+                    android:id="@+id/nextQuestionButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="2dp"
+                    android:background="@drawable/custom_shape_rectangle_button"
+                    android:text="Következő"
+                    android:drawableTop="@drawable/ic_next"
+                    android:gravity="center"
+                    android:textSize="14sp" />
 
-                        <Button
-                            android:id="@+id/nextQuestionButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_margin="2dp"
-                            android:background="@drawable/custom_shape_rectangle_button"
-                            android:text="Következő"
-                            android:drawableTop="@drawable/ic_next"
-                            android:gravity="center"
-                            android:textSize="14sp" />
-
-                </LinearLayout>
-
+        </LinearLayout>
 </RelativeLayout>
