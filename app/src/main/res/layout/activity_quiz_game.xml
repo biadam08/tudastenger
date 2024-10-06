@@ -1,163 +1,167 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="vertical"
     android:background="@drawable/quiz_bg"
     tools:context=".activities.QuizGameActivity">
 
-        <LinearLayout
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/scrollView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical">
 
-                <androidx.constraintlayout.widget.ConstraintLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/topBarLayout"
-                    android:orientation="horizontal"
-                    android:background="@drawable/custom_shape_rectangle_button">
-
-                        <Button
-                            android:id="@+id/saveQuestionButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Mentés"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toTopOf="parent" />
-
-                        <TextView
-                            android:id="@+id/userGold"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center"
-                            android:layout_marginEnd="36dp"
-                            android:textColor="@color/white"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintEnd_toStartOf="@+id/helpButton"
-                            app:layout_constraintStart_toEndOf="@+id/saveQuestionButton"
-                            app:layout_constraintTop_toTopOf="parent" />
-
-                        <ImageView
-                            android:id="@+id/coinImageView"
-                            android:layout_width="wrap_content"
-                            android:layout_height="20dp"
-                            android:layout_gravity="center"
-                            android:layout_marginStart="36dp"
-                            android:layout_weight="0.5"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintEnd_toStartOf="@+id/helpButton"
-                            app:layout_constraintStart_toEndOf="@+id/saveQuestionButton"
-                            app:layout_constraintTop_toTopOf="parent"
-                            app:srcCompat="@drawable/coins" />
-
-                        <Button
-                            android:id="@+id/helpButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Segítség"
-                            app:layout_constraintEnd_toEndOf="parent"
-                            app:layout_constraintTop_toTopOf="parent" />
-                </androidx.constraintlayout.widget.ConstraintLayout>
-
-
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/quizLinerLayout"
-                    android:layout_margin="10dp"
-                    android:padding="10dp"
-                    android:orientation="vertical"
-                    android:background="#FFFFFF">
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
 
-                        <TextView
-                            android:id="@+id/questionTextView"
+                        <androidx.constraintlayout.widget.ConstraintLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:gravity="center_horizontal"
-                            android:padding="8dp"
-                            android:textColor="#000000"
-                            android:textSize="24sp"
-                            android:textStyle="bold" />
+                            android:id="@+id/topBarLayout"
+                            android:orientation="horizontal"
+                            android:background="@drawable/custom_shape_rectangle_button">
 
-                        <ImageView
-                            android:id="@+id/questionImage"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center"
-                            android:adjustViewBounds="true"
-                            android:maxHeight="200dp"
-                            android:layout_margin="16dp"/>
+                                <Button
+                                    android:id="@+id/saveQuestionButton"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Mentés"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toTopOf="parent" />
+
+                                <TextView
+                                    android:id="@+id/userGold"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_gravity="center"
+                                    android:layout_marginEnd="36dp"
+                                    android:textColor="@color/white"
+                                    app:layout_constraintBottom_toBottomOf="parent"
+                                    app:layout_constraintEnd_toStartOf="@+id/helpButton"
+                                    app:layout_constraintStart_toEndOf="@+id/saveQuestionButton"
+                                    app:layout_constraintTop_toTopOf="parent" />
+
+                                <ImageView
+                                    android:id="@+id/coinImageView"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="20dp"
+                                    android:layout_gravity="center"
+                                    android:layout_marginStart="36dp"
+                                    android:layout_weight="0.5"
+                                    app:layout_constraintBottom_toBottomOf="parent"
+                                    app:layout_constraintEnd_toStartOf="@+id/helpButton"
+                                    app:layout_constraintStart_toEndOf="@+id/saveQuestionButton"
+                                    app:layout_constraintTop_toTopOf="parent"
+                                    app:srcCompat="@drawable/coins" />
+
+                                <Button
+                                    android:id="@+id/helpButton"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Segítség"
+                                    app:layout_constraintEnd_toEndOf="parent"
+                                    app:layout_constraintTop_toTopOf="parent" />
+                        </androidx.constraintlayout.widget.ConstraintLayout>
+
 
                         <LinearLayout
-                            android:id="@+id/answersLayout"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:id="@+id/quizLinerLayout"
+                            android:layout_margin="10dp"
+                            android:padding="10dp"
                             android:orientation="vertical"
-                            android:layout_marginBottom="15dp">
+                            android:background="#FFFFFF">
+
+                                <TextView
+                                    android:id="@+id/questionTextView"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center_horizontal"
+                                    android:padding="8dp"
+                                    android:textColor="#000000"
+                                    android:textSize="24sp"
+                                    android:textStyle="bold" />
+
+                                <ImageView
+                                    android:id="@+id/questionImage"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_gravity="center"
+                                    android:adjustViewBounds="true"
+                                    android:maxHeight="200dp"
+                                    android:layout_margin="16dp"/>
+
+                                <LinearLayout
+                                    android:id="@+id/answersLayout"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="vertical"
+                                    android:layout_marginBottom="15dp">
+
+                                </LinearLayout>
+
+                                <TextView
+                                    android:id="@+id/numCorrectAnswersTextView"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center_horizontal"
+                                    android:padding="8dp"
+                                    android:textColor="#000000"
+                                    android:textSize="16sp"
+                                    android:visibility="gone"/>
 
                         </LinearLayout>
-
-                        <TextView
-                            android:id="@+id/numCorrectAnswersTextView"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:gravity="center_horizontal"
-                            android:padding="8dp"
-                            android:textColor="#000000"
-                            android:textSize="16sp"
-                            android:visibility="gone"/>
-
                 </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
 
                 <LinearLayout
                     android:id="@+id/buttonsLinearLayout"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:gravity="center"
-                    android:layout_marginBottom="30dp"
-                    android:layout_gravity="center_horizontal"
-                    android:visibility="gone">
+                    android:orientation="horizontal"
+                    android:background="#FFFFFF"
+                    android:layout_alignParentBottom="true"
+                    android:padding="5dp"
+                    android:gravity="center_horizontal">
+
+                        <Button
+                            android:id="@+id/goToHomeButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_margin="2dp"
+                            android:background="@drawable/custom_shape_rectangle_button"
+                            android:text="Főoldal"
+                            android:drawableTop="@drawable/ic_home"
+                            android:gravity="center"
+                            android:textSize="14sp" />
+
+                        <Button
+                            android:id="@+id/showExplanationButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_margin="2dp"
+                            android:background="@drawable/custom_shape_rectangle_button"
+                            android:text="Magyarázat"
+                            android:drawableTop="@drawable/ic_eye"
+                            android:gravity="center"
+                            android:textSize="14sp" />
 
                         <Button
                             android:id="@+id/nextQuestionButton"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_margin="6dp"
+                            android:layout_margin="2dp"
                             android:background="@drawable/custom_shape_rectangle_button"
                             android:text="Következő"
-                            android:drawableLeft="@drawable/ic_next"
-                            android:textSize="18sp" />
+                            android:drawableTop="@drawable/ic_next"
+                            android:gravity="center"
+                            android:textSize="14sp" />
 
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="match_parent"
-                            android:orientation="horizontal">
-
-                                <Button
-                                    android:id="@+id/showExplanationButton"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_margin="6dp"
-                                    android:background="@drawable/custom_shape_rectangle_button"
-                                    android:text="Magyarázat"
-                                    android:drawableLeft="@drawable/ic_eye"
-                                    android:textSize="18sp" />
-
-                                <Button
-                                    android:id="@+id/goToHomeButton"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_margin="6dp"
-                                    android:background="@drawable/custom_shape_rectangle_button"
-                                    android:text="Főoldal"
-                                    android:drawableLeft="@drawable/ic_home"
-                                    android:textSize="18sp" />
-                        </LinearLayout>
                 </LinearLayout>
 
-        </LinearLayout>
-</androidx.core.widget.NestedScrollView>
+</RelativeLayout>
