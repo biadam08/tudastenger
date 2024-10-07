@@ -154,6 +154,17 @@ public class DrawerBaseActivity extends AppCompatActivity implements NavigationV
                 startActivity(new Intent(DrawerBaseActivity.this, QuestionEditUploadActivity.class));
             }
         }
+        if(itemId == R.id.nav_list_questions){
+            if(user != null && currentUserRole.equals("admin")) {
+                startActivity(new Intent(DrawerBaseActivity.this, QuestionListActivity.class));
+            }
+        }
+        if(itemId == R.id.nav_list_categories){
+            if(user != null && currentUserRole.equals("admin")) {
+                startActivity(new Intent(DrawerBaseActivity.this, CategoryListActivity.class));
+            }
+        }
+
         if(itemId == R.id.nav_logout){
             FirebaseAuth.AuthStateListener authStateListener = new FirebaseAuth.AuthStateListener() {
                 @Override
@@ -166,11 +177,6 @@ public class DrawerBaseActivity extends AppCompatActivity implements NavigationV
             };
             mAuth.addAuthStateListener(authStateListener);
             mAuth.signOut();
-        }
-        if(itemId == R.id.nav_list_questions){
-            if(user != null) {
-                startActivity(new Intent(DrawerBaseActivity.this, QuestionListActivity.class));
-            }
         }
         return false;
     }

@@ -42,4 +42,5 @@
     <string name="back_to_login_activity">Vissza a bejelentkezéshez</string>
     <string name="reset_password">Új jelszó beállítása</string>
     <string name="edit_questions">Kérdések szerkesztése</string>
+    <string name="edit_categories">Kategória szerkesztése</string>
 </resources>

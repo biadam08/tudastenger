@@ -59,6 +59,10 @@
                     android:title="@string/add_a_question"
                     android:icon="@drawable/ic_add_a_question" />
                 <item
+                    android:id="@+id/nav_list_categories"
+                    android:title="@string/edit_categories"
+                    android:icon="@drawable/ic_edit_question" />
+                <item
                     android:id="@+id/nav_add_a_category"
                     android:title="@string/add_a_category"
                     android:icon="@drawable/ic_add_a_category" />

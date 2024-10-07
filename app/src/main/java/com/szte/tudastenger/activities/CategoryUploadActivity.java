@@ -7,11 +7,17 @@ import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.szte.tudastenger.R;
 import com.szte.tudastenger.databinding.ActivityCategoryUploadBinding;
 import com.szte.tudastenger.models.Category;
+import com.szte.tudastenger.models.Question;
 
 public class CategoryUploadActivity extends DrawerBaseActivity {
 
@@ -47,10 +53,20 @@ public class CategoryUploadActivity extends DrawerBaseActivity {
         }
 
         // Új kategória hozzáadása Firestore-hoz
-        Category category = new Category(categoryName);
-        mCategories.add(category).addOnSuccessListener(documentReference -> {
-            clearInputField();
-            showSuccessDialog();
+        Category category = new Category(null, categoryName);
+
+        mCategories.add(category).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+            @Override
+            public void onSuccess(DocumentReference documentReference) {
+                String documentId = documentReference.getId();
+                category.setId(documentId);
+
+                mFirestore.collection("Categories").document(documentId)
+                        .update("id", documentId);
+
+                clearInputField();
+                showSuccessDialog();
+            }
         }).addOnFailureListener(e -> {
             Toast.makeText(CategoryUploadActivity.this, "Sikertelen kategória hozzáadás!", Toast.LENGTH_SHORT).show();
 

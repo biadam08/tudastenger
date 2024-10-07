@@ -1,13 +1,23 @@
 package com.szte.tudastenger.models;
 
 public class Category {
+    private String id;
     private String name;
 
     public Category() { // szükséges a Firebase Firestore-ból való objektum-deszerializáláshoz
     }
 
-    public Category(String name) {
+    public Category(String id, String name) {
+        this.id = id;
         this.name = name;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getName() {
