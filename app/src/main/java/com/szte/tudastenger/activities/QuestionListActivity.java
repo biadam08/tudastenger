@@ -12,6 +12,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.SearchView;
 import android.widget.Spinner;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -43,7 +44,7 @@ public class QuestionListActivity extends DrawerBaseActivity {
     private RecyclerView mRecyclerView;
 
     private QuestionAdapter mAdapter;
-    private EditText searchEditText;
+    private SearchView searchView;
     private Spinner categorySpinner;
     private ArrayList<String> categories;
 
@@ -57,23 +58,56 @@ public class QuestionListActivity extends DrawerBaseActivity {
         mAuth = FirebaseAuth.getInstance();
         user = FirebaseAuth.getInstance().getCurrentUser();
 
-        searchEditText = findViewById(R.id.searchEditText);
+        searchView = findViewById(R.id.searchView);
         categorySpinner = findViewById(R.id.categorySpinner);
+
+        mQuestions = mFirestore.collection("Questions");
+
+        mRecyclerView = findViewById(R.id.recyclerView);
+        mRecyclerView.setLayoutManager(new GridLayoutManager(this, 1));
+
+        mQuestionsData = new ArrayList<>();
+        mAdapter = new QuestionAdapter(this, mQuestionsData);
+        mRecyclerView.setAdapter(mAdapter);
+
 
         initCategorySpinner();
         initSearchFunctionality();
+
 
         if (user != null && user.getEmail() != null) {
             DocumentReference userDocRef = mFirestore.collection("Users").document(user.getUid());
             userDocRef.get().addOnSuccessListener(documentSnapshot -> {
                 if (documentSnapshot.exists() && documentSnapshot.getString("role").equals("admin")) {
-                    listQuestions();
+                    queryData();
                 } else {
                     finish();
                 }
             });
         }
     }
+
+    private void queryData() {
+        mQuestionsData.clear();
+
+        mQuestions.orderBy("questionText").get().addOnSuccessListener(queryDocumentSnapshots -> {
+            for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
+                Question question = document.toObject(Question.class);
+                mQuestionsData.add(question);
+            }
+            mAdapter.notifyDataSetChanged();
+        });
+    }
+
+    private void filterQuestions() {
+        String selectedCategory = categorySpinner.getSelectedItem().toString();
+        String searchText = searchView.getQuery().toString().toLowerCase();
+
+        mAdapter.setFilterCategory(selectedCategory);
+
+        mAdapter.getFilter().filter(searchText);
+    }
+
     private void initCategorySpinner() {
         categories = new ArrayList<>();
         categories.add("Összes kategória");
@@ -102,70 +136,17 @@ public class QuestionListActivity extends DrawerBaseActivity {
     }
 
     private void initSearchFunctionality() {
-        searchEditText.addTextChangedListener(new TextWatcher() {
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            public boolean onQueryTextSubmit(String s) {
+                return false;
             }
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            public boolean onQueryTextChange(String s) {
                 filterQuestions();
+                return false;
             }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-            }
-        });
-    }
-
-    private void listQuestions() {
-        mQuestions = mFirestore.collection("Questions");
-
-        mRecyclerView = findViewById(R.id.recyclerView);
-        mRecyclerView.setLayoutManager(new GridLayoutManager(this, 1));
-
-        mQuestionsData = new ArrayList<>();
-        mAdapter = new QuestionAdapter(this, mQuestionsData);
-        mRecyclerView.setAdapter(mAdapter);
-
-        queryData();
-    }
-
-    private void queryData() {
-        mQuestionsData.clear();
-
-        mQuestions.orderBy("questionText").get().addOnSuccessListener(queryDocumentSnapshots -> {
-            for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                Question question = document.toObject(Question.class);
-                mQuestionsData.add(question);
-            }
-            mAdapter.notifyDataSetChanged();
-        });
-    }
-
-    private void filterQuestions() {
-        String searchText = searchEditText.getText().toString();
-        String selectedCategory = categorySpinner.getSelectedItem().toString();
-
-        if (mQuestionsData == null) {
-            mQuestionsData = new ArrayList<>();
-        } else {
-            mQuestionsData.clear();
-        }
-
-        mQuestions.orderBy("questionText").get().addOnSuccessListener(queryDocumentSnapshots -> {
-            for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                Question question = document.toObject(Question.class);
-
-                boolean matchesSearch = question.getQuestionText().toLowerCase().contains(searchText.toLowerCase());
-                boolean matchesCategory = selectedCategory.equals("Összes kategória") || question.getCategory().equals(selectedCategory);
-
-                if (matchesSearch && matchesCategory) {
-                    mQuestionsData.add(question);
-                }
-            }
-
-            mAdapter.notifyDataSetChanged();
         });
     }
 }
