@@ -101,6 +101,7 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
     private ArrayList<String> answers;
     private int correctAnswerIndex = -1;
     private String questionId; // Kérdés ID szerkesztés esetén
+    private String existingImageName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -186,6 +187,8 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
             @Override
             public void onClick(View view) {
                 imageUri = null;
+                existingImageName = null;
+
                 questionImagePreview.setVisibility(View.GONE);
                 uploadImageButton.setVisibility(View.VISIBLE);
                 manageImageLinearLayout.setVisibility(View.GONE);
@@ -214,6 +217,7 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
                         correctAnswerIndex = question.getCorrectAnswerIndex();
                         category = question.getCategory();
                         explanationText = question.getExplanationText();
+                        existingImageName = question.getImage();
 
                         // UI elemek frissítése
                         ((EditText) findViewById(R.id.questionName)).setText(questionText);
@@ -229,9 +233,10 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
                             }
                         }
 
-                        String imageName = question.getImage();
-                        if (imageName != null && !imageName.isEmpty()) {
-                            StorageReference storageRef = FirebaseStorage.getInstance().getReference().child("images/" + imageName);
+                        if (existingImageName != null && !existingImageName.isEmpty()) {
+                            uploadImageButton.setVisibility(View.GONE);
+                            manageImageLinearLayout.setVisibility(View.VISIBLE);
+                            StorageReference storageRef = FirebaseStorage.getInstance().getReference().child("images/" + existingImageName);
                             storageRef.getDownloadUrl().addOnSuccessListener(uri -> {
                                 String imageUrl = uri.toString();
                                 Glide.with(this)
@@ -261,7 +266,7 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
     public void uploadQuestion(View view) {
         if (validateQuestionInput()) {
             if (imageUri != null) {
-                uploadImage(imageUri);  // Kép feltöltése és kérdés mentése/frissítése
+                uploadImage(imageUri);  // Kép feltöltés, majd ezután kérdés mentése/frissítése
             } else {
                 if (questionId != null) {
                     updateQuestion(null);  // Kép nélkül kérdés frissítése
@@ -319,13 +324,16 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
     }
 
     private void updateQuestion(String fileName) {
-        Question question = new Question(questionId, questionText, category, answers, correctAnswerIndex, fileName, explanationText);
+        String imageToSave = (fileName != null) ? fileName : existingImageName;
+        Question question = new Question(questionId, questionText, category, answers, correctAnswerIndex, imageToSave, explanationText);
 
         mFirestore.collection("Questions").document(questionId)
                 .set(question)
                 .addOnSuccessListener(aVoid -> {
                     clearInputFields();
                     showSuccessDialog("Sikeres módosítás!", "A kérdés sikeresen módosítva lett!");
+                    uploadImageButton.setVisibility(View.VISIBLE);
+                    manageImageLinearLayout.setVisibility(View.GONE);
                 })
                 .addOnFailureListener(e -> Toast.makeText(QuestionEditUploadActivity.this, "Hiba történt a frissítés során.", Toast.LENGTH_SHORT).show());
     }
