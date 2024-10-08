@@ -7,6 +7,7 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -18,6 +19,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
+import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.CollectionReference;
@@ -33,6 +35,8 @@ import com.szte.tudastenger.models.Category;
 import com.szte.tudastenger.models.Question;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
+
+import org.checkerframework.checker.units.qual.C;
 
 import java.util.UUID;
 
@@ -61,6 +65,7 @@ public class CategoryUploadActivity extends DrawerBaseActivity {
     private Uri imageUri;
     private FirebaseStorage mStorage;
     private String existingImageName;
+    private String categoryName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,6 +86,7 @@ public class CategoryUploadActivity extends DrawerBaseActivity {
         uploadImageButton = findViewById(R.id.uploadImageButton);
         modifyImageButton = findViewById(R.id.modifyImageButton);
         deleteImageButton = findViewById(R.id.deleteImageButton);
+        addCategoryButton = findViewById(R.id.addCategoryButton);
 
         mStorage = FirebaseStorage.getInstance();
         storageReference = mStorage.getReference();
@@ -89,20 +95,10 @@ public class CategoryUploadActivity extends DrawerBaseActivity {
 
         if (categoryId != null) {
             addCategoryTextView.setText("Kérdés szerkesztése");
+            addCategoryButton.setText("Módosítás");
+            editBarLinearLayout.setVisibility(View.VISIBLE);
+            loadCategoryData(categoryId);
         }
-
-        addCategoryButton = findViewById(R.id.addCategoryButton);
-        addCategoryButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if(categoryId == null) {
-                    addNewCategory(null);
-                } else{
-                    updateCategory(null);
-                }
-            }
-        });
-
         uploadImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -130,9 +126,41 @@ public class CategoryUploadActivity extends DrawerBaseActivity {
             }
         });
     }
-
+    public void uploadCategory(View view) {
+        if (imageUri != null) {
+            uploadImage(imageUri);  // Kép feltöltés, majd ezután kategória mentése/frissítése
+        } else {
+            if (categoryId != null) {
+                updateCategory(null);  // Kép nélkül kérdés frissítése
+            } else {
+                addNewCategory(null);  // Kép nélkül új kérdés mentése
+            }
+        }
+    }
     private void updateCategory(String filename) {
-        loadCategoryData(categoryId);
+        categoryName = ((EditText) findViewById(R.id.categoryName)).getText().toString();
+        String imageToSave = (filename != null) ? filename : existingImageName;
+        Category category = new Category(categoryId, categoryName, imageToSave);
+
+        mFirestore.collection("Categories").document(categoryId)
+                .set(category)
+                .addOnSuccessListener(aVoid -> {
+                    clearInputFields();
+                    showSuccessDialog("Sikeres módosítás!", "A kérdés sikeresen módosítva lett!");
+                    uploadImageButton.setVisibility(View.VISIBLE);
+                    manageImageLinearLayout.setVisibility(View.GONE);
+                })
+                .addOnFailureListener(e -> Toast.makeText(CategoryUploadActivity.this, "Hiba történt a frissítés során.", Toast.LENGTH_SHORT).show());
+    }
+
+    private void clearInputFields() {
+        ((EditText) findViewById(R.id.categoryName)).setText("");
+
+        imageUri = null;
+        categoryImagePreview.setVisibility(View.GONE);
+
+        uploadImageButton.setVisibility(View.VISIBLE);
+        manageImageLinearLayout.setVisibility(View.GONE);
     }
 
     private void loadCategoryData(String categoryId) {
@@ -141,13 +169,34 @@ public class CategoryUploadActivity extends DrawerBaseActivity {
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
                         Category category = documentSnapshot.toObject(Category.class);
+                        categoryName = category.getName();
+                        existingImageName = category.getImage();
+
                         ((EditText) findViewById(R.id.categoryName)).setText(category.getName());
+
+                        if (existingImageName != null && !existingImageName.isEmpty()) {
+                            uploadImageButton.setVisibility(View.GONE);
+                            manageImageLinearLayout.setVisibility(View.VISIBLE);
+                            StorageReference storageRef = FirebaseStorage.getInstance().getReference().child("images/" + existingImageName);
+                            storageRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                                String imageUrl = uri.toString();
+                                Glide.with(this)
+                                        .load(imageUrl)
+                                        .into(categoryImagePreview);
+                                categoryImagePreview.setVisibility(View.VISIBLE);
+                            }).addOnFailureListener(e -> {
+                                categoryImagePreview.setVisibility(View.GONE);
+                                Toast.makeText(CategoryUploadActivity.this, "Hiba a kép betöltésekor", Toast.LENGTH_SHORT).show();
+                            });
+                        } else {
+                            categoryImagePreview.setVisibility(View.GONE);
+                        }
                     }
                 });
     }
 
     public void addNewCategory(String filename) {
-        String categoryName = categoryNameEditText.getText().toString();
+        categoryName = categoryNameEditText.getText().toString();
 
         // Ellenőrzés, hogy a kategória név mező nem üres-e
         if (categoryName.isEmpty()) {
@@ -155,8 +204,12 @@ public class CategoryUploadActivity extends DrawerBaseActivity {
             return;
         }
 
-        // Új kategória hozzáadása Firestore-hoz
-        Category category = new Category(null, categoryName);
+        Category category = new Category(null, categoryName, null);
+
+        if(imageUri != null) {
+            uploadImage(imageUri);
+            category.setImage(filename);
+        }
 
         mCategories.add(category).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
             @Override
@@ -167,8 +220,8 @@ public class CategoryUploadActivity extends DrawerBaseActivity {
                 mFirestore.collection("Categories").document(documentId)
                         .update("id", documentId);
 
-                clearInputField();
-                showSuccessDialog();
+                clearInputFields();
+                showSuccessDialog("Sikeres hozzáadás", "A kategória sikeresen létrehozva!");
             }
         }).addOnFailureListener(e -> {
             Toast.makeText(CategoryUploadActivity.this, "Sikertelen kategória hozzáadás!", Toast.LENGTH_SHORT).show();
@@ -176,40 +229,34 @@ public class CategoryUploadActivity extends DrawerBaseActivity {
         });
     }
 
-    private void clearInputField() {
-        categoryNameEditText.setText("");
-    }
-
-    private void showSuccessDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Sikeres feltöltés")
-                .setMessage("A kategória sikeresen létrehozva!")
-                .setPositiveButton("Rendben", null)
-                .show();
-    }
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
         if (requestCode == CropImage.PICK_IMAGE_CHOOSER_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
-            Uri imageUri = CropImage.getPickImageResultUri(this, data);
-            if(CropImage.isReadExternalStoragePermissionsRequired(this, imageUri)){
-                requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},0);
+            Uri selectedImageUri = CropImage.getPickImageResultUri(this, data);
+            if (CropImage.isReadExternalStoragePermissionsRequired(this, selectedImageUri)) {
+                requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 0);
             } else {
-                startCrop(imageUri);
+                startCrop(selectedImageUri);
             }
         }
 
-        if(requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
+        if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
             CropImage.ActivityResult result = CropImage.getActivityResult(data);
-            if(resultCode == RESULT_OK) {
+            if (resultCode == RESULT_OK) {
                 imageUri = result.getUri();
                 categoryImagePreview.setImageURI(imageUri);
                 categoryImagePreview.setVisibility(View.VISIBLE);
                 uploadImageButton.setVisibility(View.GONE);
                 manageImageLinearLayout.setVisibility(View.VISIBLE);
+            } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
+                Exception error = result.getError();
+                Log.e("CATUP_CROPIMAGE_ERROR", error.getMessage());
             }
         }
     }
+
 
     private void startCrop(Uri imageUri) {
         CropImage.activity(imageUri)
@@ -218,6 +265,7 @@ public class CategoryUploadActivity extends DrawerBaseActivity {
                 .start(this);
     }
     private void uploadImage(Uri imageUri) {
+
         if(imageUri != null) {
             ProgressDialog progressDialog = new ProgressDialog(this);
             progressDialog.setTitle("Feltöltés...");
@@ -255,5 +303,12 @@ public class CategoryUploadActivity extends DrawerBaseActivity {
         }
     }
 
+    private void showSuccessDialog(String title, String message) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(title)
+                .setMessage(message)
+                .setPositiveButton("Rendben", null)
+                .show();
+    }
 
 }
