@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -32,7 +33,6 @@ import com.google.firebase.storage.UploadTask;
 import com.szte.tudastenger.R;
 import com.szte.tudastenger.databinding.ActivityCategoryUploadBinding;
 import com.szte.tudastenger.models.Category;
-import com.szte.tudastenger.models.Question;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
@@ -123,6 +123,25 @@ public class CategoryUploadActivity extends DrawerBaseActivity {
             public void onClick(View v) {
                 Intent pickIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
                 startActivityForResult(pickIntent, CropImage.PICK_IMAGE_CHOOSER_REQUEST_CODE);
+            }
+        });
+
+        backButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(CategoryUploadActivity.this, CategoryListActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        deleteButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(categoryId != null) {
+                    showDeleteConfirmationDialog(categoryId);
+                } else{
+                    Toast.makeText(CategoryUploadActivity.this, "Nincs törlendő kategória", Toast.LENGTH_SHORT).show();
+                }
             }
         });
     }
@@ -301,6 +320,46 @@ public class CategoryUploadActivity extends DrawerBaseActivity {
                         }
                     });
         }
+    }
+
+    private void showDeleteConfirmationDialog(String categoryId) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Kategória törlése");
+        builder.setMessage("Biztosan törölni szeretnéd ezt a kérdést? A kategóriához rendelt kérdések Besorolatlan kategóriába kerülnek!");
+
+        builder.setPositiveButton("Igen", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                deleteCategory(categoryId);
+            }
+        });
+
+        builder.setNegativeButton("Nem", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+
+            }
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
+    private void deleteCategory(String categoryId) {
+        mFirestore.collection("Categories").document(categoryId)
+                .delete()
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Toast.makeText(getApplicationContext(), "Kategória sikeresen törölve", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(getApplicationContext(), "Hiba történt a törlés közben", Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
     private void showSuccessDialog(String title, String message) {
