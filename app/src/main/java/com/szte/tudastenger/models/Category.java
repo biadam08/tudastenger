@@ -4,12 +4,23 @@ public class Category {
     private String id;
     private String name;
 
+    private String image;
+
     public Category() { // szükséges a Firebase Firestore-ból való objektum-deszerializáláshoz
     }
 
-    public Category(String id, String name) {
+    public Category(String id, String name, String image) {
         this.id = id;
         this.name = name;
+        this.image = image;
+    }
+
+    public String getImage() {
+        return image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
     }
 
     public String getId() {
