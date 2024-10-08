@@ -135,7 +135,6 @@ public class DuelListingActivity extends DrawerBaseActivity{
                                 docIds.add(document.getId());
                                 Duel duel = document.toObject(Duel.class);
                                 mergedResults.add(duel);
-                                Log.d("duel456", duel.getId());
                                 mFinishedDuelsData.add(duel);
                             }
                         }

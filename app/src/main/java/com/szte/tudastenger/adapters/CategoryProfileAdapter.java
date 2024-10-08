@@ -44,7 +44,7 @@ public class CategoryProfileAdapter extends RecyclerView.Adapter<CategoryProfile
 
         mFirestore.collection("AnsweredQuestions")
                 .whereEqualTo("userId", currentUser.getId())
-                .whereEqualTo("category", currentCategory.getName())
+                .whereEqualTo("category", currentCategory.getId())
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override

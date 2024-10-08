@@ -40,6 +40,7 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.szte.tudastenger.R;
 import com.szte.tudastenger.databinding.ActivityQuestionEditUploadBinding;
+import com.szte.tudastenger.models.Category;
 import com.szte.tudastenger.models.Question;
 import com.szte.tudastenger.models.User;
 import com.theartofdev.edmodo.cropper.CropImage;
@@ -132,12 +133,14 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
         questionId = getIntent().getStringExtra("questionId");
 
         mFirestore.collection("Categories").get().addOnSuccessListener(queryDocumentSnapshots -> {
-            List<String> categoryList = new ArrayList<>();
+            List<Category> categoryList = new ArrayList<>();
             for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
-                categoryList.add(documentSnapshot.getString("name"));
+                Category category = documentSnapshot.toObject(Category.class);
+                category.setId(documentSnapshot.getId());
+                categoryList.add(category);
             }
 
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(QuestionEditUploadActivity.this, android.R.layout.simple_spinner_item, categoryList);
+            ArrayAdapter<Category> adapter = new ArrayAdapter<>(QuestionEditUploadActivity.this, android.R.layout.simple_spinner_item, categoryList);
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             spinner.setAdapter(adapter);
 
@@ -148,6 +151,7 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
                 addQuestionButton.setText("Kérdés módosítása");
             }
         });
+
 
         uploadImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -325,7 +329,10 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
 
     private void updateQuestion(String fileName) {
         String imageToSave = (fileName != null) ? fileName : existingImageName;
-        Question question = new Question(questionId, questionText, category, answers, correctAnswerIndex, imageToSave, explanationText);
+        Category selectedCategory = (Category) spinner.getSelectedItem();
+        String selectedCategoryId = selectedCategory.getId();
+
+        Question question = new Question(questionId, questionText, selectedCategoryId, answers, correctAnswerIndex, imageToSave, explanationText);
 
         mFirestore.collection("Questions").document(questionId)
                 .set(question)
@@ -406,28 +413,24 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
     }
 
     private void saveQuestion(String fileName) {
+        Category selectedCategory = (Category) spinner.getSelectedItem();
+        String selectedCategoryId = selectedCategory.getId();
 
-        Question question = new Question(null, questionText, category, answers, correctAnswerIndex, fileName, explanationText);
+        Question question = new Question(null, questionText, selectedCategoryId, answers, correctAnswerIndex, fileName, explanationText);
 
         mFirestore.collection("Questions").add(question)
-                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                    @Override
-                    public void onSuccess(DocumentReference documentReference) {
-                        String documentId = documentReference.getId();
-                        question.setId(documentId);
+                .addOnSuccessListener(documentReference -> {
+                    String documentId = documentReference.getId();
+                    question.setId(documentId);
 
-                        mFirestore.collection("Questions").document(documentId)
-                                .update("id", documentId);
+                    mFirestore.collection("Questions").document(documentId)
+                            .update("id", documentId);
 
-                        clearInputFields();
-                        showSuccessDialog("Sikeres feltöltés", "A kérdés sikeresen feltöltve!");
-                    }
+                    clearInputFields();
+                    showSuccessDialog("Sikeres feltöltés", "A kérdés sikeresen feltöltve!");
                 })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Toast.makeText(QuestionEditUploadActivity.this, "Hiba történt a mentés során.", Toast.LENGTH_SHORT).show();
-                    }
+                .addOnFailureListener(e -> {
+                    Toast.makeText(QuestionEditUploadActivity.this, "Hiba történt a mentés során.", Toast.LENGTH_SHORT).show();
                 });
     }
 

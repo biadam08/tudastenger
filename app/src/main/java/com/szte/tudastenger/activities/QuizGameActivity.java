@@ -13,7 +13,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
@@ -58,7 +57,7 @@ public class QuizGameActivity extends DrawerBaseActivity {
     private StorageReference storageReference;
     private User currentUser;
     private TextView userGold;
-    private String categoryName; // adott kategóriában való játszásnál a kategória neve
+    private String intentCategoryId; // adott kategóriában való játszásnál a kategória neve
     private boolean isSelectedAnswer; // választott-e már választ a felhasználó az adott kérdésnél
     private String questionDocId; // kérdés dokumentum ID-ja, ami megegyezik a kérdés ID-jával
     private DocumentReference userRef;
@@ -89,8 +88,8 @@ public class QuizGameActivity extends DrawerBaseActivity {
         Intent intent = getIntent();
 
         // Adott kategóriájú kérdést akar
-        if (intent != null && intent.hasExtra("CategoryName")) {
-            categoryName = intent.getStringExtra("CategoryName");
+        if (intent != null && intent.hasExtra("intentCategoryId")) {
+            intentCategoryId = intent.getStringExtra("intentCategoryId");
         }
 
         // Vegyes játékot indított
@@ -161,7 +160,7 @@ public class QuizGameActivity extends DrawerBaseActivity {
 
                     // Ha van kategória kiválasztva, akkor csak azon belül szűrünk
                     if (!isMixed) {
-                        query = query.whereEqualTo("category", categoryName);
+                        query = query.whereEqualTo("category", intentCategoryId);
                     }
 
                     query.get().addOnSuccessListener(questions -> {
@@ -205,7 +204,7 @@ public class QuizGameActivity extends DrawerBaseActivity {
         answersLayout.setVisibility(View.GONE);
         buttonsLayout.setVisibility(View.GONE);
 
-        if (categoryName != null) {
+        if (intentCategoryId != null) {
             questionTextView.setText("Sajnos nincs több kérdés ebben a kategóriában!");
         } else {
             questionTextView.setText("Sajnos nincs több megválaszolatlan kérdés!");
@@ -320,7 +319,6 @@ public class QuizGameActivity extends DrawerBaseActivity {
                                     }
                                 }
                             });
-
                 } else {
                     //lekezelni, hogyha nem jött fel az új ablak és már nem kattinthat újat
                 }

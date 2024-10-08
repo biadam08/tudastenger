@@ -91,7 +91,14 @@ public class AnsweredQuestionAdapter extends RecyclerView.Adapter<AnsweredQuesti
                                 question.setQuestionText(questionText);
                                 question.setAnswers(answers);
                                 question.setCorrectAnswerIndex(correctAnswerIndex);
-                                question.setCategory(category);
+
+                                mFirestore.collection("Categories").document(category).get().addOnSuccessListener(categoryDoc -> {
+                                    if (categoryDoc.exists()) {
+                                        String categoryName = categoryDoc.getString("name");
+                                        mCategoryTextView.setText(categoryName);
+                                    }
+                                });
+
                                 question.setImage(image);
 
                                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy. MMMM dd. HH:mm:ss", new Locale("hu", "HU"));

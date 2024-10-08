@@ -306,12 +306,13 @@ public class DuelActivity extends DrawerBaseActivity{
             categoryId = "mixed";
         }
 
+
         buttonsLinearLayout.setVisibility(View.GONE);
 
         Query query = mQuestions;
 
         if (!category.equals("mixed")) {
-            query = query.whereEqualTo("category", category);
+            query = query.whereEqualTo("category", categoryId);
         }
 
         query

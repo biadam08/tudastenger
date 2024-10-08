@@ -27,6 +27,7 @@ import com.szte.tudastenger.models.Category;
 import com.szte.tudastenger.models.User;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class HistoryActivity extends DrawerBaseActivity {
     private ActivityHistoryBinding activityHistoryBinding;
@@ -72,19 +73,21 @@ public class HistoryActivity extends DrawerBaseActivity {
 
     private void displayQuestions() {
         Spinner spinner = findViewById(R.id.spinner);
-        ArrayList<String> categories = new ArrayList<>();
-        categories.add("Összes kategória");
+        List<Category> categoryList = new ArrayList<>();
+        Category allCategories = new Category("0", "Összes kategória", null);
+        categoryList.add(allCategories);
 
-        mFirestore.collection("Categories").orderBy("name").get().addOnSuccessListener(queryDocumentSnapshots -> {
-            for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                Category category = document.toObject(Category.class);
-                categories.add(category.getName());
-            }
-        });
+        mFirestore.collection("Categories").get().addOnSuccessListener(queryDocumentSnapshots -> {
+                    for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
+                        Category category = documentSnapshot.toObject(Category.class);
+                        category.setId(documentSnapshot.getId());
+                        categoryList.add(category);
+                    }
 
-        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, categories);
-        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinner.setAdapter(spinnerAdapter);
+                    ArrayAdapter<Category> adapter = new ArrayAdapter<>(HistoryActivity.this, android.R.layout.simple_spinner_item, categoryList);
+                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                    spinner.setAdapter(adapter);
+                });
 
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -98,6 +101,7 @@ public class HistoryActivity extends DrawerBaseActivity {
             }
         });
     }
+
 
     private void queryData(String sortCategory) {
         mRecyclerView = findViewById(R.id.recyclerView);
@@ -117,35 +121,40 @@ public class HistoryActivity extends DrawerBaseActivity {
                     if (task.isSuccessful()) {
                         for (QueryDocumentSnapshot document : task.getResult()) {
                             String questionId = document.getString("questionId");
-                            mQuestions
-                                    .document(questionId)
-                                    .get()
-                                    .addOnCompleteListener(task2 -> {
-                                        if (task2.isSuccessful()) {
-                                            DocumentSnapshot questionDocument = task2.getResult();
-                                            if (questionDocument.exists()) {
-                                                String answer = document.getString("answer");
-                                                boolean correct = document.getBoolean("correct");
-                                                Timestamp timestamp = document.getTimestamp("date");
-                                                String category = questionDocument.getString("category");
-                                                if (sortCategory.equals("Összes kategória") || sortCategory.equals(category)) {
-                                                    AnsweredQuestion answeredQuestion = new AnsweredQuestion(questionId, category, currentUser.getId(), timestamp, answer, correct);
+
+                            mQuestions.document(questionId).get().addOnCompleteListener(task2 -> {
+                                if (task2.isSuccessful()) {
+                                    DocumentSnapshot questionDocument = task2.getResult();
+                                    if (questionDocument.exists()) {
+                                        String answer = document.getString("answer");
+                                        boolean correct = document.getBoolean("correct");
+                                        Timestamp timestamp = document.getTimestamp("date");
+                                        String categoryId = questionDocument.getString("category");
+
+                                        mFirestore.collection("Categories").document(categoryId).get().addOnSuccessListener(categoryDoc -> {
+                                            if (categoryDoc.exists()) {
+                                                String categoryName = categoryDoc.getString("name");
+
+                                                if (sortCategory.equals("Összes kategória") || sortCategory.equals(categoryName)) {
+                                                    AnsweredQuestion answeredQuestion = new AnsweredQuestion(questionId, categoryName, currentUser.getId(), timestamp, answer, correct);
                                                     mAnsweredQuestionsData.add(answeredQuestion);
                                                 }
+
+                                                // A legújabb kitöltés legyen legfelül
+                                                mAnsweredQuestionsData.sort((q1, q2) -> q2.getDate().compareTo(q1.getDate()));
+                                                mAdapter.notifyDataSetChanged();
+
+                                                // "Nincs kérdés" szöveg megjelenítése/eltüntetése
+                                                if (mAnsweredQuestionsData.isEmpty()) {
+                                                    noSolvedQuestionTextView.setVisibility(View.VISIBLE);
+                                                } else {
+                                                    noSolvedQuestionTextView.setVisibility(View.GONE);
+                                                }
                                             }
-
-                                            // A legújabb kitöltés legyen legfelül
-                                            mAnsweredQuestionsData.sort((q1, q2) -> q2.getDate().compareTo(q1.getDate()));
-
-                                            mAdapter.notifyDataSetChanged();
-
-                                            if (mAnsweredQuestionsData.isEmpty()) {
-                                                noSolvedQuestionTextView.setVisibility(View.VISIBLE);
-                                            } else {
-                                                noSolvedQuestionTextView.setVisibility(View.GONE);
-                                            }
-                                        }
-                                    });
+                                        });
+                                    }
+                                }
+                            });
                         }
                     } else {
                         Log.d("Error", task.getException().getMessage());

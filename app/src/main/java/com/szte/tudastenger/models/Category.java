@@ -15,6 +15,11 @@ public class Category {
         this.image = image;
     }
 
+    @Override
+    public String toString() {
+        return name;
+    }
+
     public String getImage() {
         return image;
     }

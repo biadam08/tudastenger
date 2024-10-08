@@ -56,7 +56,7 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHo
                     if (position != RecyclerView.NO_POSITION) {
                         Category clickedCategory = mCategoriesData.get(position);
                         Intent intent = new Intent(mContext, QuizGameActivity.class);
-                        intent.putExtra("CategoryName", clickedCategory.getName());
+                        intent.putExtra("intentCategoryId", clickedCategory.getId());
                         mContext.startActivity(intent);
                     }
                 }

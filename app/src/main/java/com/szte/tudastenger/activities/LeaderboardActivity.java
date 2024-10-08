@@ -60,6 +60,7 @@ public class LeaderboardActivity extends DrawerBaseActivity {
     private Date startDateFromDialog;
     private Date endDateFromDialog;
     private String selectedCategory;
+    private String selectedCategoryId;
     private ImageView clearDateRangeImageView;
     private List<Map.Entry<String, Integer>> sortedListWithUsernames = new ArrayList<>();
 
@@ -105,25 +106,29 @@ public class LeaderboardActivity extends DrawerBaseActivity {
         config.setLocale(locale);
         getBaseContext().getResources().updateConfiguration(config, getBaseContext().getResources().getDisplayMetrics());
 
-        ArrayList<String> categories = new ArrayList<>();
-        categories.add("Összes kategória");
+        List<Category> categoryList = new ArrayList<>();
+        Category allCategories = new Category("0", "Összes kategória", null);
+        categoryList.add(allCategories);
 
-        mFirestore.collection("Categories").orderBy("name").get().addOnSuccessListener(queryDocumentSnapshots -> {
-            for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                Category category = document.toObject(Category.class);
-                categories.add(category.getName());
+        mFirestore.collection("Categories").get().addOnSuccessListener(queryDocumentSnapshots -> {
+            for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
+                Category category = documentSnapshot.toObject(Category.class);
+                category.setId(documentSnapshot.getId());
+                categoryList.add(category);
             }
-        });
 
-        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, categories);
-        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinner.setAdapter(spinnerAdapter);
+            ArrayAdapter<Category> adapter = new ArrayAdapter<>(LeaderboardActivity.this, android.R.layout.simple_spinner_item, categoryList);
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            spinner.setAdapter(adapter);
+        });
 
 
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 selectedCategory = parent.getItemAtPosition(position).toString();
+                Category selectedCategory = (Category) parent.getItemAtPosition(position);
+                selectedCategoryId = selectedCategory.getId();
                 displayLeaderboard();
             }
 
@@ -168,8 +173,9 @@ public class LeaderboardActivity extends DrawerBaseActivity {
                     .whereLessThanOrEqualTo("date", endDatePlusOne);
         }
 
+
         if (selectedCategory != null && !selectedCategory.isEmpty() && !selectedCategory.equals("Összes kategória")) {
-            query = query.whereEqualTo("category", selectedCategory);
+            query = query.whereEqualTo("category", selectedCategoryId);
         }
 
         query.get().addOnCompleteListener(task -> {
@@ -214,8 +220,6 @@ public class LeaderboardActivity extends DrawerBaseActivity {
                             sortedListWithUsernames.addAll(sortedMapWithUsernames.entrySet());
 
                             Collections.sort(sortedListWithUsernames, (entry1, entry2) -> entry2.getValue().compareTo(entry1.getValue()));
-
-                            Log.d("FONTOS", String.valueOf(sortedListWithUsernames));
 
                             if (sortedListWithUsernames.isEmpty()) {
                                 noDataForThisFilter.setVisibility(View.VISIBLE);

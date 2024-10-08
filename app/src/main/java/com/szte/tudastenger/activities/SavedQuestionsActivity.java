@@ -25,6 +25,7 @@ import com.szte.tudastenger.models.Question;
 import com.szte.tudastenger.models.User;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class SavedQuestionsActivity extends DrawerBaseActivity {
 
@@ -77,19 +78,22 @@ public class SavedQuestionsActivity extends DrawerBaseActivity {
     }
 
     private void displayQuestions() {
-        ArrayList<String> categories = new ArrayList<>();
-        categories.add("Összes kategória");
+        Spinner spinner = findViewById(R.id.spinner);
+        List<Category> categoryList = new ArrayList<>();
+        Category allCategories = new Category("0", "Összes kategória", null);
+        categoryList.add(allCategories);
 
-        mFirestore.collection("Categories").orderBy("name").get().addOnSuccessListener(queryDocumentSnapshots -> {
-            for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                Category category = document.toObject(Category.class);
-                categories.add(category.getName());
+        mFirestore.collection("Categories").get().addOnSuccessListener(queryDocumentSnapshots -> {
+            for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
+                Category category = documentSnapshot.toObject(Category.class);
+                category.setId(documentSnapshot.getId());
+                categoryList.add(category);
             }
-        });
 
-        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, categories);
-        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinner.setAdapter(spinnerAdapter);
+            ArrayAdapter<Category> adapter = new ArrayAdapter<>(SavedQuestionsActivity.this, android.R.layout.simple_spinner_item, categoryList);
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            spinner.setAdapter(adapter);
+        });
 
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -106,7 +110,6 @@ public class SavedQuestionsActivity extends DrawerBaseActivity {
 
     private void queryData(String sortCategory) {
         mRecyclerView = findViewById(R.id.recyclerView);
-
         mRecyclerView.setLayoutManager(new GridLayoutManager(this, 1));
 
         mQuestionsData = new ArrayList<>();
@@ -122,36 +125,45 @@ public class SavedQuestionsActivity extends DrawerBaseActivity {
                     if (task.isSuccessful()) {
                         for (QueryDocumentSnapshot document : task.getResult()) {
                             String questionId = document.getString("questionId");
-                            mQuestions
-                                    .document(questionId)
-                                    .get()
-                                    .addOnCompleteListener(task2 -> {
-                                        if (task2.isSuccessful()) {
-                                            DocumentSnapshot questionDocument = task2.getResult();
-                                            if (questionDocument.exists()) {
-                                                String questionText = questionDocument.getString("questionText");
-                                                ArrayList<String> answers = (ArrayList<String>) questionDocument.get("answers");
-                                                int correctAnswerIndex = questionDocument.getLong("correctAnswerIndex").intValue();
-                                                String category = questionDocument.getString("category");
-                                                String image = questionDocument.getString("image");
-                                                String explanationText = questionDocument.getString("explanationText");
-                                                if(sortCategory.equals("Összes kategória") || sortCategory.equals(category)) {
-                                                    Question question = new Question(questionId, questionText, category, answers, correctAnswerIndex, image, explanationText);
+
+                            mQuestions.document(questionId).get().addOnCompleteListener(task2 -> {
+                                if (task2.isSuccessful()) {
+                                    DocumentSnapshot questionDocument = task2.getResult();
+                                    if (questionDocument.exists()) {
+                                        String questionText = questionDocument.getString("questionText");
+                                        ArrayList<String> answers = (ArrayList<String>) questionDocument.get("answers");
+                                        int correctAnswerIndex = questionDocument.getLong("correctAnswerIndex").intValue();
+                                        String categoryId = questionDocument.getString("category");
+                                        String image = questionDocument.getString("image");
+                                        String explanationText = questionDocument.getString("explanationText");
+
+                                        mFirestore.collection("Categories").document(categoryId).get().addOnSuccessListener(categoryDoc -> {
+                                            if (categoryDoc.exists()) {
+                                                String categoryName = categoryDoc.getString("name");
+
+                                                if (sortCategory.equals("Összes kategória") || sortCategory.equals(categoryName)) {
+
+                                                    Question question = new Question(questionId, questionText, categoryName, answers, correctAnswerIndex, image, explanationText);
                                                     mQuestionsData.add(question);
+
+                                                    mAdapter.notifyDataSetChanged();
+
+                                                    if (mQuestionsData.isEmpty()) {
+                                                        noSavedQuestionTextView.setVisibility(View.VISIBLE);
+                                                    } else {
+                                                        noSavedQuestionTextView.setVisibility(View.GONE);
+                                                    }
                                                 }
                                             }
-                                        }
-                                        mAdapter.notifyDataSetChanged();
-                                        if(mQuestionsData.isEmpty()){
-                                            noSavedQuestionTextView.setVisibility(View.VISIBLE);
-                                        } else{
-                                            noSavedQuestionTextView.setVisibility(View.GONE);
-                                        }
-                                    });
+                                        });
+                                    }
+                                }
+                            });
                         }
                     } else {
                         Log.d("Error", task.getException().getMessage());
                     }
                 });
     }
+
 }
