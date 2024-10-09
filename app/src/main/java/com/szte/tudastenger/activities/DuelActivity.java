@@ -75,9 +75,7 @@ public class DuelActivity extends DrawerBaseActivity{
     private ArrayList<Category> mCategoriesData;
 
     private RecyclerView mRecyclerView;
-
     private DuelCategoryAdapter mAdapter;
-    private Button startMixedGameButton;
     private Button startDuelButton;
     private String category;
     private String categoryId;
@@ -160,9 +158,12 @@ public class DuelActivity extends DrawerBaseActivity{
                 currentUser = doc.toObject(User.class);
                 userRef = mUsers.document(currentUser.getId());
             }
+            //ha a játékos a kihívó
             if(currentUser != null && currentUser.getId().equals(challengerUserId)){
                 makeDuel();
-            } else{
+            }
+            //ha nem kihívó, akkor töltse be a kihívást
+            else{
                 buttonsLinearLayout.setVisibility(View.GONE);
                 loadDuelData();
             }
@@ -234,13 +235,6 @@ public class DuelActivity extends DrawerBaseActivity{
 
 
         mCategories = mFirestore.collection("Categories");
-        startMixedGameButton = popupView.findViewById(R.id.startMixedGameButton);
-        startMixedGameButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                category = "mixed";
-            }
-        });
 
         int minValue = 1;
         int maxValue = 10;
@@ -258,18 +252,25 @@ public class DuelActivity extends DrawerBaseActivity{
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         mCategoriesData = new ArrayList<>();
+        mCategoriesData.add(new Category(null, "Vegyes kategória", null));
+
         mAdapter = new DuelCategoryAdapter(this, mCategoriesData, new OnCategoryClickListener() {
             @Override
             public void onCategoryClicked(String categoryName) {
-                mFirestore.collection("Categories")
-                        .whereEqualTo("name", categoryName)
-                        .get()
-                        .addOnSuccessListener(queryDocumentSnapshots -> {
-                            for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
-                                categoryId = documentSnapshot.getId();
-                            }
-                        });
-                category = categoryName;
+                if(!categoryName.equals("Vegyes kategória")) {
+                    mFirestore.collection("Categories")
+                            .whereEqualTo("name", categoryName)
+                            .get()
+                            .addOnSuccessListener(queryDocumentSnapshots -> {
+                                for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
+                                    categoryId = documentSnapshot.getId();
+                                }
+                            });
+                    category = categoryName;
+                } else{
+                    categoryId = null;
+                    category = "mixed";
+                }
             }
         });
 

@@ -23,6 +23,8 @@ public class DuelCategoryAdapter extends RecyclerView.Adapter<DuelCategoryAdapte
     private Context mContext;
     private OnCategoryClickListener mOnCategoryClickListener;
 
+    private int selectedPosition = RecyclerView.NO_POSITION;
+
     public DuelCategoryAdapter(Context context, ArrayList<Category> categoriesData, OnCategoryClickListener listener){
         this.mCategoriesData = categoriesData;
         this.mContext = context;
@@ -32,16 +34,28 @@ public class DuelCategoryAdapter extends RecyclerView.Adapter<DuelCategoryAdapte
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new ViewHolder(LayoutInflater.from(mContext).inflate(R.layout.list_category, parent, false));
+        return new ViewHolder(LayoutInflater.from(mContext).inflate(R.layout.list_edit_category, parent, false));
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Category currentCategory = mCategoriesData.get(position);
 
+        if (position == selectedPosition) {
+            holder.itemView.setBackgroundResource(R.drawable.custom_shape_selected_item_border);
+        } else {
+            holder.itemView.setBackgroundResource(R.drawable.custom_shape_item_default_border);
+        }
+
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                int previousPosition = selectedPosition;
+                selectedPosition = holder.getAdapterPosition();
+
+                notifyItemChanged(previousPosition);
+                notifyItemChanged(selectedPosition);
+
                 String categoryName = mCategoriesData.get(holder.getAdapterPosition()).getName();
                 mOnCategoryClickListener.onCategoryClicked(categoryName);
             }
