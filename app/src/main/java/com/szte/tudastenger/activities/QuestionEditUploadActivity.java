@@ -29,11 +29,16 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.GetTokenResult;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.functions.FirebaseFunctions;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
@@ -42,26 +47,15 @@ import com.szte.tudastenger.R;
 import com.szte.tudastenger.databinding.ActivityQuestionEditUploadBinding;
 import com.szte.tudastenger.models.Category;
 import com.szte.tudastenger.models.Question;
-import com.szte.tudastenger.models.User;
+
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
-
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 
 
 public class QuestionEditUploadActivity extends DrawerBaseActivity {
@@ -490,7 +484,7 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
             @Override
             public void onClick(View view) {
                 if (validateQuestionInput()) {
-                    generateExplanationWithOkHttp();
+                    generateExplanationWithFirebase();
                 }
             }
         });
@@ -526,86 +520,32 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
         wm.updateViewLayout(container, p);
     }
 
-    private void generateExplanationWithOkHttp() {
-        String apiKey = "Bearer ";
-
+    private void generateExplanationWithFirebase() {
         String prompt = "Adj egy rövid 3-5 mondatos ismeretterjesztő választ az alábbi kérdésre és a hozzátartozó helyes válaszra. \nKérdés: " + questionText + "\nHelyes válasz: " + answers.get(correctAnswerIndex);
 
-        OkHttpClient client = new OkHttpClient();
+        FirebaseFunctions functions = FirebaseFunctions.getInstance();
 
-        JSONObject jsonObject = new JSONObject();
-        try {
-            jsonObject.put("model", "gpt-4o-mini");
+        functions
+                .getHttpsCallable("getChatGPTResponse")
+                .call(Collections.singletonMap("prompt", prompt))
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Map<String, Object> resultMap = (Map<String, Object>) task.getResult().getData();
 
-            JSONArray messages = new JSONArray();
+                        if (resultMap.containsKey("response")) {
+                            String explanation = (String) resultMap.get("response");
 
-            JSONObject userMessage = new JSONObject();
-            userMessage.put("role", "user");
-            userMessage.put("content", prompt);
-
-            messages.put(userMessage);
-
-            jsonObject.put("messages", messages);
-            jsonObject.put("max_tokens", 350);
-            jsonObject.put("temperature", 0.7);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        RequestBody body = RequestBody.create(
-                jsonObject.toString(), MediaType.get("application/json; charset=utf-8"));
-
-        Request request = new Request.Builder()
-                .url("https://api.openai.com/v1/chat/completions")
-                .header("Authorization", apiKey)
-                .post(body)
-                .build();
-
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                runOnUiThread(() ->
-                        Toast.makeText(QuestionEditUploadActivity.this, "Failed to generate explanation",  Toast.LENGTH_SHORT).show()
-                );
-            }
-
-            @Override
-            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                if (response.isSuccessful()) {
-                    if (response.body() != null) {
-                        String responseBody = response.body().string();
-                        Log.d("API_RESPONSE", responseBody); // Itt írasd ki a teljes választ a Logcat-be
-                        String explanation = extractExplanationFromResponse(responseBody);
-
-                        runOnUiThread(() -> {
-                            explanationEditText.setText(explanation);
-                            explanationText = explanation;
-                        });
+                            runOnUiThread(() -> {
+                                explanationEditText.setText(explanation);
+                                explanationText = explanation;
+                            });
+                        } else {
+                            Toast.makeText(this, "Hiba történt a generálás során", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        Toast.makeText(this, "Hiba történt a generálás során", Toast.LENGTH_SHORT).show();
                     }
-                } else {
-                    String errorBody = response.body() != null ? response.body().string() : "Unknown error";
-                    runOnUiThread(() -> {
-                        Log.d("ERRORAPI", errorBody);
-                        Toast.makeText(QuestionEditUploadActivity.this, "Error generating explanation: " + errorBody, Toast.LENGTH_LONG).show();
-                    });
-                }
-            }
-
-        });
-    }
-
-    private String extractExplanationFromResponse(String responseBody) {
-        try {
-            JSONObject jsonObject = new JSONObject(responseBody);
-            JSONArray choices = jsonObject.getJSONArray("choices");
-            if (choices.length() > 0) {
-                JSONObject message = choices.getJSONObject(0).getJSONObject("message");
-                return message.getString("content").trim();
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        return "Nincs elérhető magyarázat.";
+                });
     }
 
     private void showDeleteConfirmationDialog(String questionId) {
