@@ -35,7 +35,7 @@ public class CategoryEditAdapter extends RecyclerView.Adapter<CategoryEditAdapte
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new ViewHolder(LayoutInflater.from(mContext).inflate(R.layout.list_category, parent, false));
+        return new ViewHolder(LayoutInflater.from(mContext).inflate(R.layout.list_edit_category, parent, false));
     }
 
     @Override

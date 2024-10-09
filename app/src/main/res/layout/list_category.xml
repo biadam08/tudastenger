@@ -9,22 +9,27 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/card"
-        android:padding="16dp"
-        android:background="?attr/selectableItemBackground">
+        android:layout_height="120dp"
+        android:id="@+id/card">
 
-        <TextView
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/categoryName"
-            android:gravity="center_vertical"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="#000000"
-            android:padding="8dp"
-            />
+            android:layout_height="match_parent"
+            android:elevation="6dp"
+            android:gravity="center">
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/categoryName"
+                android:gravity="center"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#000000"
+                android:padding="12dp"
+                android:background="@drawable/text_background_fade"
+            />
+        </FrameLayout>
     </RelativeLayout>
 
 </androidx.cardview.widget.CardView>

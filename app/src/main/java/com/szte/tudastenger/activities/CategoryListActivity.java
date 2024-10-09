@@ -24,7 +24,7 @@ import com.szte.tudastenger.models.Question;
 
 import java.util.ArrayList;
 
-public class CategoryListActivity extends AppCompatActivity {
+public class CategoryListActivity extends DrawerBaseActivity {
     private ActivityCategoryListBinding activityCategoryListBinding;
     private FirebaseFirestore mFirestore;
     private FirebaseAuth mAuth;
