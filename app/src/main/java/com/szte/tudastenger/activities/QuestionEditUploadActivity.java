@@ -521,7 +521,7 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
     }
 
     private void generateExplanationWithFirebase() {
-        String prompt = "Adj egy rövid 3-5 mondatos ismeretterjesztő választ az alábbi kérdésre és a hozzátartozó helyes válaszra. \nKérdés: " + questionText + "\nHelyes válasz: " + answers.get(correctAnswerIndex);
+        String prompt = "Kérlek, készíts egy pontos, 3-6 mondatos választ az alábbi kérdésre, figyelembe véve, hogy a helyes válasz kizárólag a megadott helyes válasz lehet: \nKérdés: " + questionText + "\nHelyes válasz: " + answers.get(correctAnswerIndex) + ".";
 
         FirebaseFunctions functions = FirebaseFunctions.getInstance();
 
