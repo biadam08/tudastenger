@@ -40,7 +40,7 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/userListRecyclerView"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="360dp"
         android:scrollbars="vertical"
         app:layout_constraintTop_toBottomOf="@+id/searchByName" />
 
