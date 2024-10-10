@@ -15,12 +15,15 @@ import android.widget.EditText;
 import android.widget.SearchView;
 import android.widget.Spinner;
 
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.szte.tudastenger.R;
 import com.szte.tudastenger.adapters.CategoryProfileAdapter;
 import com.szte.tudastenger.adapters.QuestionAdapter;
@@ -46,7 +49,7 @@ public class QuestionListActivity extends DrawerBaseActivity {
     private QuestionAdapter mAdapter;
     private SearchView searchView;
     private Spinner categorySpinner;
-    private ArrayList<String> categories;
+    private ArrayList<Category> categories;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,24 +104,46 @@ public class QuestionListActivity extends DrawerBaseActivity {
 
     private void filterQuestions() {
         String selectedCategory = categorySpinner.getSelectedItem().toString();
+        Log.d("SelectedCat", selectedCategory);
         String searchText = searchView.getQuery().toString().toLowerCase();
 
-        mAdapter.setFilterCategory(selectedCategory);
-
-        mAdapter.getFilter().filter(searchText);
+        if(selectedCategory.equals("Összes kategória")){
+            mAdapter.setFilterCategory("Összes kategória");
+            mAdapter.getFilter().filter(searchText);
+        } else {
+            mFirestore.collection("Categories")
+                    .get()
+                    .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                        @Override
+                        public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                            for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
+                                String categoryName = document.getString("name");
+                                if (categoryName != null && categoryName.equals(selectedCategory)) {
+                                    String categoryId = document.getId();
+                                    mAdapter.setFilterCategory(categoryId);
+                                    mAdapter.getFilter().filter(searchText);
+                                    break;
+                                }
+                            }
+                        }
+                    });
+            mAdapter.getFilter().filter(searchText);
+        }
     }
 
     private void initCategorySpinner() {
         categories = new ArrayList<>();
-        categories.add("Összes kategória");
+        Category allCategories = new Category("0", "Összes kategória", null);
+        categories.add(allCategories);
 
-        mFirestore.collection("Categories").orderBy("name").get().addOnSuccessListener(queryDocumentSnapshots -> {
-            for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                Category category = document.toObject(Category.class);
-                categories.add(category.getName());
+        mFirestore.collection("Categories").get().addOnSuccessListener(queryDocumentSnapshots -> {
+            for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
+                Category category = documentSnapshot.toObject(Category.class);
+                category.setId(documentSnapshot.getId());
+                categories.add(category);
             }
 
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, categories);
+            ArrayAdapter<Category> adapter = new ArrayAdapter<>(QuestionListActivity.this, android.R.layout.simple_spinner_item, categories);
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             categorySpinner.setAdapter(adapter);
         });
