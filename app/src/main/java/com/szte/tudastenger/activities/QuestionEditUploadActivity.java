@@ -36,8 +36,10 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.GetTokenResult;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.functions.FirebaseFunctions;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
@@ -126,7 +128,7 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
 
         questionId = getIntent().getStringExtra("questionId");
 
-        mFirestore.collection("Categories").get().addOnSuccessListener(queryDocumentSnapshots -> {
+        mFirestore.collection("Categories").orderBy("name").get().addOnSuccessListener(queryDocumentSnapshots -> {
             List<Category> categoryList = new ArrayList<>();
             for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
                 Category category = documentSnapshot.toObject(Category.class);
@@ -137,15 +139,14 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
             ArrayAdapter<Category> adapter = new ArrayAdapter<>(QuestionEditUploadActivity.this, android.R.layout.simple_spinner_item, categoryList);
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             spinner.setAdapter(adapter);
-
-            if (questionId != null) {
-                editBarLinearLayout.setVisibility(View.VISIBLE);
-                loadQuestionData(questionId);
-                addQuestionTextView.setText("Kérdés szerkesztése");
-                addQuestionButton.setText("Kérdés módosítása");
-            }
         });
 
+        if (questionId != null) {
+            editBarLinearLayout.setVisibility(View.VISIBLE);
+            loadQuestionData(questionId);
+            addQuestionTextView.setText("Kérdés szerkesztése");
+            addQuestionButton.setText("Kérdés módosítása");
+        }
 
         uploadImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -209,52 +210,70 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
                     if (documentSnapshot.exists()) {
                         Question question = documentSnapshot.toObject(Question.class);
 
-                        // kérdés adatainak betöltése
                         questionText = question.getQuestionText();
                         answers = question.getAnswers();
                         correctAnswerIndex = question.getCorrectAnswerIndex();
-                        category = question.getCategory();
+                        category = question.getCategory(); // This is the category ID
                         explanationText = question.getExplanationText();
                         existingImageName = question.getImage();
 
-                        // UI elemek frissítése
-                        ((EditText) findViewById(R.id.questionName)).setText(questionText);
-                        spinner.setSelection(getSpinnerIndex(spinner, category));
-
-                        for (int i = 0; i < answers.size(); i++) {
-                            EditText answerEditText = (EditText) answerContainer.getChildAt(i);
-                            RadioButton radioButton = (RadioButton) radioGroup.getChildAt(i);
-                            answerEditText.setText(answers.get(i));
-
-                            if (i == correctAnswerIndex) {
-                                radioButton.setChecked(true);
-                            }
-                        }
-
-                        if (existingImageName != null && !existingImageName.isEmpty()) {
-                            uploadImageButton.setVisibility(View.GONE);
-                            manageImageLinearLayout.setVisibility(View.VISIBLE);
-                            StorageReference storageRef = FirebaseStorage.getInstance().getReference().child("images/" + existingImageName);
-                            storageRef.getDownloadUrl().addOnSuccessListener(uri -> {
-                                String imageUrl = uri.toString();
-                                Glide.with(this)
-                                        .load(imageUrl)
-                                        .into(questionImagePreview);
-                                questionImagePreview.setVisibility(View.VISIBLE);
-                            }).addOnFailureListener(e -> {
-                                questionImagePreview.setVisibility(View.GONE);
-                                Toast.makeText(QuestionEditUploadActivity.this, "Hiba a kép betöltésekor", Toast.LENGTH_SHORT).show();
-                            });
-                        } else {
-                            questionImagePreview.setVisibility(View.GONE);
-                        }
+                        mFirestore.collection("Categories")
+                                .whereEqualTo("id", category)
+                                .get()
+                                .addOnSuccessListener(queryDocumentSnapshots -> {
+                                    if (!queryDocumentSnapshots.isEmpty()) {
+                                        DocumentSnapshot categoryDoc = queryDocumentSnapshots.getDocuments().get(0);
+                                        category = categoryDoc.getString("name");
+                                        Log.d("kategórialoadban", category);
+                                    }
+                                    updateUI();
+                                })
+                                .addOnFailureListener(e -> {
+                                    category = "Besorolatlan";
+                                    updateUI();
+                                });
                     }
                 });
     }
 
-    private int getSpinnerIndex(Spinner spinner, String category) {
+    private void updateUI() {
+        ((EditText) findViewById(R.id.questionName)).setText(questionText);
+        Log.d("kategóriaupdateui", category);
+        spinner.setSelection(getSpinnerIndex(spinner, category));
+
+        for (int i = 0; i < answers.size(); i++) {
+            EditText answerEditText = (EditText) answerContainer.getChildAt(i);
+            RadioButton radioButton = (RadioButton) radioGroup.getChildAt(i);
+            answerEditText.setText(answers.get(i));
+
+            if (i == correctAnswerIndex) {
+                radioButton.setChecked(true);
+            }
+        }
+
+        if (existingImageName != null && !existingImageName.isEmpty()) {
+            uploadImageButton.setVisibility(View.GONE);
+            manageImageLinearLayout.setVisibility(View.VISIBLE);
+            StorageReference storageRef = FirebaseStorage.getInstance().getReference().child("images/" + existingImageName);
+            storageRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                String imageUrl = uri.toString();
+                Glide.with(this)
+                        .load(imageUrl)
+                        .into(questionImagePreview);
+                questionImagePreview.setVisibility(View.VISIBLE);
+            }).addOnFailureListener(e -> {
+                questionImagePreview.setVisibility(View.GONE);
+                Toast.makeText(QuestionEditUploadActivity.this, "Hiba a kép betöltés során", Toast.LENGTH_SHORT).show();
+            });
+        } else {
+            questionImagePreview.setVisibility(View.GONE);
+        }
+    }
+
+    private int getSpinnerIndex(Spinner spinner, String categoryName) {
         for (int i = 0; i < spinner.getCount(); i++) {
-            if (spinner.getItemAtPosition(i).equals(category)) {
+            Category category = (Category) spinner.getItemAtPosition(i);
+            if (category.getName().equals(categoryName)) {
                 return i;
             }
         }

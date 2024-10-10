@@ -348,7 +348,7 @@ public class CategoryUploadActivity extends DrawerBaseActivity {
         dialog.show();
     }
 
-    private void deleteCategory(String categoryId) {
+    private void deleteCategory(String currentCategoryId) {
         mFirestore.collection("Categories")
                 .whereEqualTo("name", "Besorolatlan")
                 .get()
@@ -360,10 +360,10 @@ public class CategoryUploadActivity extends DrawerBaseActivity {
                             String uncategorizedId = queryDocumentSnapshots.getDocuments().get(0).getId();
 
                             // az eredeti kategóriát töröljük, a kérdések kategóriáját módosítjuk
-                            updateQuestionsAfterCategoryDeletion(categoryId, uncategorizedId);
+                            updateQuestionsAfterCategoryDeletion(currentCategoryId, uncategorizedId);
                         } else {
                             // nem létezik még a Besorolatlan kategória, ezért először létrehozzuk, majd töröljük az eredetit
-                            createUncategorizedCategoryAndDelete(categoryId);
+                            createUncategorizedCategoryAndDelete(currentCategoryId);
                         }
                     }
                 })
@@ -375,7 +375,7 @@ public class CategoryUploadActivity extends DrawerBaseActivity {
                 });
     }
 
-    private void createUncategorizedCategoryAndDelete(String categoryId) {
+    private void createUncategorizedCategoryAndDelete(String currentCategoryId) {
         Category uncategorizedCategory = new Category(null, "Besorolatlan", null);
 
         mCategories.add(uncategorizedCategory)
@@ -388,7 +388,7 @@ public class CategoryUploadActivity extends DrawerBaseActivity {
                         mFirestore.collection("Categories").document(uncategorizedId)
                                 .update("id", uncategorizedId);
 
-                        updateQuestionsAfterCategoryDeletion(categoryId, uncategorizedId);
+                        updateQuestionsAfterCategoryDeletion(currentCategoryId, uncategorizedId);
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
@@ -399,9 +399,9 @@ public class CategoryUploadActivity extends DrawerBaseActivity {
                 });
     }
 
-    private void updateQuestionsAfterCategoryDeletion(String categoryId, String newCategoryId) {
+    private void updateQuestionsAfterCategoryDeletion(String currentCategoryId, String newCategoryId) {
         mFirestore.collection("Questions")
-                .whereEqualTo("category", categoryId)
+                .whereEqualTo("category", currentCategoryId)
                 .get()
                 .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                     @Override
@@ -410,14 +410,14 @@ public class CategoryUploadActivity extends DrawerBaseActivity {
                         WriteBatch batch = mFirestore.batch();
                         for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
                             DocumentReference questionRef = document.getReference();
-                            batch.update(questionRef, "categoryId", newCategoryId);
+                            batch.update(questionRef, "category", newCategoryId);
                         }
                         batch.commit()
                                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                                     @Override
                                     public void onSuccess(Void aVoid) {
                                         //törölhetjük a kategóriát
-                                        mFirestore.collection("Categories").document(categoryId)
+                                        mFirestore.collection("Categories").document(currentCategoryId)
                                                 .delete()
                                                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                                                     @Override
