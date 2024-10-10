@@ -25,7 +25,10 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.WriteBatch;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
@@ -346,18 +349,102 @@ public class CategoryUploadActivity extends DrawerBaseActivity {
     }
 
     private void deleteCategory(String categoryId) {
-        mFirestore.collection("Categories").document(categoryId)
-                .delete()
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
+        mFirestore.collection("Categories")
+                .whereEqualTo("name", "Besorolatlan")
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                     @Override
-                    public void onSuccess(Void aVoid) {
-                        Toast.makeText(getApplicationContext(), "Kategória sikeresen törölve", Toast.LENGTH_SHORT).show();
+                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                        if (!queryDocumentSnapshots.isEmpty()) {
+                            // létezik már a Besorolatlan kategória
+                            String uncategorizedId = queryDocumentSnapshots.getDocuments().get(0).getId();
+
+                            // az eredeti kategóriát töröljük, a kérdések kategóriáját módosítjuk
+                            updateQuestionsAfterCategoryDeletion(categoryId, uncategorizedId);
+                        } else {
+                            // nem létezik még a Besorolatlan kategória, ezért először létrehozzuk, majd töröljük az eredetit
+                            createUncategorizedCategoryAndDelete(categoryId);
+                        }
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        Toast.makeText(getApplicationContext(), "Hiba történt a törlés közben", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "Hiba történt a Besorolatlan kategória lekérdezésekor", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    private void createUncategorizedCategoryAndDelete(String categoryId) {
+        Category uncategorizedCategory = new Category(null, "Besorolatlan", null);
+
+        mCategories.add(uncategorizedCategory)
+                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                    @Override
+                    public void onSuccess(DocumentReference documentReference) {
+                        String uncategorizedId = documentReference.getId();
+                        uncategorizedCategory.setId(uncategorizedId);
+
+                        mFirestore.collection("Categories").document(uncategorizedId)
+                                .update("id", uncategorizedId);
+
+                        updateQuestionsAfterCategoryDeletion(categoryId, uncategorizedId);
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(getApplicationContext(), "Hiba történt a Besorolatlan kategória létrehozása közben", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    private void updateQuestionsAfterCategoryDeletion(String categoryId, String newCategoryId) {
+        mFirestore.collection("Questions")
+                .whereEqualTo("category", categoryId)
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                    @Override
+                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                        //a kategória korábbi kérdéseinek átállítjuk a kategóriáját a Besorolatlanra
+                        WriteBatch batch = mFirestore.batch();
+                        for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
+                            DocumentReference questionRef = document.getReference();
+                            batch.update(questionRef, "categoryId", newCategoryId);
+                        }
+                        batch.commit()
+                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                    @Override
+                                    public void onSuccess(Void aVoid) {
+                                        //törölhetjük a kategóriát
+                                        mFirestore.collection("Categories").document(categoryId)
+                                                .delete()
+                                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                    @Override
+                                                    public void onSuccess(Void aVoid) {
+                                                        showSuccessDialog("Sikeres törlés", "A kategória sikeresen törölve lett!");
+                                                    }
+                                                })
+                                                .addOnFailureListener(new OnFailureListener() {
+                                                    @Override
+                                                    public void onFailure(@NonNull Exception e) {
+                                                        Toast.makeText(getApplicationContext(), "Hiba történt a törlés közben", Toast.LENGTH_SHORT).show();
+                                                    }
+                                                });
+                                    }
+                                })
+                                .addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        Toast.makeText(getApplicationContext(), "Hiba történt a kérdések frissítése közben", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(getApplicationContext(), "Hiba történt a kérdések lekérdezése közben", Toast.LENGTH_SHORT).show();
                     }
                 });
     }
