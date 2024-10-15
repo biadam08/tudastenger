@@ -146,6 +146,10 @@ public class QuizGameActivity extends DrawerBaseActivity {
         helpButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(isSelectedAnswer){
+                    showOkAlertDialog("Már válaszoltál", "Ezt a kérdést már megválaszoltad, így nem vehetsz igénybe segítséget!");
+                    return;
+                }
                 popUpHelp();
             }
         });
@@ -474,25 +478,29 @@ public class QuizGameActivity extends DrawerBaseActivity {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         if(currentUser.getGold() >= helpCost) {
-                            userRef.update("gold", FieldValue.increment(-helpCost))
-                                    .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                        @Override
-                                        public void onComplete(@NonNull Task<Void> task) {
-                                            currentUser.setGold(currentUser.getGold() - helpCost);
-                                            userGold.setText(currentUser.getGold().toString());
-                                            popupWindow.dismiss();
-                                            removeWrongAnswer();
-                                        }
-                                    }).addOnFailureListener(new OnFailureListener() {
-                                        @Override
-                                        public void onFailure(@NonNull Exception e) {
-                                            Toast.makeText(QuizGameActivity.this, "A segítséget nem sikerült igénybevenni!", Toast.LENGTH_SHORT).show();
-                                        }
-                                    });
-                        } else if(currentUser.getGold() < helpCost){
+                            if(isHelpUsedYet){
+                                popupWindow.dismiss();
+                                showOkAlertDialog("Már használtál segítséget","Ennél a kérdésnél már használtál segítséget!");
+                            } else {
+                                userRef.update("gold", FieldValue.increment(-helpCost))
+                                        .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<Void> task) {
+                                                currentUser.setGold(currentUser.getGold() - helpCost);
+                                                userGold.setText(currentUser.getGold().toString());
+                                                popupWindow.dismiss();
+                                                removeWrongAnswer();
+                                            }
+                                        }).addOnFailureListener(new OnFailureListener() {
+                                            @Override
+                                            public void onFailure(@NonNull Exception e) {
+                                                Toast.makeText(QuizGameActivity.this, "A segítséget nem sikerült igénybevenni!", Toast.LENGTH_SHORT).show();
+                                            }
+                                        });
+                            }
+                        } else {
+                            popupWindow.dismiss();
                             showOkAlertDialog("Nincs elég aranyad","A segítség megvásárlásához szükséges arannyal sajnos nem rendelkezel!");
-                        } else if(isHelpUsedYet){
-                            showOkAlertDialog("Már használtál segítséget","Ennél a kérdésnél már használtál segítséget!");
                         }
                     }
                 });
