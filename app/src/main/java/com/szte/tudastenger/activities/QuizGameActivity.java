@@ -85,6 +85,8 @@ public class QuizGameActivity extends DrawerBaseActivity {
 
     private Question actualQuestion;
     List<View> answerViews = new ArrayList<>();
+    private boolean isHelpUsedYet; // aktuális kérdésnél volt-e már segítség használva
+    private final Integer helpCost = 10; // a segítség ára
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -230,6 +232,7 @@ public class QuizGameActivity extends DrawerBaseActivity {
     }
 
     private void displayQuestion(Question question) {
+        isHelpUsedYet = false;
         buttonsLayout.setVisibility(View.GONE);
         numCorrectAnswers.setText("");
         numCorrectAnswers.setVisibility(View.GONE);
@@ -394,7 +397,6 @@ public class QuizGameActivity extends DrawerBaseActivity {
                             if (!queryDocumentSnapshots.isEmpty()) {
                                 for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
                                     savedDocumentId = documentSnapshot.getId();
-                                    Log.d("Talalat", savedDocumentId);
 
                                     mFirestore.collection("SavedQuestions").document(savedDocumentId)
                                             .delete()
@@ -407,8 +409,6 @@ public class QuizGameActivity extends DrawerBaseActivity {
                                                 }
                                             });
                                 }
-                            } else {
-                                Log.d("Talalat", "Nincs ilyen dokumentum");
                             }
                         }
                     });
@@ -468,17 +468,17 @@ public class QuizGameActivity extends DrawerBaseActivity {
             public void onClick(View view) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(QuizGameActivity.this);
                 builder.setTitle("Segítség vásárlása");
-                builder.setMessage("Biztosan megvásárolod a segítséget 10 aranyért?");
+                builder.setMessage("Biztosan megvásárolod a segítséget " + helpCost.toString() + " aranyért?");
 
                 builder.setPositiveButton("Igen", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        if(currentUser.getGold() >= 10) {
-                            userRef.update("gold", FieldValue.increment(-10))
+                        if(currentUser.getGold() >= helpCost) {
+                            userRef.update("gold", FieldValue.increment(-helpCost))
                                     .addOnCompleteListener(new OnCompleteListener<Void>() {
                                         @Override
                                         public void onComplete(@NonNull Task<Void> task) {
-                                            currentUser.setGold(currentUser.getGold() - 10);
+                                            currentUser.setGold(currentUser.getGold() - helpCost);
                                             userGold.setText(currentUser.getGold().toString());
                                             popupWindow.dismiss();
                                             removeWrongAnswer();
@@ -489,18 +489,10 @@ public class QuizGameActivity extends DrawerBaseActivity {
                                             Toast.makeText(QuizGameActivity.this, "A segítséget nem sikerült igénybevenni!", Toast.LENGTH_SHORT).show();
                                         }
                                     });
-                        } else{
-                            AlertDialog.Builder builder = new AlertDialog.Builder(QuizGameActivity.this);
-                            builder.setTitle("Nincs elég aranyad");
-                            builder.setMessage("A segítség megvásárlásához szükséges arannyal sajnos nem rendelkezel.");
-                            builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialogInterface, int i) {
-                                    dialogInterface.cancel();
-                                }
-                            });
-                            AlertDialog dialog = builder.create();
-                            dialog.show();
+                        } else if(currentUser.getGold() < helpCost){
+                            showOkAlertDialog("Nincs elég aranyad","A segítség megvásárlásához szükséges arannyal sajnos nem rendelkezel!");
+                        } else if(isHelpUsedYet){
+                            showOkAlertDialog("Már használtál segítséget","Ennél a kérdésnél már használtál segítséget!");
                         }
                     }
                 });
@@ -526,6 +518,7 @@ public class QuizGameActivity extends DrawerBaseActivity {
     }
 
     private void removeWrongAnswer() {
+        isHelpUsedYet = true;
         List<Integer> incorrectAnswers = new ArrayList<>();
         for (int i = 0; i < actualQuestion.getAnswers().size(); i++) {
             if (i != actualQuestion.getCorrectAnswerIndex()) {
@@ -543,6 +536,21 @@ public class QuizGameActivity extends DrawerBaseActivity {
         }
     }
 
+    private void showOkAlertDialog(String title, String message){
+        AlertDialog.Builder builder = new AlertDialog.Builder(QuizGameActivity.this);
+        builder.setTitle(title);
+        builder.setMessage(message);
+        builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.cancel();
+            }
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
     public static void dimBehind(PopupWindow popupWindow) {
         View container = popupWindow.getContentView().getRootView();
         Context context = popupWindow.getContentView().getContext();
@@ -552,5 +560,4 @@ public class QuizGameActivity extends DrawerBaseActivity {
         p.dimAmount = 0.5f;
         wm.updateViewLayout(container, p);
     }
-
 }
