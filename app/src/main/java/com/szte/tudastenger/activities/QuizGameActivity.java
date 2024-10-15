@@ -3,8 +3,10 @@ package com.szte.tudastenger.activities;
 import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -20,8 +22,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -79,6 +83,9 @@ public class QuizGameActivity extends DrawerBaseActivity {
 
     private TextView numCorrectAnswers;
 
+    private Question actualQuestion;
+    List<View> answerViews = new ArrayList<>();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -131,6 +138,13 @@ public class QuizGameActivity extends DrawerBaseActivity {
                 userRef = mUsers.document(currentUser.getId());
                 userGold.setText(currentUser.getGold().toString());
                 queryRandomQuestion();
+            }
+        });
+
+        helpButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                popUpHelp();
             }
         });
     }
@@ -222,6 +236,8 @@ public class QuizGameActivity extends DrawerBaseActivity {
 
         LinearLayout answersLayout = findViewById(R.id.answersLayout);
         answersLayout.removeAllViews();
+        answerViews.clear();
+        actualQuestion = question;
 
         if (question.getImage() == null) {
             questionImageView.setVisibility(View.GONE);
@@ -319,8 +335,6 @@ public class QuizGameActivity extends DrawerBaseActivity {
                                     }
                                 }
                             });
-                } else {
-                    //lekezelni, hogyha nem jött fel az új ablak és már nem kattinthat újat
                 }
             });
 
@@ -341,6 +355,8 @@ public class QuizGameActivity extends DrawerBaseActivity {
             });
 
             answersLayout.addView(answerCardView);
+            answerViews.add(answerCardView);
+
         }
     }
 
@@ -426,6 +442,105 @@ public class QuizGameActivity extends DrawerBaseActivity {
                 popupWindow.dismiss();
             }
         });
+    }
+
+    public void popUpHelp() {
+        LayoutInflater inflater = (LayoutInflater)
+                getSystemService(LAYOUT_INFLATER_SERVICE);
+        View popupView = inflater.inflate(R.layout.popup_buy_help, null);
+
+        int width = LinearLayout.LayoutParams.WRAP_CONTENT;
+        int height = LinearLayout.LayoutParams.WRAP_CONTENT;
+        final PopupWindow popupWindow = new PopupWindow(popupView, width, height, false);
+
+        popupWindow.setTouchable(true);
+        popupWindow.setFocusable(false);
+        popupWindow.setOutsideTouchable(false);
+
+        Button removeWrongAnswerButton = popupView.findViewById(R.id.removeWrongAnswerButton);
+        Button closeHelpPopupButton = popupView.findViewById(R.id.closeHelpPopupButton);
+
+        popupWindow.showAtLocation(findViewById(android.R.id.content), Gravity.CENTER, 0, 0);
+        dimBehind(popupWindow);
+
+        removeWrongAnswerButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(QuizGameActivity.this);
+                builder.setTitle("Segítség vásárlása");
+                builder.setMessage("Biztosan megvásárolod a segítséget 10 aranyért?");
+
+                builder.setPositiveButton("Igen", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        if(currentUser.getGold() >= 10) {
+                            userRef.update("gold", FieldValue.increment(-10))
+                                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<Void> task) {
+                                            currentUser.setGold(currentUser.getGold() - 10);
+                                            userGold.setText(currentUser.getGold().toString());
+                                            popupWindow.dismiss();
+                                            removeWrongAnswer();
+                                        }
+                                    }).addOnFailureListener(new OnFailureListener() {
+                                        @Override
+                                        public void onFailure(@NonNull Exception e) {
+                                            Toast.makeText(QuizGameActivity.this, "A segítséget nem sikerült igénybevenni!", Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
+                        } else{
+                            AlertDialog.Builder builder = new AlertDialog.Builder(QuizGameActivity.this);
+                            builder.setTitle("Nincs elég aranyad");
+                            builder.setMessage("A segítség megvásárlásához szükséges arannyal sajnos nem rendelkezel.");
+                            builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    dialogInterface.cancel();
+                                }
+                            });
+                            AlertDialog dialog = builder.create();
+                            dialog.show();
+                        }
+                    }
+                });
+
+                builder.setNegativeButton("Nem", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.cancel();
+                    }
+                });
+
+                AlertDialog dialog = builder.create();
+                dialog.show();
+            }
+        });
+
+        closeHelpPopupButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                popupWindow.dismiss();
+            }
+        });
+    }
+
+    private void removeWrongAnswer() {
+        List<Integer> incorrectAnswers = new ArrayList<>();
+        for (int i = 0; i < actualQuestion.getAnswers().size(); i++) {
+            if (i != actualQuestion.getCorrectAnswerIndex()) {
+                incorrectAnswers.add(i);
+            }
+        }
+
+        if (!incorrectAnswers.isEmpty()) {
+            Random random = new Random();
+            int randomIncorrectIndex = incorrectAnswers.get(random.nextInt(incorrectAnswers.size()));
+
+            View incorrectAnswerView = answerViews.get(randomIncorrectIndex);
+            incorrectAnswerView.setVisibility(View.INVISIBLE);
+            incorrectAnswerView.setClickable(false);
+        }
     }
 
     public static void dimBehind(PopupWindow popupWindow) {
