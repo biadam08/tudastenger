@@ -12,7 +12,20 @@
           "package_name": "com.szte.tudastenger"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "388914753240-tvo503dqvp35j5qnm911svmjs17m9tj0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.szte.tudastenger",
+            "certificate_hash": "5ab7b6a3bced37d96ac51a30ba7e79bcadfb35b1"
+          }
+        },
+        {
+          "client_id": "388914753240-3qctbu9dt09cigfnqj5e8jecs4u6oss2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBKWLXedExM2ilwtnd5mvjUEJqGdEswh20"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "388914753240-3qctbu9dt09cigfnqj5e8jecs4u6oss2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
