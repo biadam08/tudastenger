@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -20,12 +21,14 @@ import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.szte.tudastenger.R;
 import com.szte.tudastenger.databinding.ActivityEditProfileBinding;
+import com.szte.tudastenger.models.User;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
@@ -35,6 +38,7 @@ public class EditProfileActivity extends DrawerBaseActivity {
 
     private ActivityEditProfileBinding activityEditProfileBinding;
     private FirebaseFirestore mFirestore;
+    private CollectionReference mUsers;
     private FirebaseAuth mAuth;
     private FirebaseUser user;
     private FirebaseStorage storage;
@@ -44,6 +48,7 @@ public class EditProfileActivity extends DrawerBaseActivity {
     private EditText newPasswordEditText;
     private EditText confirmPasswordEditText;
     private Button changePasswordButton;
+    private Button deleteAccountButton;
     private ImageView profilePicture;
     private TextView userNameTextView;
 
@@ -58,6 +63,7 @@ public class EditProfileActivity extends DrawerBaseActivity {
         mAuth = FirebaseAuth.getInstance();
         user = FirebaseAuth.getInstance().getCurrentUser();
         mFirestore = FirebaseFirestore.getInstance();
+        mUsers = mFirestore.collection("Users");
         storage = FirebaseStorage.getInstance();
         storageReference = storage.getReference();
 
@@ -65,6 +71,7 @@ public class EditProfileActivity extends DrawerBaseActivity {
         newPasswordEditText = findViewById(R.id.newPasswordEditText);
         confirmPasswordEditText = findViewById(R.id.confirmPasswordEditText);
         changePasswordButton = findViewById(R.id.changePasswordButton);
+        deleteAccountButton = findViewById(R.id.deleteAccountButton);
         profilePicture = findViewById(R.id.profilePicture);
         userNameTextView = findViewById(R.id.userNameTextView);
 
@@ -90,13 +97,20 @@ public class EditProfileActivity extends DrawerBaseActivity {
             }
         });
 
+        deleteAccountButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showDeleteConfirmationDialog();
+            }
+        });
+
         setProfilePictureClickListener();
     }
 
     private void loadUserProfile() {
         // Felhasználói adatok betöltése
         if (user != null && user.getEmail() != null) {
-            DocumentReference userDocRef = mFirestore.collection("Users").document(user.getUid());
+            DocumentReference userDocRef = mUsers.document(user.getUid());
 
             userDocRef.get().addOnSuccessListener(documentSnapshot -> {
                 if (documentSnapshot.exists()) {
@@ -174,7 +188,7 @@ public class EditProfileActivity extends DrawerBaseActivity {
             ref.putFile(imageUri)
                     .addOnSuccessListener(taskSnapshot -> {
                         progressDialog.dismiss();
-                        DocumentReference userDocRef = mFirestore.collection("Users").document(user.getUid());
+                        DocumentReference userDocRef = mUsers.document(user.getUid());
                         userDocRef.update("profilePicture", fileName);
                         profilePicture.setImageURI(imageUri);
                     })
@@ -225,4 +239,46 @@ public class EditProfileActivity extends DrawerBaseActivity {
                 .setPositiveButton("Rendben", null)
                 .show();
     }
+
+    private void showDeleteConfirmationDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(EditProfileActivity.this);
+        builder.setTitle("Fiók törlése");
+        builder.setMessage("Biztosan törölni szeretnéd véglegesen a fiókodat?");
+
+        builder.setPositiveButton("Igen", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                deleteAccount();
+            }
+        });
+
+        builder.setNegativeButton("Nem", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.cancel();
+            }
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
+    private void deleteAccount() {
+        DocumentReference userDocRef = mUsers.document(user.getUid());
+        userDocRef.delete().addOnSuccessListener(aVoid -> {
+            user.delete().addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    Intent intent = new Intent(EditProfileActivity.this, LoginActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    startActivity(intent);
+                    finish();
+                } else {
+                    showDialog("Hiba", "A fiók törlése nem sikerült!");
+                }
+            });
+        }).addOnFailureListener(e -> {
+            showDialog("Hiba", "A fiók törlése nem sikerült!");
+        });
+    }
+
 }
