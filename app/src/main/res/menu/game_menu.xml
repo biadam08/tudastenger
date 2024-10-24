@@ -66,6 +66,10 @@
                     android:id="@+id/nav_add_a_category"
                     android:title="@string/add_a_category"
                     android:icon="@drawable/ic_add_a_category" />
+                <item
+                    android:id="@+id/nav_list_import_questions"
+                    android:title="@string/import_questions"
+                    android:icon="@drawable/ic_add_a_category" />
             </group>
         </menu>
     </item>
