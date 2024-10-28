@@ -30,6 +30,7 @@ import com.szte.tudastenger.activities.QuizGameActivity;
 import com.szte.tudastenger.interfaces.OnFriendAdded;
 import com.szte.tudastenger.interfaces.OnFriendRemoved;
 import com.szte.tudastenger.models.User;
+import com.szte.tudastenger.viewmodels.FriendsViewModel;
 
 
 import java.util.ArrayList;
@@ -40,14 +41,19 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
     private ArrayList<User> mFriends;
     private Context mContext;
     private String mCurrentUserId;
-    private OnFriendRemoved mOnFriendRemovedListener;
-    private FirebaseFirestore mFirestore = FirebaseFirestore.getInstance();
+    private FriendsViewModel viewModel;
 
-    public FriendAdapter(Context context, ArrayList<User> friends, String currentUserId, OnFriendRemoved onFriendRemovedListener){
+    public FriendAdapter(Context context, ArrayList<User> friends, String currentUserId, FriendsViewModel viewModel) {
         this.mFriends = friends;
         this.mContext = context;
         this.mCurrentUserId = currentUserId;
-        this.mOnFriendRemovedListener = onFriendRemovedListener;
+        this.viewModel = viewModel;
+    }
+
+    public void updateData(ArrayList<User> newFriends) {
+        mFriends.clear();
+        mFriends.addAll(newFriends);
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -104,6 +110,7 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
         mContext.startActivity(intent);
     }
 
+
     private void showDeleteConfirmationDialog(User currentUser) {
         AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
         builder.setTitle("Barát törlése");
@@ -112,7 +119,7 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
         builder.setPositiveButton("Igen", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                deleteFriend(currentUser);
+                viewModel.deleteFriend(currentUser);
             }
         });
 
@@ -125,19 +132,6 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
 
         AlertDialog dialog = builder.create();
         dialog.show();
-    }
-
-    private void deleteFriend(User currentUser) {
-        mFirestore.collection("Friends")
-                .document(mCurrentUserId)
-                .update(Collections.singletonMap(currentUser.getId(), FieldValue.delete()));
-
-        mFirestore.collection("Friends")
-                .document(currentUser.getId())
-                .update(Collections.singletonMap(mCurrentUserId, FieldValue.delete()));
-
-        mOnFriendRemovedListener.onFriendRemoved(currentUser);
-
     }
 }
 

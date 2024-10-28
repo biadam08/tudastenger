@@ -5,7 +5,8 @@
     android:layout_margin="8dp"
     android:layout_gravity="center"
     app:cardElevation="4dp"
-    app:cardCornerRadius="8dp">
+    app:cardCornerRadius="8dp"
+    android:id="@+id/duelCardView">
 
     <RelativeLayout
         android:layout_width="match_parent"

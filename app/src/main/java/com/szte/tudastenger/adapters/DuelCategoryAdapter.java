@@ -17,6 +17,7 @@ import com.szte.tudastenger.interfaces.OnCategoryClickListener;
 import com.szte.tudastenger.models.Category;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class DuelCategoryAdapter extends RecyclerView.Adapter<DuelCategoryAdapter.ViewHolder> {
     private ArrayList<Category> mCategoriesData;
@@ -80,6 +81,13 @@ public class DuelCategoryAdapter extends RecyclerView.Adapter<DuelCategoryAdapte
         public void bindTo(Category currentCategory) {
             mCategoryName.setText(currentCategory.getName());
         }
+    }
+
+    public void updateCategories(List<Category> categories) {
+        mCategoriesData.clear();
+        mCategoriesData.addAll(categories);
+        selectedPosition = RecyclerView.NO_POSITION;
+        notifyDataSetChanged();
     }
 }
 

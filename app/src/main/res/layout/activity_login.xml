@@ -57,7 +57,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:background="@drawable/custom_shape_edittext"
-                        android:id="@+id/passwordEditText"
+                        android:id="@+id/loginPasswordEditText"
                         android:hint="@string/password"
                         android:drawableLeft="@drawable/ic_password"
                         android:drawablePadding="8dp"
@@ -77,9 +77,7 @@
                     android:backgroundTint="@color/browne"
                     android:textColor="@color/white"
                     android:background="@drawable/custom_shape_rounded_button"
-                    android:layout_marginBottom="12dp"
-                    android:onClick="login"
-                    />
+                    android:layout_marginBottom="12dp" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -109,10 +107,7 @@
                     android:layout_marginTop="16dp"
                     android:layout_marginEnd="16dp"
                     android:layout_marginBottom="16dp" />
-
-
             </LinearLayout>
-
 
 
         </androidx.cardview.widget.CardView>

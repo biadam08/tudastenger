@@ -1,6 +1,6 @@
 package com.szte.tudastenger.activities;
 
-import androidx.annotation.NonNull;
+import androidx.lifecycle.ViewModelProvider;
 
 import android.Manifest;
 import android.app.Activity;
@@ -11,7 +11,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,291 +18,213 @@ import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.RadioButton;
-import android.widget.RadioGroup;
-import android.widget.Spinner;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.GetTokenResult;
-import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
-import com.google.firebase.functions.FirebaseFunctions;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.OnProgressListener;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 import com.szte.tudastenger.R;
 import com.szte.tudastenger.databinding.ActivityQuestionEditUploadBinding;
 import com.szte.tudastenger.models.Category;
 import com.szte.tudastenger.models.Question;
 
+import com.szte.tudastenger.viewmodels.QuestionEditUploadViewModel;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 
 public class QuestionEditUploadActivity extends DrawerBaseActivity {
-    private static final String LOG_TAG = QuestionEditUploadActivity.class.getName();
-
-    private ActivityQuestionEditUploadBinding activityQuestionEditUploadBinding;
-    private FirebaseFirestore mFirestore;
-
-    private LinearLayout container;
-    private LinearLayout editBarLinearLayout;
-    private LinearLayout answerContainer;
-    private LinearLayout manageImageLinearLayout;
-    private Spinner spinner;
-
-    private RadioGroup radioGroup;
-    private int answerCounter = 2;
-
-    private ImageView questionImagePreview;
-    private Uri imageUri;
-
-    private FirebaseStorage mStorage;
-
-    private static final int PICK_IMAGE_REQUEST = 1;
-
-    private StorageReference storageReference;
-    private EditText explanationEditText;
-    private TextView addQuestionTextView;
-    private Button addQuestionButton;
-    private Button backButton;
-    private Button deleteButton;
-    private Button addExplanationButton;
-    private Button uploadImageButton;
-    private Button deleteImageButton;
-    private Button modifyImageButton;
-    private String explanationText;
-    private String questionText;
-    private String category;
-    private ArrayList<String> answers;
-    private int correctAnswerIndex = -1;
-    private String questionId; // Kérdés ID szerkesztés esetén
-    private String existingImageName;
+    private ActivityQuestionEditUploadBinding binding;
+    private QuestionEditUploadViewModel viewModel;
+    private String questionId;
+    private ProgressDialog progressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        activityQuestionEditUploadBinding = ActivityQuestionEditUploadBinding.inflate(getLayoutInflater());
-        setContentView(activityQuestionEditUploadBinding.getRoot());
+        binding = ActivityQuestionEditUploadBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
-        mFirestore = FirebaseFirestore.getInstance();
-        mStorage = FirebaseStorage.getInstance();
-        storageReference = mStorage.getReference();
-        spinner = findViewById(R.id.questionCategory);
-        container = findViewById(R.id.container);
-        answerContainer = findViewById(R.id.answerContainer);
-        editBarLinearLayout = findViewById(R.id.editBarLinearLayout);
-        manageImageLinearLayout = findViewById(R.id.manageImageLinearLayout);
-        radioGroup = findViewById(R.id.radioGroup);
-        addQuestionTextView = findViewById(R.id.addQuestionTextView);
-        addQuestionButton = findViewById(R.id.addQuestionButton);
-        backButton = findViewById(R.id.backButton);
-        deleteButton = findViewById(R.id.deleteButton);
-        addExplanationButton = findViewById(R.id.addExplanationButton);
-
-        questionImagePreview = findViewById(R.id.questionImagePreview);
-        uploadImageButton = findViewById(R.id.uploadImageButton);
-        modifyImageButton = findViewById(R.id.modifyImageButton);
-        deleteImageButton = findViewById(R.id.deleteImageButton);
+        viewModel = new ViewModelProvider(this).get(QuestionEditUploadViewModel.class);
 
         questionId = getIntent().getStringExtra("questionId");
+        setupViews();
+        setupObservers();
+        setupClickListeners();
 
-        mFirestore.collection("Categories").orderBy("name").get().addOnSuccessListener(queryDocumentSnapshots -> {
-            List<Category> categoryList = new ArrayList<>();
-            for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
-                Category category = documentSnapshot.toObject(Category.class);
-                category.setId(documentSnapshot.getId());
-                categoryList.add(category);
+        viewModel.loadCategories();
+        if (questionId != null) {
+            binding.editBarLinearLayout.setVisibility(View.VISIBLE);
+            binding.addQuestionTextView.setText("Kérdés szerkesztése");
+            binding.addQuestionButton.setText("Kérdés módosítása");
+            viewModel.checkAdmin();
+            viewModel.loadQuestionData(questionId);
+        }
+    }
+
+    private void setupViews() {
+        binding.editBarLinearLayout.setVisibility(View.GONE);
+        binding.manageImageLinearLayout.setVisibility(View.GONE);
+        binding.questionImagePreview.setVisibility(View.GONE);
+    }
+
+    private void setupObservers() {
+        viewModel.getIsAdmin().observe(this, isAdmin -> {
+            if (!isAdmin) {
+                finish();
             }
-
-            ArrayAdapter<Category> adapter = new ArrayAdapter<>(QuestionEditUploadActivity.this, android.R.layout.simple_spinner_item, categoryList);
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            spinner.setAdapter(adapter);
         });
 
-        if (questionId != null) {
-            editBarLinearLayout.setVisibility(View.VISIBLE);
-            loadQuestionData(questionId);
-            addQuestionTextView.setText("Kérdés szerkesztése");
-            addQuestionButton.setText("Kérdés módosítása");
+        viewModel.getCategories().observe(this, categories -> {
+            ArrayAdapter<Category> adapter = new ArrayAdapter<>(this,
+                    android.R.layout.simple_spinner_item, categories);
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            binding.questionCategory.setAdapter(adapter);
+        });
+
+        viewModel.getCurrentQuestion().observe(this, question -> {
+            updateUI(question);
+        });
+
+        viewModel.getErrorMessage().observe(this, message ->
+                Toast.makeText(this, message, Toast.LENGTH_SHORT).show());
+
+        viewModel.getSuccessMessage().observe(this, message ->
+                showSuccessDialog("Sikeres művelet", message));
+
+        viewModel.getImageUrl().observe(this, url -> {
+            if (url != null) {
+                binding.uploadImageButton.setVisibility(View.GONE);
+                binding.manageImageLinearLayout.setVisibility(View.VISIBLE);
+                Glide.with(this)
+                        .load(url)
+                        .into(binding.questionImagePreview);
+                binding.questionImagePreview.setVisibility(View.VISIBLE);
+            }
+        });
+
+        viewModel.getIsImageUploading().observe(this, isUploading -> {
+            if (isUploading) {
+                showProgressDialog("Feltöltés...");
+            } else {
+                hideProgressDialog();
+            }
+        });
+
+        viewModel.getUploadProgress().observe(this, progress ->
+                updateProgressDialog("Feltöltve: " + progress + "%"));
+    }
+
+    private void setupClickListeners() {
+        binding.uploadImageButton.setOnClickListener(v -> {
+            Intent pickIntent = new Intent(Intent.ACTION_PICK,
+                    android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            startActivityForResult(pickIntent, CropImage.PICK_IMAGE_CHOOSER_REQUEST_CODE);
+        });
+
+        binding.addExplanationButton.setOnClickListener(v -> showAddExplanationPopup());
+        binding.backButton.setOnClickListener(v -> navigateToQuestionList());
+        binding.deleteButton.setOnClickListener(v -> {
+            if (questionId != null) {
+                showDeleteConfirmationDialog();
+            } else {
+                Toast.makeText(this, "Nincs törlendő kérdés", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        binding.deleteImageButton.setOnClickListener(v -> {
+            viewModel.clearImageUri();
+            binding.questionImagePreview.setVisibility(View.GONE);
+            binding.uploadImageButton.setVisibility(View.VISIBLE);
+            binding.manageImageLinearLayout.setVisibility(View.GONE);
+        });
+
+        binding.modifyImageButton.setOnClickListener(v -> {
+            Intent pickIntent = new Intent(Intent.ACTION_PICK,
+                    android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            startActivityForResult(pickIntent, CropImage.PICK_IMAGE_CHOOSER_REQUEST_CODE);
+        });
+    }
+
+    private void updateUI(Question question) {
+        if (question == null){
+            return;
         }
 
-        uploadImageButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent pickIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                startActivityForResult(pickIntent, CropImage.PICK_IMAGE_CHOOSER_REQUEST_CODE);
-            }
-        });
+        binding.questionName.setText(question.getQuestionText());
 
-        addExplanationButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showAddExplanationPopup();
-            }
-        });
-
-        backButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(QuestionEditUploadActivity.this, QuestionListActivity.class);
-                startActivity(intent);
-            }
-        });
-
-        deleteButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if(questionId != null) {
-                    showDeleteConfirmationDialog(questionId);
-                } else{
-                    Toast.makeText(QuestionEditUploadActivity.this, "Nincs törlendő kérdés", Toast.LENGTH_SHORT).show();
+        if (question.getCategory() != null) {
+            for (int i = 0; i < binding.questionCategory.getCount(); i++) {
+                Category category = (Category) binding.questionCategory.getItemAtPosition(i);
+                if (category.getId().equals(question.getCategory())) {
+                    binding.questionCategory.setSelection(i);
+                    break;
                 }
             }
-        });
+        }
 
-        deleteImageButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                imageUri = null;
-                existingImageName = null;
-
-                questionImagePreview.setVisibility(View.GONE);
-                uploadImageButton.setVisibility(View.VISIBLE);
-                manageImageLinearLayout.setVisibility(View.GONE);
-            }
-        });
-
-        modifyImageButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent pickIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                startActivityForResult(pickIntent, CropImage.PICK_IMAGE_CHOOSER_REQUEST_CODE);
-            }
-        });
-    }
-
-    private void loadQuestionData(String questionId) {
-        mFirestore.collection("Questions").document(questionId)
-                .get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists()) {
-                        Question question = documentSnapshot.toObject(Question.class);
-
-                        questionText = question.getQuestionText();
-                        answers = question.getAnswers();
-                        correctAnswerIndex = question.getCorrectAnswerIndex();
-                        category = question.getCategory(); // This is the category ID
-                        explanationText = question.getExplanationText();
-                        existingImageName = question.getImage();
-
-                        mFirestore.collection("Categories")
-                                .whereEqualTo("id", category)
-                                .get()
-                                .addOnSuccessListener(queryDocumentSnapshots -> {
-                                    if (!queryDocumentSnapshots.isEmpty()) {
-                                        DocumentSnapshot categoryDoc = queryDocumentSnapshots.getDocuments().get(0);
-                                        category = categoryDoc.getString("name");
-                                        Log.d("kategórialoadban", category);
-                                    }
-                                    updateUI();
-                                })
-                                .addOnFailureListener(e -> {
-                                    category = "Besorolatlan";
-                                    updateUI();
-                                });
-                    }
-                });
-    }
-
-    private void updateUI() {
-        ((EditText) findViewById(R.id.questionName)).setText(questionText);
-        Log.d("kategóriaupdateui", category);
-        spinner.setSelection(getSpinnerIndex(spinner, category));
-
+        ArrayList<String> answers = question.getAnswers();
         for (int i = 0; i < answers.size(); i++) {
-            EditText answerEditText = (EditText) answerContainer.getChildAt(i);
-            RadioButton radioButton = (RadioButton) radioGroup.getChildAt(i);
-            answerEditText.setText(answers.get(i));
+            EditText answerEditText = (EditText) binding.answerContainer.getChildAt(i);
+            RadioButton radioButton = (RadioButton) binding.radioGroup.getChildAt(i);
 
-            if (i == correctAnswerIndex) {
+            answerEditText.setText(answers.get(i));
+            if (i == question.getCorrectAnswerIndex()) {
                 radioButton.setChecked(true);
             }
         }
-
-        if (existingImageName != null && !existingImageName.isEmpty()) {
-            uploadImageButton.setVisibility(View.GONE);
-            manageImageLinearLayout.setVisibility(View.VISIBLE);
-            StorageReference storageRef = FirebaseStorage.getInstance().getReference().child("images/" + existingImageName);
-            storageRef.getDownloadUrl().addOnSuccessListener(uri -> {
-                String imageUrl = uri.toString();
-                Glide.with(this)
-                        .load(imageUrl)
-                        .into(questionImagePreview);
-                questionImagePreview.setVisibility(View.VISIBLE);
-            }).addOnFailureListener(e -> {
-                questionImagePreview.setVisibility(View.GONE);
-                Toast.makeText(QuestionEditUploadActivity.this, "Hiba a kép betöltés során", Toast.LENGTH_SHORT).show();
-            });
-        } else {
-            questionImagePreview.setVisibility(View.GONE);
-        }
-    }
-
-    private int getSpinnerIndex(Spinner spinner, String categoryName) {
-        for (int i = 0; i < spinner.getCount(); i++) {
-            Category category = (Category) spinner.getItemAtPosition(i);
-            if (category.getName().equals(categoryName)) {
-                return i;
-            }
-        }
-        return 0;
     }
 
     public void uploadQuestion(View view) {
         if (validateQuestionInput()) {
-            if (imageUri != null) {
-                uploadImage(imageUri);  // Kép feltöltés, majd ezután kérdés mentése/frissítése
-            } else {
-                if (questionId != null) {
-                    updateQuestion(null);  // Kép nélkül kérdés frissítése
-                } else {
-                    saveQuestion(null);  // Kép nélkül új kérdés mentése
-                }
-            }
+            Question question = createQuestionFromInput();
+            viewModel.uploadQuestion(question, viewModel.getImageUri().getValue());
         }
     }
 
+    private Question createQuestionFromInput() {
+        String questionText = binding.questionName.getText().toString();
+        Category selectedCategory = (Category) binding.questionCategory.getSelectedItem();
+        String categoryId = selectedCategory.getId();
+
+        ArrayList<String> answers = new ArrayList<>();
+        int correctAnswerIndex = -1;
+
+        for (int i = 0; i < binding.radioGroup.getChildCount(); i++) {
+            EditText answer = (EditText) binding.answerContainer.getChildAt(i);
+            RadioButton radioButton = (RadioButton) binding.radioGroup.getChildAt(i);
+
+            if (radioButton.isChecked()) {
+                correctAnswerIndex = i;
+            }
+
+            if (!answer.getText().toString().isEmpty()) {
+                answers.add(answer.getText().toString());
+            }
+        }
+
+        return new Question(
+                questionId,
+                questionText,
+                categoryId,
+                answers,
+                correctAnswerIndex,
+                null, // kép neve később lesz beállítva
+                viewModel.getExplanationText().getValue()
+        );
+    }
 
     private boolean validateQuestionInput() {
-        questionText = ((EditText) findViewById(R.id.questionName)).getText().toString();
-        category = ((Spinner) findViewById(R.id.questionCategory)).getSelectedItem().toString();
+        String questionText = binding.questionName.getText().toString();
         ArrayList<Boolean> answerInputHasValue = new ArrayList<>();
-        answers = new ArrayList<>();
+        int correctAnswerIndex = -1;
 
-        for (int i = 0; i < radioGroup.getChildCount(); i++) {
-            EditText answer = (EditText) answerContainer.getChildAt(i);
-            RadioButton radioButton = (RadioButton) radioGroup.getChildAt(i);
+        for (int i = 0; i < binding.radioGroup.getChildCount(); i++) {
+            EditText answer = (EditText) binding.answerContainer.getChildAt(i);
+            RadioButton radioButton = (RadioButton) binding.radioGroup.getChildAt(i);
 
             if (answer.getText().toString().isEmpty() && radioButton.isChecked()) {
                 answer.setError("Nem lehet üres válasz a helyes");
@@ -314,15 +235,7 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
                 correctAnswerIndex = i;
             }
 
-            if (!answer.getText().toString().isEmpty()) {
-                answerInputHasValue.add(true);
-            } else {
-                answerInputHasValue.add(false);
-            }
-
-            if (!answer.getText().toString().isEmpty()) {
-                answers.add(answer.getText().toString());
-            }
+            answerInputHasValue.add(!answer.getText().toString().isEmpty());
         }
 
         if (correctAnswerIndex == -1) {
@@ -340,30 +253,13 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
         return true;
     }
 
-    private void updateQuestion(String fileName) {
-        String imageToSave = (fileName != null) ? fileName : existingImageName;
-        Category selectedCategory = (Category) spinner.getSelectedItem();
-        String selectedCategoryId = selectedCategory.getId();
-
-        Question question = new Question(questionId, questionText, selectedCategoryId, answers, correctAnswerIndex, imageToSave, explanationText);
-
-        mFirestore.collection("Questions").document(questionId)
-                .set(question)
-                .addOnSuccessListener(aVoid -> {
-                    clearInputFields();
-                    showSuccessDialog("Sikeres módosítás!", "A kérdés sikeresen módosítva lett!");
-                    uploadImageButton.setVisibility(View.VISIBLE);
-                    manageImageLinearLayout.setVisibility(View.GONE);
-                })
-                .addOnFailureListener(e -> Toast.makeText(QuestionEditUploadActivity.this, "Hiba történt a frissítés során.", Toast.LENGTH_SHORT).show());
-    }
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == CropImage.PICK_IMAGE_CHOOSER_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
             Uri imageUri = CropImage.getPickImageResultUri(this, data);
             if(CropImage.isReadExternalStoragePermissionsRequired(this, imageUri)){
-                requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},0);
+                requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 0);
             } else {
                 startCrop(imageUri);
             }
@@ -372,202 +268,84 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
         if(requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
             CropImage.ActivityResult result = CropImage.getActivityResult(data);
             if(resultCode == RESULT_OK) {
-                imageUri = result.getUri();
-                questionImagePreview.setImageURI(imageUri);
-                questionImagePreview.setVisibility(View.VISIBLE);
-                uploadImageButton.setVisibility(View.GONE);
-                manageImageLinearLayout.setVisibility(View.VISIBLE);
+                Uri imageUri = result.getUri();
+                viewModel.setImageUri(imageUri);
+                binding.questionImagePreview.setImageURI(imageUri);
+                binding.questionImagePreview.setVisibility(View.VISIBLE);
+                binding.uploadImageButton.setVisibility(View.GONE);
+                binding.manageImageLinearLayout.setVisibility(View.VISIBLE);
             }
         }
     }
 
     private void startCrop(Uri imageUri) {
         CropImage.activity(imageUri)
+                .setCropMenuCropButtonTitle("Beállítás")
                 .setGuidelines(CropImageView.Guidelines.ON)
                 .setMultiTouchEnabled(true)
                 .start(this);
     }
-    private void uploadImage(Uri imageUri) {
-        if(imageUri != null) {
-            ProgressDialog progressDialog = new ProgressDialog(this);
-            progressDialog.setTitle("Feltöltés...");
-            progressDialog.show();
 
-            StorageReference ref = storageReference.child("images/" + UUID.randomUUID().toString());
-
-            ref.putFile(imageUri)
-                    .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                        @Override
-                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                            progressDialog.dismiss();
-                            String fileName = taskSnapshot.getMetadata().getReference().getName();
-                            if (questionId != null) {
-                                updateQuestion(fileName);
-                            } else {
-                                saveQuestion(fileName);  // Új kérdés létrehozása
-                            }
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            progressDialog.dismiss();
-                            Toast.makeText(QuestionEditUploadActivity.this, "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                        }
-                    })
-                    .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
-                        @Override
-                        public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                            double progress = (100.0 * taskSnapshot.getBytesTransferred() / taskSnapshot.getTotalByteCount());
-                            progressDialog.setMessage("Feltöltve: " + (int) progress + "%");
-                        }
-                    });
-        }
-    }
-
-    private void saveQuestion(String fileName) {
-        Category selectedCategory = (Category) spinner.getSelectedItem();
-        String selectedCategoryId = selectedCategory.getId();
-
-        Question question = new Question(null, questionText, selectedCategoryId, answers, correctAnswerIndex, fileName, explanationText);
-
-        mFirestore.collection("Questions").add(question)
-                .addOnSuccessListener(documentReference -> {
-                    String documentId = documentReference.getId();
-                    question.setId(documentId);
-
-                    mFirestore.collection("Questions").document(documentId)
-                            .update("id", documentId);
-
-                    clearInputFields();
-                    showSuccessDialog("Sikeres feltöltés", "A kérdés sikeresen feltöltve!");
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(QuestionEditUploadActivity.this, "Hiba történt a mentés során.", Toast.LENGTH_SHORT).show();
-                });
-    }
-
-    private void clearInputFields() {
-        ((EditText) findViewById(R.id.questionName)).setText("");
-        for (int i = 0; i < radioGroup.getChildCount(); i++) {
-            ((EditText) answerContainer.getChildAt(i)).setText("");
-            RadioButton radioButton = (RadioButton) radioGroup.getChildAt(i);
-            radioButton.setChecked(false);
-        }
-
-        spinner.setSelection(0);
-
-        imageUri = null;
-        questionImagePreview.setVisibility(View.GONE);
-    }
-
-    private void showSuccessDialog(String title, String message) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(title)
-                .setMessage(message)
-                .setPositiveButton("Rendben", null)
-                .show();
-    }
-
-    private void showErrorDialog(String message) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Hiba")
-                .setMessage(message)
-                .setPositiveButton("Rendben", null)
-                .show();
-    }
-
-    public void showAddExplanationPopup() {
-        LayoutInflater inflater = (LayoutInflater)
-                getSystemService(LAYOUT_INFLATER_SERVICE);
+    private void showAddExplanationPopup() {
+        LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
         View popupView = inflater.inflate(R.layout.popup_add_explanation, null);
 
-        int width = LinearLayout.LayoutParams.WRAP_CONTENT;
-        int height = LinearLayout.LayoutParams.WRAP_CONTENT;
-        final PopupWindow popupWindow = new PopupWindow(popupView, width, height, false);
+        PopupWindow popupWindow = createPopupWindow(popupView);
+        EditText explanationEditText = popupView.findViewById(R.id.editExplanationTextMultiLine);
 
-        popupWindow.setTouchable(true);
-        popupWindow.setFocusable(true);
-
-        explanationEditText = popupView.findViewById(R.id.editExplanationTextMultiLine);
-
-        if (explanationText != null && !explanationText.isEmpty()) {
-            explanationEditText.setText(explanationText);
+        String currentExplanation = viewModel.getExplanationText().getValue();
+        if (currentExplanation != null && !currentExplanation.isEmpty()) {
+            explanationEditText.setText(currentExplanation);
         }
 
-        Button mPopUpCloseButton = popupView.findViewById(R.id.popUpCloseButton);
-        Button mGenerateTextButton = popupView.findViewById(R.id.generateTextButton);
-        Button mSaveExplanationButton = popupView.findViewById(R.id.saveExplanationText);
+        Button closeButton = popupView.findViewById(R.id.popUpCloseButton);
+        Button generateButton = popupView.findViewById(R.id.generateTextButton);
+        Button saveButton = popupView.findViewById(R.id.saveExplanationText);
 
-        mGenerateTextButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (validateQuestionInput()) {
-                    generateExplanationWithFirebase();
+        viewModel.getExplanationText().observe(this, explanationText -> {
+            if (explanationText != null && !explanationText.isEmpty()) {
+                explanationEditText.setText(explanationText);
+            }
+        });
+
+        generateButton.setOnClickListener(v -> {
+            if (validateQuestionInput()) {
+                String questionText = binding.questionName.getText().toString();
+                String correctAnswer = "";
+                for (int i = 0; i < binding.radioGroup.getChildCount(); i++) {
+                    RadioButton radioButton = (RadioButton) binding.radioGroup.getChildAt(i);
+                    if (radioButton.isChecked()) {
+                        EditText answer = (EditText) binding.answerContainer.getChildAt(i);
+                        correctAnswer = answer.getText().toString();
+                        break;
+                    }
                 }
+                viewModel.generateExplanation(questionText, correctAnswer);
             }
         });
 
+        closeButton.setOnClickListener(v -> popupWindow.dismiss());
 
-        mPopUpCloseButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                popupWindow.dismiss();
-            }
+        saveButton.setOnClickListener(v -> {
+            viewModel.setExplanationText(explanationEditText.getText().toString());
+            Toast.makeText(this, "Sikeresen elmentve!", Toast.LENGTH_SHORT).show();
+            popupWindow.dismiss();
         });
-
-        mSaveExplanationButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                explanationText = explanationEditText.getText().toString();
-                Toast.makeText(QuestionEditUploadActivity.this, "Sikeresen elmentve!", Toast.LENGTH_SHORT).show();
-            }
-        });
-
 
         popupWindow.showAtLocation(findViewById(android.R.id.content), Gravity.CENTER, 0, 0);
         dimBehind(popupWindow);
     }
 
-    public static void dimBehind(PopupWindow popupWindow) {
-        View container = popupWindow.getContentView().getRootView();
-        Context context = popupWindow.getContentView().getContext();
-        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-        WindowManager.LayoutParams p = (WindowManager.LayoutParams) container.getLayoutParams();
-        p.flags |= WindowManager.LayoutParams.FLAG_DIM_BEHIND;
-        p.dimAmount = 0.5f;
-        wm.updateViewLayout(container, p);
+    private PopupWindow createPopupWindow(View popupView) {
+        int width = LinearLayout.LayoutParams.WRAP_CONTENT;
+        int height = LinearLayout.LayoutParams.WRAP_CONTENT;
+        PopupWindow popupWindow = new PopupWindow(popupView, width, height, false);
+        popupWindow.setTouchable(true);
+        popupWindow.setFocusable(true);
+        return popupWindow;
     }
 
-    private void generateExplanationWithFirebase() {
-        String prompt = "Kérlek, készíts egy pontos, 3-6 mondatos választ az alábbi kérdésre, figyelembe véve, hogy a helyes válasz kizárólag a megadott helyes válasz lehet: \nKérdés: " + questionText + "\nHelyes válasz: " + answers.get(correctAnswerIndex) + ".";
-
-        FirebaseFunctions functions = FirebaseFunctions.getInstance();
-
-        functions
-                .getHttpsCallable("getChatGPTResponse")
-                .call(Collections.singletonMap("prompt", prompt))
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        Map<String, Object> resultMap = (Map<String, Object>) task.getResult().getData();
-
-                        if (resultMap.containsKey("response")) {
-                            String explanation = (String) resultMap.get("response");
-
-                            runOnUiThread(() -> {
-                                explanationEditText.setText(explanation);
-                                explanationText = explanation;
-                            });
-                        } else {
-                            Toast.makeText(this, "Hiba történt a generálás során", Toast.LENGTH_SHORT).show();
-                        }
-                    } else {
-                        Toast.makeText(this, "Hiba történt a generálás során", Toast.LENGTH_SHORT).show();
-                    }
-                });
-    }
-
-    private void showDeleteConfirmationDialog(String questionId) {
+    private void showDeleteConfirmationDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Kérdés törlése");
         builder.setMessage("Biztosan törölni szeretnéd ezt a kérdést?");
@@ -575,7 +353,7 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
         builder.setPositiveButton("Igen", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                deleteQuestion(questionId);
+                viewModel.deleteQuestion(questionId);
             }
         });
 
@@ -590,21 +368,62 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
         dialog.show();
     }
 
-    private void deleteQuestion(String questionId) {
-        mFirestore.collection("Questions").document(questionId)
-                .delete()
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Toast.makeText(getApplicationContext(), "Kérdés sikeresen törölve", Toast.LENGTH_SHORT).show();
+    private void showSuccessDialog(String title, String message) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(title)
+                .setMessage(message)
+                .setPositiveButton("Rendben", (dialog, which) -> {
+                    if(questionId != null) {
+                        navigateToQuestionList();
+                    } else{
+                        Intent intent = new Intent(QuestionEditUploadActivity.this, QuestionEditUploadActivity.class);
+                        startActivity(intent);
+                        finish();
                     }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Toast.makeText(getApplicationContext(), "Hiba történt a törlés közben", Toast.LENGTH_SHORT).show();
-                    }
-                });
+                 })
+                .show();
     }
 
+    private void showErrorDialog(String message) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Hiba")
+                .setMessage(message)
+                .setPositiveButton("Rendben", null)
+                .show();
+    }
+
+    private void navigateToQuestionList() {
+        Intent intent = new Intent(this, QuestionListActivity.class);
+        startActivity(intent);
+    }
+
+    public static void dimBehind(PopupWindow popupWindow) {
+        View container = popupWindow.getContentView().getRootView();
+        Context context = popupWindow.getContentView().getContext();
+        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        WindowManager.LayoutParams p = (WindowManager.LayoutParams) container.getLayoutParams();
+        p.flags |= WindowManager.LayoutParams.FLAG_DIM_BEHIND;
+        p.dimAmount = 0.5f;
+        wm.updateViewLayout(container, p);
+    }
+
+    private void showProgressDialog(String message) {
+        if (progressDialog == null) {
+            progressDialog = new ProgressDialog(this);
+        }
+        progressDialog.setTitle(message);
+        progressDialog.show();
+    }
+
+    private void updateProgressDialog(String message) {
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.setMessage(message);
+        }
+    }
+
+    private void hideProgressDialog() {
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
+        }
+    }
 }

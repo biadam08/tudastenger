@@ -63,5 +63,10 @@ public class UserLeaderboardAdapter extends RecyclerView.Adapter<UserLeaderboard
             pointsTextView.setText(String.valueOf(userEntry.getValue()));
         }
     }
+    public void updateData(List<Map.Entry<String, Integer>> newData) {
+        mUserList.clear();
+        mUserList.addAll(newData);
+        notifyDataSetChanged();
+    }
 }
 

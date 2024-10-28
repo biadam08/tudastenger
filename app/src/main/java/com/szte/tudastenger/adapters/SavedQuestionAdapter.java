@@ -20,18 +20,28 @@ import com.szte.tudastenger.activities.QuizGameActivity;
 import com.szte.tudastenger.R;
 import com.szte.tudastenger.activities.SavedQuestionGameActivity;
 import com.szte.tudastenger.models.Question;
+import com.szte.tudastenger.viewmodels.SavedQuestionsViewModel;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class SavedQuestionAdapter extends RecyclerView.Adapter<SavedQuestionAdapter.ViewHolder> {
     private ArrayList<Question> mQuestionsData;
     private Context mContext;
     private String mCurrentUserId;
+    private SavedQuestionsViewModel viewModel;
 
-    public SavedQuestionAdapter(Context context, ArrayList<Question> questionsData, String currentUserId){
+    public SavedQuestionAdapter(Context context, ArrayList<Question> questionsData, String currentUserId, SavedQuestionsViewModel viewModel) {
         this.mQuestionsData = questionsData;
         this.mContext = context;
         this.mCurrentUserId = currentUserId;
+        this.viewModel = viewModel;
+    }
+
+    public void updateData(List<Question> newData) {
+        mQuestionsData.clear();
+        mQuestionsData.addAll(newData);
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -51,12 +61,11 @@ public class SavedQuestionAdapter extends RecyclerView.Adapter<SavedQuestionAdap
         return mQuestionsData.size();
     }
 
-    class ViewHolder extends RecyclerView.ViewHolder{
+    class ViewHolder extends RecyclerView.ViewHolder {
         private TextView mCategoryName;
         private TextView mQuestionText;
         private Button mSolveButton;
         private ImageView mDeleteSavedQuestion;
-        private FirebaseFirestore mFirestore = FirebaseFirestore.getInstance();
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -70,38 +79,14 @@ public class SavedQuestionAdapter extends RecyclerView.Adapter<SavedQuestionAdap
             mQuestionText.setText(currentQuestion.getQuestionText());
             mCategoryName.setText(currentQuestion.getCategory());
 
-            mSolveButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    Intent intent = new Intent(mContext, SavedQuestionGameActivity.class);
-                    intent.putExtra("questionId", currentQuestion.getId());
-                    mContext.startActivity(intent);
-                }
+            mSolveButton.setOnClickListener(v -> {
+                Intent intent = new Intent(mContext, SavedQuestionGameActivity.class);
+                intent.putExtra("questionId", currentQuestion.getId());
+                mContext.startActivity(intent);
             });
 
-            mDeleteSavedQuestion.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    mFirestore.collection("SavedQuestions")
-                            .whereEqualTo("userId", mCurrentUserId)
-                            .whereEqualTo("questionId", currentQuestion.getId())
-                            .get()
-                            .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
-                                @Override
-                                public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-                                    if (!queryDocumentSnapshots.isEmpty()) {
-                                        for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
-                                            mFirestore.collection("SavedQuestions").document(documentSnapshot.getId())
-                                                    .delete();
-                                        }
-                                    }
-                                    mQuestionsData.remove(currentQuestion);
-                                    notifyDataSetChanged();
-                                }
-                            });
-                }
-            });
+            mDeleteSavedQuestion.setOnClickListener(v ->
+                    viewModel.deleteQuestion(currentQuestion));
         }
     }
 }
-

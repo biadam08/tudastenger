@@ -5,19 +5,21 @@ import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.cardview.widget.CardView;
+import androidx.lifecycle.LifecycleOwner;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.firebase.firestore.FirebaseFirestore;
 import com.szte.tudastenger.R;
 import com.szte.tudastenger.activities.DuelActivity;
 import com.szte.tudastenger.models.Duel;
+import com.szte.tudastenger.viewmodels.DuelListViewModel;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.TimeZone;
@@ -26,13 +28,14 @@ public class DuelAdapter extends RecyclerView.Adapter<DuelAdapter.ViewHolder> {
     private ArrayList<Duel> mDuelsData;
     private Context mContext;
     private String mCurrentUserId;
-    private FirebaseFirestore mFirestore = FirebaseFirestore.getInstance();
+    private DuelListViewModel viewModel;
 
 
-    public DuelAdapter(Context context, ArrayList<Duel> duelsData, String currentUserId){
+    public DuelAdapter(Context context, ArrayList<Duel> duelsData, String currentUserId, DuelListViewModel viewModel){
         this.mDuelsData = duelsData;
         this.mContext = context;
         this.mCurrentUserId = currentUserId;
+        this.viewModel = viewModel;
     }
 
     @NonNull
@@ -44,6 +47,7 @@ public class DuelAdapter extends RecyclerView.Adapter<DuelAdapter.ViewHolder> {
     @Override
     public void onBindViewHolder(@NonNull DuelAdapter.ViewHolder holder, int position) {
         Duel currentDuel = mDuelsData.get(position);
+
         holder.bindTo(currentDuel);
     }
 
@@ -57,7 +61,7 @@ public class DuelAdapter extends RecyclerView.Adapter<DuelAdapter.ViewHolder> {
         private TextView mCategoryAndQuestionNumberTextView;
         private TextView mDuelDate;
         private TextView mPointsTextView;
-        private RelativeLayout mDuelRelativeLayout;
+        private CardView mDuelCardView;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -65,42 +69,28 @@ public class DuelAdapter extends RecyclerView.Adapter<DuelAdapter.ViewHolder> {
             mCategoryAndQuestionNumberTextView = itemView.findViewById(R.id.categoryAndQuestionNumberTextView);
             mDuelDate = itemView.findViewById(R.id.duelDateTextView);
             mPointsTextView = itemView.findViewById(R.id.pointsTextView);
-            mDuelRelativeLayout = itemView.findViewById(R.id.duelRelativeLayout);
+            mDuelCardView = itemView.findViewById(R.id.duelCardView);
         }
 
         public void bindTo(Duel currentDuel) {
-            mFirestore.collection("Users")
-                    .document(currentDuel.getChallengerUid())
-                    .get()
-                    .addOnSuccessListener(documentSnapshot -> {
-                        if (documentSnapshot.exists()) {
-                            mFirestore.collection("Users")
-                                    .document(currentDuel.getChallengedUid())
-                                    .get()
-                                    .addOnSuccessListener(documentSnapshot2 -> {
-                                        if (documentSnapshot2.exists()) {
-                                            String challengedUsername = documentSnapshot2.getString("username");
-                                            String challengerUsername = documentSnapshot.getString("username");
-                                            String players = challengerUsername + " - " + challengedUsername;
-                                            mPlayersUsernameTextView.setText(players);
-                                        }
-                                    });
+
+            viewModel.getUsernames(currentDuel).observe(
+                    (LifecycleOwner) mContext, usernames -> {
+                        if (usernames != null) {
+                            mPlayersUsernameTextView.setText(usernames);
                         }
-                    });
+                    }
+            );
 
             if(Objects.equals(currentDuel.getCategory(), "mixed")){
                 String mCategoryAndQuestionNumber = "Vegyes / " + currentDuel.getQuestionIds().size() + " db";
                 mCategoryAndQuestionNumberTextView.setText(mCategoryAndQuestionNumber);
             } else {
-                mFirestore.collection("Categories")
-                        .document(currentDuel.getCategory())
-                        .get()
-                        .addOnSuccessListener(documentSnapshot -> {
-                            if (documentSnapshot.exists()) {
-                                String mCategoryAndQuestionNumber = documentSnapshot.getString("name") + " / " + currentDuel.getQuestionIds().size() + " db";
-                                mCategoryAndQuestionNumberTextView.setText(mCategoryAndQuestionNumber);
-                            }
-                        });
+                viewModel.loadCategoryAndQuestionNumber(currentDuel.getCategory(), currentDuel.getQuestionIds().size());
+
+                viewModel.getCategoryAndQuestionNumber().observe((LifecycleOwner) mContext, categoryAndQuestionNumber -> {
+                    mCategoryAndQuestionNumberTextView.setText(categoryAndQuestionNumber);
+                });
             }
 
 
@@ -139,22 +129,28 @@ public class DuelAdapter extends RecyclerView.Adapter<DuelAdapter.ViewHolder> {
 
                 if(currentDuel.getChallengerUid().equals(mCurrentUserId)) {
                     if(challengerUserPoints > challengedUserPoints) {
-                        mDuelRelativeLayout.setBackgroundResource(R.color.correct_green);
+                        mDuelCardView.setBackgroundResource(R.color.correct_green);
                     } else if(challengerUserPoints < challengedUserPoints){
-                        mDuelRelativeLayout.setBackgroundResource(R.color.incorrect_red);
+                        mDuelCardView.setBackgroundResource(R.color.incorrect_red);
                     } else {
-                        mDuelRelativeLayout.setBackgroundResource(R.color.draw);
+                        mDuelCardView.setBackgroundResource(R.color.draw);
                     }
                 } else{
                     if(challengedUserPoints > challengerUserPoints) {
-                        mDuelRelativeLayout.setBackgroundResource(R.color.correct_green);
+                        mDuelCardView.setBackgroundResource(R.color.correct_green);
                     } else if(challengedUserPoints < challengerUserPoints){
-                        mDuelRelativeLayout.setBackgroundResource(R.color.incorrect_red);
+                        mDuelCardView.setBackgroundResource(R.color.incorrect_red);
                     } else {
-                        mDuelRelativeLayout.setBackgroundResource(R.color.draw);
+                        mDuelCardView.setBackgroundResource(R.color.draw);
                     }
                 }
             }
         }
     }
+    public void updateData(List<Duel> duels) {
+        mDuelsData.clear();
+        mDuelsData.addAll(duels);
+        notifyDataSetChanged();
+    }
+
 }

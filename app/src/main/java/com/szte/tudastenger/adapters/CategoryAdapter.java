@@ -24,6 +24,7 @@ import com.szte.tudastenger.activities.QuizGameActivity;
 import com.szte.tudastenger.models.Category;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHolder> {
 
@@ -122,4 +123,5 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHo
                     });
         }
     }
+
 }

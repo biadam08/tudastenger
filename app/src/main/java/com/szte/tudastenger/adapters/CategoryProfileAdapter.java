@@ -19,71 +19,57 @@ import com.szte.tudastenger.models.Category;
 import com.szte.tudastenger.models.User;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class CategoryProfileAdapter extends RecyclerView.Adapter<CategoryProfileAdapter.ViewHolder> {
-    private ArrayList<Category> mCategoriesData;
-    private Context mContext;
-    private User currentUser;
-    private FirebaseFirestore mFirestore = FirebaseFirestore.getInstance();
+    private ArrayList<Category> categories;
+    private Map<String, String> categoryScores;
+    private Context context;
 
-    public CategoryProfileAdapter(Context context, ArrayList<Category> categoriesData, User currentUser){
-        this.mCategoriesData = categoriesData;
-        this.mContext = context;
-        this.currentUser = currentUser;
+    public CategoryProfileAdapter(Context context, ArrayList<Category> categories) {
+        this.context = context;
+        this.categories = categories;
+        this.categoryScores = new HashMap<>();
+    }
+
+    public void setCategoryScores(Map<String, String> scores) {
+        this.categoryScores = scores;
+        notifyDataSetChanged();
     }
 
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new ViewHolder(LayoutInflater.from(mContext).inflate(R.layout.list_category_profile, parent, false));
+        return new ViewHolder(LayoutInflater.from(context)
+                .inflate(R.layout.list_category_profile, parent, false));
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        Category currentCategory = mCategoriesData.get(position);
-
-        mFirestore.collection("AnsweredQuestions")
-                .whereEqualTo("userId", currentUser.getId())
-                .whereEqualTo("category", currentCategory.getId())
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            int correctAnswers = 0;
-                            int totalAnswers = 0;
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                totalAnswers++;
-                                if (document.getBoolean("correct")) {
-                                    correctAnswers++;
-                                }
-                            }
-                            String categoryScore = correctAnswers + "/" + totalAnswers;
-                            holder.bindTo(currentCategory, categoryScore);
-                        }
-                    }
-                });
+        Category category = categories.get(position);
+        String score = categoryScores.getOrDefault(category.getId(), "0/0");
+        holder.bindTo(category, score);
     }
 
     @Override
     public int getItemCount() {
-        return mCategoriesData.size();
+        return categories.size();
     }
 
-    class ViewHolder extends RecyclerView.ViewHolder{
-        private TextView mCategoryName;
-        private TextView mScoreTextView;
+    static class ViewHolder extends RecyclerView.ViewHolder {
+        private TextView categoryName;
+        private TextView scoreTextView;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            mCategoryName = itemView.findViewById(R.id.categoryNameTextView);
-            mScoreTextView = itemView.findViewById(R.id.scoreTextView);
+            categoryName = itemView.findViewById(R.id.categoryNameTextView);
+            scoreTextView = itemView.findViewById(R.id.scoreTextView);
         }
 
-        public void bindTo(Category currentCategory, String score) {
-            mCategoryName.setText(currentCategory.getName());
-            mScoreTextView.setText(score);
+        public void bindTo(Category category, String score) {
+            categoryName.setText(category.getName());
+            scoreTextView.setText(score);
         }
     }
 }
-

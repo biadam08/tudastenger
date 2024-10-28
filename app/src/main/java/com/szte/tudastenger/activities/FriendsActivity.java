@@ -12,22 +12,11 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.SearchView;
-import android.widget.TextView;
 
-import androidx.annotation.NonNull;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.CollectionReference;
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
 import com.szte.tudastenger.interfaces.OnFriendAdded;
 import com.szte.tudastenger.interfaces.OnFriendRemoved;
 import com.szte.tudastenger.interfaces.OnFriendRequestRemoved;
@@ -38,196 +27,87 @@ import com.szte.tudastenger.adapters.FriendRequestAdapter;
 import com.szte.tudastenger.adapters.UserAdapter;
 import com.szte.tudastenger.databinding.ActivityFriendsBinding;
 import com.szte.tudastenger.models.User;
+import com.szte.tudastenger.viewmodels.FriendsViewModel;
 
 import java.util.ArrayList;
-import java.util.Map;
-import java.util.Objects;
+
 
 public class FriendsActivity extends DrawerBaseActivity implements OnFriendRequestAdded, OnFriendAdded, OnFriendRequestRemoved, OnFriendRemoved {
-    private ActivityFriendsBinding activityFriendsBinding;
-    private FirebaseFirestore mFirestore;
-    private FirebaseUser user;
-    private User currentUser;
-    private CollectionReference mUsers;
-    private FirebaseAuth mAuth;
-
+    private ActivityFriendsBinding binding;
+    private FriendsViewModel viewModel;
     private RecyclerView mUserListRecyclerView;
-    private RecyclerView mFriendListRecyclerView;
-    private RecyclerView mFriendRequestListRecyclerView;
     private ArrayList<User> mUsersData;
-    private ArrayList<User> mFriendsData;
-    private ArrayList<User> mFriendRequestsData;
     private UserAdapter mUserAdapter;
     private FriendAdapter mFriendAdapter;
     private FriendRequestAdapter mFriendRequestAdapter;
-    private Button popUpShowUsersButton;
-    private TextView mNoFriendRequestsTextView;
-    private TextView mNoFriendsYetTextView;
-    private boolean userHasFriend;
-    private boolean userHasFriendRequest;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        activityFriendsBinding = ActivityFriendsBinding.inflate(getLayoutInflater());
-        setContentView(activityFriendsBinding.getRoot());
+        binding = ActivityFriendsBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
-        mAuth = FirebaseAuth.getInstance();
-        user = mAuth.getCurrentUser();
+        viewModel = new ViewModelProvider(this).get(FriendsViewModel.class);
 
-        if(user == null){
-            finish();
-        }
+        initializeViews();
+        setupRecyclerViews();
+        observeViewModel();
 
-        mFirestore = FirebaseFirestore.getInstance();
-        mUsers = mFirestore.collection("Users");
-
-        mNoFriendsYetTextView = findViewById(R.id.noFriendsYetTextView);
-        mNoFriendRequestsTextView = findViewById(R.id.noFriendRequestsTextView);
-
-        mFriendListRecyclerView = findViewById(R.id.friendListRecyclerView);
-        mFriendListRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        mFriendsData = new ArrayList<>();
-
-        mFriendRequestListRecyclerView = findViewById(R.id.friendRequestListRecyclerView);
-        mFriendRequestListRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        mFriendRequestsData = new ArrayList<>();
-
-        popUpShowUsersButton = findViewById(R.id.popUpShowUsersButton);
-
-        mUsers.whereEqualTo("email", user.getEmail()).get().addOnSuccessListener(queryDocumentSnapshots -> {
-            for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                currentUser = doc.toObject(User.class);
-
-                mFriendRequestAdapter = new FriendRequestAdapter(this, mFriendRequestsData, currentUser.getId(), this::onFriendAdded, this::onFriendRequestRemoved);
-                mFriendRequestListRecyclerView.setAdapter(mFriendRequestAdapter);
-
-                mFriendAdapter = new FriendAdapter(this, mFriendsData, currentUser.getId(), this::onFriendRemoved);
-                mFriendListRecyclerView.setAdapter(mFriendAdapter);
-
-                queryData();
-            }
-        });
-
-
-
+        binding.popUpShowUsersButton.setOnClickListener(view -> showUsers());
     }
 
-    private void queryData() {
-        mFirestore.collection("Friends").document(currentUser.getId()).get()
-                .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                        if (task.isSuccessful()) {
-                            DocumentSnapshot document = task.getResult();
-                            if (document.exists()) {
-                                Map<String, Object> friends = document.getData();
-                                for (Map.Entry<String, Object> entry : friends.entrySet()) {
-                                    if ((boolean) entry.getValue()) { // Ha a barát státusza true
-                                        String friendId = entry.getKey();
+    private void initializeViews() {
+        binding.friendListRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        binding.friendRequestListRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+    }
 
-                                        mFirestore.collection("Users").document(friendId).get()
-                                                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                                                    @Override
-                                                    public void onSuccess(DocumentSnapshot documentSnapshot) {
-                                                        if (documentSnapshot.exists()) {
-                                                            User friend = documentSnapshot.toObject(User.class);
-                                                            mFriendsData.add(friend);
-                                                            mFriendAdapter.notifyDataSetChanged();
+    private void setupRecyclerViews() {
+        viewModel.getCurrentUser().observe(this, currentUser -> {
+            if (currentUser != null) {
+                mFriendRequestAdapter = new FriendRequestAdapter(this, new ArrayList<>(), currentUser.getId(), viewModel);
+                binding.friendRequestListRecyclerView.setAdapter(mFriendRequestAdapter);
 
-                                                            // Frissítés után az üzenet elrejtése
-                                                            mNoFriendsYetTextView.setVisibility(View.GONE);
-                                                        }
-                                                    }
-                                                });
-                                    }
-                                }
-                            }
-
-                            if (mFriendsData.isEmpty()) {
-                                mNoFriendsYetTextView.setVisibility(View.VISIBLE);
-                                mNoFriendsYetTextView.setText("Jelenleg nincs barátod");
-                            }
-                        }
-                    }
-                });
-
-        mFirestore.collection("FriendRequests")
-                .whereEqualTo("user_uid1", currentUser.getId())
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                String user_uid2 = document.getString("user_uid2");
-
-                                mFirestore.collection("Users").document(user_uid2).get()
-                                        .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                                            @Override
-                                            public void onSuccess(DocumentSnapshot documentSnapshot) {
-                                                if (documentSnapshot.exists()) {
-                                                    User friend = documentSnapshot.toObject(User.class);
-                                                    mFriendRequestsData.add(friend);
-                                                    mFriendRequestAdapter.notifyDataSetChanged();
-
-                                                    // Frissítés után az üzenet elrejtése
-                                                    mNoFriendRequestsTextView.setVisibility(View.GONE);
-                                                }
-                                            }
-                                        });
-                            }
-
-                            if (mFriendRequestsData.isEmpty()) {
-                                mNoFriendRequestsTextView.setVisibility(View.VISIBLE);
-                                mNoFriendRequestsTextView.setText("Jelenleg nincs függő barátkérelem");
-                            }
-                        }
-                    }
-                });
-
-        mFirestore.collection("FriendRequests")
-                .whereEqualTo("user_uid2", currentUser.getId())
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                String user_uid1 = document.getString("user_uid1");
-
-                                mFirestore.collection("Users").document(user_uid1).get()
-                                        .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                                            @Override
-                                            public void onSuccess(DocumentSnapshot documentSnapshot) {
-                                                if (documentSnapshot.exists()) {
-                                                    User friend = documentSnapshot.toObject(User.class);
-                                                    mFriendRequestsData.add(friend);
-                                                    mFriendRequestAdapter.notifyDataSetChanged();
-
-                                                    // Frissítés után az üzenet elrejtése
-                                                    mNoFriendRequestsTextView.setVisibility(View.GONE);
-                                                }
-                                            }
-                                        });
-                            }
-
-                            if (mFriendRequestsData.isEmpty()) {
-                                mNoFriendRequestsTextView.setVisibility(View.VISIBLE);
-                                mNoFriendRequestsTextView.setText("Jelenleg nincs függő barátkérelem");
-                            }
-                        }
-                    }
-                });
-
-        popUpShowUsersButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showUsers();
+                mFriendAdapter = new FriendAdapter(this, new ArrayList<>(), currentUser.getId(), viewModel);
+                binding.friendListRecyclerView.setAdapter(mFriendAdapter);
             }
         });
     }
 
+    private void observeViewModel() {
+        viewModel.getFriendsData().observe(this, friends -> {
+            if (mFriendAdapter != null) {
+                mFriendAdapter.updateData(friends);
+            }
+        });
+
+        viewModel.getFriendRequestsData().observe(this, requests -> {
+            if (mFriendRequestAdapter != null) {
+                mFriendRequestAdapter.updateData(requests);
+            }
+        });
+
+
+        viewModel.getNoFriendsVisibility().observe(this, showNoFriends -> {
+            binding.noFriendsYetTextView.setVisibility(showNoFriends ? View.VISIBLE : View.GONE);
+            if (showNoFriends) {
+                binding.noFriendsYetTextView.setText("Jelenleg nincs barátod");
+            }
+        });
+
+        viewModel.getNoRequestsVisibility().observe(this, showNoRequests -> {
+            binding.noFriendRequestsTextView.setVisibility(showNoRequests ? View.VISIBLE : View.GONE);
+            if (showNoRequests) {
+                binding.noFriendRequestsTextView.setText("Jelenleg nincs függő barátkérelem");
+            }
+        });
+
+        viewModel.getFriendRequestSent().observe(this, user -> {
+            if (user != null) {
+                onFriendRequestAdded(user);
+            }
+        });
+
+    }
 
     public void showUsers() {
         LayoutInflater inflater = (LayoutInflater)
@@ -241,31 +121,27 @@ public class FriendsActivity extends DrawerBaseActivity implements OnFriendReque
         popupWindow.setTouchable(true);
         popupWindow.setFocusable(true);
 
-
         mUserListRecyclerView = popupView.findViewById(R.id.userListRecyclerView);
         Button mPopUpCloseButton = popupView.findViewById(R.id.popUpCloseButton);
 
         mUserListRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         mUsersData = new ArrayList<>();
-        mUserAdapter = new UserAdapter(this, mUsersData, currentUser.getId(), this);
-        mUserListRecyclerView.setAdapter(mUserAdapter);
 
-        mPopUpCloseButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                popupWindow.dismiss();
+        viewModel.getCurrentUser().observe(this, currentUser -> {
+            if (currentUser != null) {
+                mUserAdapter = new UserAdapter(this, mUsersData, currentUser.getId(), this, viewModel);
+                mUserListRecyclerView.setAdapter(mUserAdapter);
+                viewModel.loadUsers();
             }
         });
 
-        mFirestore.collection("Users").orderBy("username").limit(10).get().addOnSuccessListener(queryDocumentSnapshots -> {
-            for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                User user = document.toObject(User.class);
-                if(!Objects.equals(user.getId(), currentUser.getId())) {
-                    mUsersData.add(user);
-                    mUserAdapter.notifyDataSetChanged();
-                }
-            }
+        viewModel.getUsersData().observe(this, users -> {
+            mUsersData.clear();
+            mUsersData.addAll(users);
+            mUserAdapter.notifyDataSetChanged();
         });
+
+        mPopUpCloseButton.setOnClickListener(view -> popupWindow.dismiss());
 
         SearchView searchView = popupView.findViewById(R.id.searchByName);
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
@@ -297,42 +173,21 @@ public class FriendsActivity extends DrawerBaseActivity implements OnFriendReque
 
     @Override
     public void onFriendRequestAdded(User user) {
-        mFriendRequestsData.add(user);
-        mFriendRequestAdapter.notifyDataSetChanged();
-
-        if (!mFriendRequestsData.isEmpty()) {
-            mNoFriendRequestsTextView.setVisibility(View.GONE);
-        }
+        viewModel.onFriendRequestAdded(user);
     }
+
     @Override
     public void onFriendAdded(User user) {
-        mFriendsData.add(user);
-        mFriendAdapter.notifyDataSetChanged();
-
-        if (!mFriendsData.isEmpty()) {
-            mNoFriendsYetTextView.setVisibility(View.GONE);
-        }
+        viewModel.onFriendAdded(user);
     }
 
     @Override
     public void onFriendRequestRemoved(User user) {
-        mFriendRequestsData.remove(user);
-        mFriendRequestAdapter.notifyDataSetChanged();
-
-        if (mFriendRequestsData.isEmpty()) {
-            mNoFriendRequestsTextView.setVisibility(View.VISIBLE);
-            mNoFriendRequestsTextView.setText("Jelenleg nincs függő barátkérelem");
-        }
+        viewModel.onFriendRequestRemoved(user);
     }
 
     @Override
     public void onFriendRemoved(User user) {
-        mFriendsData.remove(user);
-        mFriendAdapter.notifyDataSetChanged();
-
-        if (mFriendsData.isEmpty()) {
-            mNoFriendsYetTextView.setVisibility(View.VISIBLE);
-            mNoFriendsYetTextView.setText("Jelenleg nincs barátod");
-        }
+        viewModel.onFriendRemoved(user);
     }
 }
