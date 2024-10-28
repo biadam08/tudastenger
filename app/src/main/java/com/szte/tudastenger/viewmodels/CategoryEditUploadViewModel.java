@@ -100,11 +100,13 @@ public class CategoryEditUploadViewModel extends AndroidViewModel {
                         Category category = documentSnapshot.toObject(Category.class);
                         categoryData.setValue(category);
                         categoryName.setValue(category.getName());
+                        existingImageName.setValue(category.getImage());
 
-                        mStorage.child("images/" + category.getImage())
-                                .getDownloadUrl()
-                                .addOnSuccessListener(uri -> imageUrl.postValue(uri.toString()))
-                                .addOnFailureListener(e -> errorMessage.postValue(e.getMessage()));
+                        if(category.getImage() != null) {
+                            mStorage.child("images/" + category.getImage())
+                                    .getDownloadUrl()
+                                    .addOnSuccessListener(uri -> imageUrl.postValue(uri.toString()));
+                        }
                     }
                 });
     }

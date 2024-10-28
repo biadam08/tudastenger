@@ -36,6 +36,7 @@ public class QuestionEditUploadViewModel extends AndroidViewModel {
     private MutableLiveData<String> explanationText = new MutableLiveData<>();
     private MutableLiveData<Uri> imageUri = new MutableLiveData<>();
     private MutableLiveData<String> imageUrl = new MutableLiveData<>();
+    private MutableLiveData<String> existingImageName = new MutableLiveData<>();
     private MutableLiveData<Boolean> isImageUploading = new MutableLiveData<>();
     private MutableLiveData<Integer> uploadProgress = new MutableLiveData<>();
     private MutableLiveData<Boolean> updateSuccess = new MutableLiveData<>();
@@ -57,6 +58,7 @@ public class QuestionEditUploadViewModel extends AndroidViewModel {
     public LiveData<String> getExplanationText() { return explanationText; }
     public LiveData<Uri> getImageUri() { return imageUri; }
     public LiveData<String> getImageUrl() { return imageUrl; }
+    public LiveData<String> getExistingImageName() { return existingImageName; }
     public LiveData<Boolean> getIsImageUploading() { return isImageUploading; }
     public LiveData<Integer> getUploadProgress() { return uploadProgress; }
     public LiveData<Boolean> getIsAdmin() { return isAdmin; }
@@ -106,6 +108,7 @@ public class QuestionEditUploadViewModel extends AndroidViewModel {
                         Question question = documentSnapshot.toObject(Question.class);
                         currentQuestion.postValue(question);
                         explanationText.postValue(question.getExplanationText());
+                        existingImageName.setValue(question.getImage());
 
                         if (question.getImage() != null && !question.getImage().isEmpty()) {
                             loadQuestionImage(question.getImage());

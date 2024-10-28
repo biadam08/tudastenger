@@ -94,7 +94,6 @@ public class CategoryUploadActivity extends DrawerBaseActivity {
                         .into(binding.categoryImagePreview);
 
                 binding.categoryImagePreview.setVisibility(View.VISIBLE);
-                binding.categoryImagePreview.setVisibility(View.VISIBLE);
                 binding.uploadImageButton.setVisibility(View.GONE);
                 binding.manageImageLinearLayout.setVisibility(View.VISIBLE);
             }
@@ -141,8 +140,14 @@ public class CategoryUploadActivity extends DrawerBaseActivity {
             CropImage.ActivityResult result = CropImage.getActivityResult(data);
             if (resultCode == RESULT_OK) {
                 viewModel.setImageUri(result.getUri());
-                Uri uri = result.getUri();
-                binding.categoryImagePreview.setImageURI(uri);
+                Glide.with(this)
+                        .load(result.getUri())
+                        .into(binding.categoryImagePreview);
+
+                binding.categoryImagePreview.setVisibility(View.VISIBLE);
+                binding.uploadImageButton.setVisibility(View.GONE);
+                binding.manageImageLinearLayout.setVisibility(View.VISIBLE);
+
             } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
                 Exception error = result.getError();
                 Toast.makeText(this, "Hiba a kép vágásakor: " + error.getMessage(),

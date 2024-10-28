@@ -180,12 +180,12 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
 
     public void uploadQuestion(View view) {
         if (validateQuestionInput()) {
-            Question question = createQuestionFromInput();
+            Question question = createQuestion();
             viewModel.uploadQuestion(question, viewModel.getImageUri().getValue());
         }
     }
 
-    private Question createQuestionFromInput() {
+    private Question createQuestion() {
         String questionText = binding.questionName.getText().toString();
         Category selectedCategory = (Category) binding.questionCategory.getSelectedItem();
         String categoryId = selectedCategory.getId();
@@ -212,7 +212,7 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
                 categoryId,
                 answers,
                 correctAnswerIndex,
-                null, // kép neve később lesz beállítva
+                viewModel.getExistingImageName().getValue(),
                 viewModel.getExplanationText().getValue()
         );
     }
