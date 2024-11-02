@@ -12,6 +12,9 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.szte.tudastenger.models.Category;
 import com.szte.tudastenger.models.User;
+import com.szte.tudastenger.repositories.AnsweredQuestionsRepository;
+import com.szte.tudastenger.repositories.CategoryRepository;
+import com.szte.tudastenger.repositories.UserRepository;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,9 +22,9 @@ import java.util.List;
 import java.util.Map;
 
 public class ProfileViewModel extends AndroidViewModel {
-    private FirebaseFirestore mFirestore;
-    private FirebaseStorage mStorage;
-    private FirebaseAuth mAuth;
+    private final UserRepository userRepository;
+    private final CategoryRepository categoryRepository;
+    private final AnsweredQuestionsRepository answeredQuestionsRepository;
 
     private MutableLiveData<User> currentUser = new MutableLiveData<>();
     private MutableLiveData<List<Category>> categories = new MutableLiveData<>();
@@ -31,9 +34,9 @@ public class ProfileViewModel extends AndroidViewModel {
 
     public ProfileViewModel(Application application) {
         super(application);
-        mFirestore = FirebaseFirestore.getInstance();
-        mStorage = FirebaseStorage.getInstance();
-        mAuth = FirebaseAuth.getInstance();
+        userRepository = new UserRepository();
+        categoryRepository = new CategoryRepository();
+        answeredQuestionsRepository = new AnsweredQuestionsRepository();
         categoryScores.setValue(new HashMap<>());
     }
 
@@ -44,74 +47,46 @@ public class ProfileViewModel extends AndroidViewModel {
     public LiveData<String> getErrorMessage() { return errorMessage; }
 
     public void loadUserData() {
-        if (mAuth.getCurrentUser() == null) return;
-
-        mFirestore.collection("Users")
-                .whereEqualTo("email", mAuth.getCurrentUser().getEmail())
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                        User user = doc.toObject(User.class);
-                        currentUser.setValue(user);
-                        loadProfilePicture(user.getProfilePicture());
-                    }
+        userRepository.loadCurrentUser(
+                user -> {
+                    currentUser.setValue(user);
+                    loadProfilePicture(user.getProfilePicture());
                     loadCategories();
-                })
-                .addOnFailureListener(e -> {
-                    errorMessage.setValue(e.getMessage());
-                });
+                }
+        );
+
     }
 
     private void loadProfilePicture(String profilePicturePath) {
-        String imagePath = !profilePicturePath.isEmpty() ?
-                "profile-pictures/" + profilePicturePath :
-                "profile-pictures/default.jpg";
-
-        mStorage.getReference()
-                .child(imagePath)
-                .getDownloadUrl()
-                .addOnSuccessListener(uri -> profilePictureUrl.setValue(uri.toString()))
-                .addOnFailureListener(e -> errorMessage.setValue(e.getMessage()));
+        userRepository.loadProfilePicture( profilePicturePath, url -> profilePictureUrl.setValue(url), error -> errorMessage.setValue(error));
     }
 
     private void loadCategories() {
-        mFirestore.collection("Categories")
-                .orderBy("name")
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    List<Category> categoryList = new ArrayList<>();
-                    for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                        Category category = doc.toObject(Category.class);
-                        categoryList.add(category);
+        categoryRepository.loadCategories(
+                categoryList -> {
+                    categories.setValue((ArrayList<Category>) categoryList);
+                    for (Category category : categoryList) {
                         loadCategoryScore(category);
                     }
-                    categories.setValue(categoryList);
-                })
-                .addOnFailureListener(e -> errorMessage.setValue(e.getMessage()));
+                },
+                error -> errorMessage.setValue(error)
+        );
     }
 
     private void loadCategoryScore(Category category) {
         User user = currentUser.getValue();
         if (user == null) return;
 
-        mFirestore.collection("AnsweredQuestions")
-                .whereEqualTo("userId", user.getId())
-                .whereEqualTo("category", category.getId())
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    int correctAnswers = 0;
-                    int totalAnswers = 0;
-                    for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                        totalAnswers++;
-                        if (doc.getBoolean("correct")) {
-                            correctAnswers++;
-                        }
-                    }
+        answeredQuestionsRepository.loadCategoryScore(
+                user.getId(),
+                category.getId(),
+                (categoryId, correct, total) -> {
                     Map<String, String> scores = categoryScores.getValue();
                     if (scores == null) scores = new HashMap<>();
-                    scores.put(category.getId(), correctAnswers + "/" + totalAnswers);
+                    scores.put(categoryId, correct + "/" + total);
                     categoryScores.setValue(scores);
-                })
-                .addOnFailureListener(e -> errorMessage.setValue(e.getMessage()));
+                },
+                error -> errorMessage.setValue(error)
+        );
     }
 }

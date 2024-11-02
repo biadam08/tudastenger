@@ -22,19 +22,20 @@ import com.szte.tudastenger.models.Category;
 import com.szte.tudastenger.models.Duel;
 import com.szte.tudastenger.models.Question;
 import com.szte.tudastenger.models.User;
+import com.szte.tudastenger.repositories.CategoryRepository;
+import com.szte.tudastenger.repositories.DuelRepository;
+import com.szte.tudastenger.repositories.QuestionRepository;
+import com.szte.tudastenger.repositories.UserRepository;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 public class DuelViewModel extends AndroidViewModel {
-    private final FirebaseFirestore mFirestore;
-    private final FirebaseAuth mAuth;
-    private final FirebaseUser mUser;
-    private final CollectionReference mUsers;
-    private final CollectionReference mQuestions;
-    private final CollectionReference mCategories;
-    private final StorageReference storageReference;
+    private final QuestionRepository questionRepository;
+    private final CategoryRepository categoryRepository;
+    private final UserRepository userRepository;
+    private final DuelRepository duelRepository;
     private String categoryId;
     private String category;
     private String duelId;
@@ -63,13 +64,10 @@ public class DuelViewModel extends AndroidViewModel {
 
     public DuelViewModel(Application application) {
         super(application);
-        mFirestore = FirebaseFirestore.getInstance();
-        mAuth = FirebaseAuth.getInstance();
-        mUser = mAuth.getCurrentUser();
-        mUsers = mFirestore.collection("Users");
-        mQuestions = mFirestore.collection("Questions");
-        mCategories = mFirestore.collection("Categories");
-        storageReference = FirebaseStorage.getInstance().getReference();
+        questionRepository = new QuestionRepository();
+        duelRepository = new DuelRepository();
+        categoryRepository = new CategoryRepository();
+        userRepository = new UserRepository();
     }
 
     public LiveData<User> getCurrentUser() { return currentUser; }
@@ -94,63 +92,38 @@ public class DuelViewModel extends AndroidViewModel {
         loadCurrentUser();
     }
 
-    private void loadCurrentUser() {
-        if (mUser != null) {
-            mUsers.whereEqualTo("email", mUser.getEmail())
-                    .get()
-                    .addOnSuccessListener(queryDocumentSnapshots -> {
-                        for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                            currentUser.setValue(doc.toObject(User.class));
-                            if(currentUser.getValue().getId().equals(challengerUserId)) {
-                                showButtonsLayout.setValue(true);
-                                loadCategories();
-                            } else {
-                                showButtonsLayout.setValue(false);
-                                loadDuelData();
-                            }
-                        }
-                    });
-        }
+    private void loadCurrentUser(){
+        userRepository.loadCurrentUser(user -> {
+            currentUser.setValue(user);
+
+            if(user.getId().equals(challengerUserId)) {
+                showButtonsLayout.setValue(true);
+                loadCategories();
+            } else {
+                showButtonsLayout.setValue(false);
+                loadDuelData();
+            }
+        });
     }
 
     public void loadDuelData() {
-        mFirestore.collection("Duels").document(duelId)
-                .get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists()) {
-                        actualDuel = documentSnapshot.toObject(Duel.class);
-                        ArrayList<String> qIds = actualDuel.getQuestionIds();
-                        questionIdsList.setValue(qIds);
-
-                        List<Task<DocumentSnapshot>> tasks = new ArrayList<>();
-                        for (String questionId : qIds) {
-                            tasks.add(mQuestions.document(questionId).get());
-                        }
-
-                        Tasks.whenAllSuccess(tasks).addOnSuccessListener(list -> {
-                            ArrayList<Question> questions = new ArrayList<>();
-                            for (Object object : list) {
-                                DocumentSnapshot document = (DocumentSnapshot) object;
-                                Question question = document.toObject(Question.class);
-                                questions.add(question);
-                            }
-                            questionsList.setValue(questions);
-                            startDuel();
-                        });
-                    }
-                });
+        duelRepository.loadDuelWithQuestions(
+                duelId,
+                (duel, questionIds) -> {
+                    actualDuel = duel;
+                    questionIdsList.setValue(questionIds);
+                },
+                questions -> {
+                    questionsList.setValue(questions);
+                    startDuel();
+                }
+        );
     }
+
 
     public void selectCategory(String categoryName) {
         if(!categoryName.equals("Vegyes kategória")) {
-            mFirestore.collection("Categories")
-                    .whereEqualTo("name", categoryName)
-                    .get()
-                    .addOnSuccessListener(queryDocumentSnapshots -> {
-                        for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
-                            categoryId = documentSnapshot.getId();
-                        }
-                    });
+            categoryRepository.selectCategory(categoryName, selectedCategoryId  -> categoryId = selectedCategoryId);
             category = categoryName;
         } else {
             categoryId = null;
@@ -161,62 +134,42 @@ public class DuelViewModel extends AndroidViewModel {
     public void loadCategories() {
         ArrayList<Category> categories = new ArrayList<>();
         categories.add(new Category(null, "Vegyes kategória", null));
-        mCategoriesData.setValue(categories);
 
-        mCategories.orderBy("name")
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    for(QueryDocumentSnapshot document : queryDocumentSnapshots){
-                        Category category = document.toObject(Category.class);
-                        categories.add(category);
-                    }
+        categoryRepository.loadCategories(
+                categoryList -> {
+                    categories.addAll(categoryList);
                     mCategoriesData.setValue(categories);
-                });
+                },
+                error -> {}
+        );
     }
 
     public void initializeQuestions(int questionCount) {
-        this.questionNumber = questionCount;
-
         if(categoryId == null) {
             categoryId = "mixed";
         }
 
+        this.questionNumber = questionCount;
         showButtonsLayout.setValue(false);
 
-        Query query = mQuestions;
-        if (!category.equals("mixed")) {
-            query = query.whereEqualTo("category", categoryId);
-        }
-
-        query.get()
-                .addOnSuccessListener(questions -> {
-                    List<DocumentSnapshot> documents = questions.getDocuments();
-                    if (documents.size() >= questionNumber) {
-                        Random random = new Random();
-                        ArrayList<Question> newQuestionsList = new ArrayList<>();
-                        ArrayList<String> newQuestionIdsList = new ArrayList<>();
-
-                        while (newQuestionsList.size() < questionNumber) {
-                            DocumentSnapshot randomDoc = documents.get(random.nextInt(documents.size()));
-                            Question question = randomDoc.toObject(Question.class);
-                            if (question != null && !newQuestionIdsList.contains(question.getId())) {
-                                newQuestionsList.add(question);
-                                newQuestionIdsList.add(question.getId());
-                            }
-                        }
-
-                        questionsList.setValue(newQuestionsList);
-                        questionIdsList.setValue(newQuestionIdsList);
-                        startDuel();
-                    } else {
-                        toastMessage.setValue("Nincs elég kérdés ebben a kategóriában!");
+        questionRepository.initializeDuelQuestions(
+                categoryId,
+                category,
+                questionNumber,
+                (questions, questionIds) -> {
+                    questionsList.setValue(questions);
+                    questionIdsList.setValue(questionIds);
+                    startDuel();
+                },
+                error -> {
+                    toastMessage.setValue(error);
+                    if (error.equals("Nincs elég kérdés ebben a kategóriában!")) {
                         showButtonsLayout.setValue(true);
                     }
-                })
-                .addOnFailureListener(e -> {
-                    toastMessage.setValue("Hiba történt a kérdések betöltésekor!");
-                });
+                }
+        );
     }
+
 
     public void startDuel() {
         showButtonsLayout.setValue(false);
@@ -235,16 +188,9 @@ public class DuelViewModel extends AndroidViewModel {
         loadQuestionImage();
     }
 
-    private void loadQuestionImage() {
+    public void loadQuestionImage(){
         Question question = currentQuestion.getValue();
-        if (question != null && question.getImage() != null && !question.getImage().isEmpty()) {
-            String imagePath = "images/" + question.getImage();
-            storageReference.child(imagePath).getDownloadUrl()
-                    .addOnSuccessListener(uri -> imageUri.setValue(uri))
-                    .addOnFailureListener(e -> imageUri.setValue(null));
-        } else {
-            imageUri.setValue(null);
-        }
+        questionRepository.loadQuestionImage(question.getImage(), uri -> imageUri.setValue(Uri.parse(uri)), error -> imageUri.setValue(null));
     }
 
     public void handleAnswerClick(int clickedIndex, int correctAnswerIndex) {
@@ -268,30 +214,25 @@ public class DuelViewModel extends AndroidViewModel {
     }
 
     public void finishDuel() {
-        if(currentUser.getValue().getId().equals(challengerUserId)) {
-            Duel duel = new Duel(null, challengerUserId, challengedUserId, categoryId,
-                    questionIdsList.getValue(), challengerUserResults.getValue(), null);
+        if (currentUser.getValue().getId().equals(challengerUserId)) {
+            Duel duel = new Duel(null, challengerUserId, challengedUserId, categoryId, questionIdsList.getValue(), challengerUserResults.getValue(), null);
 
-            mFirestore.collection("Duels")
-                    .add(duel)
-                    .addOnSuccessListener(documentReference -> {
-                        String documentId = documentReference.getId();
-                        duel.setId(documentId);
-                        mFirestore.collection("Duels")
-                                .document(documentId)
-                                .update("id", documentId);
-                    });
+            // kihívás után mentés
+            duelRepository.createNewDuel(
+                    duel,
+                    this::getDuelResult
+            );
+
         } else {
-            mFirestore.collection("Duels")
-                    .document(duelId)
-                    .update(
-                            "challengedUserResults", challengedUserResults.getValue(),
-                            "finished", true
-                    );
+            // kihívott játéka után frissítés
+            duelRepository.updateDuelWithChallengedResults(
+                    duelId,
+                    challengedUserResults.getValue(),
+                    this::getDuelResult
+            );
         }
-
-        getDuelResult();
     }
+
 
     private void getDuelResult() {
         if(currentUser.getValue().getId().equals(challengerUserId)) {
@@ -301,26 +242,18 @@ public class DuelViewModel extends AndroidViewModel {
             }
             result.setValue("Eredményed: " + correctAnswers + "/" + questionIdsList.getValue().size());
         } else {
-            mFirestore.collection("Duels")
-                    .document(duelId)
-                    .get()
-                    .addOnSuccessListener(documentSnapshot -> {
-                        if (documentSnapshot.exists()) {
-                            ArrayList<Boolean> challengerResults = (ArrayList<Boolean>) documentSnapshot.get("challengerUserResults");
+            duelRepository.getDuelById(
+                    duelId,
+                    challengerResults -> {
+                        int challengerCorrect = 0;
+                        int challengedCorrect = 0;
 
-                            int challengerCorrect = 0;
-                            int challengedCorrect = 0;
-
-                            for (int i = 0; i < questionIdsList.getValue().size(); i++) {
-                                if (challengerResults.get(i)) challengerCorrect++;
-                                if (challengedUserResults.getValue().get(i)) challengedCorrect++;
-                            }
-
-                            result.setValue("Eredményed: " + challengedCorrect + "/" +
-                                    questionIdsList.getValue().size() + "\n" +
-                                    "A kihívó eredménye: " + challengerCorrect + "/" +
-                                    questionIdsList.getValue().size());
+                        for (int i = 0; i < questionIdsList.getValue().size(); i++) {
+                            if (challengerResults.get(i)) challengerCorrect++;
+                            if (challengedUserResults.getValue().get(i)) challengedCorrect++;
                         }
+
+                        result.setValue("Eredményed: " + challengedCorrect + "/" + questionIdsList.getValue().size() + "\n" + "A kihívó eredménye: " + challengerCorrect + "/" + questionIdsList.getValue().size());
                     });
         }
     }

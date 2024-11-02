@@ -65,7 +65,9 @@ public class UserLeaderboardAdapter extends RecyclerView.Adapter<UserLeaderboard
     }
     public void updateData(List<Map.Entry<String, Integer>> newData) {
         mUserList.clear();
-        mUserList.addAll(newData);
+        if(newData != null) {
+            mUserList.addAll(newData);
+        }
         notifyDataSetChanged();
     }
 }

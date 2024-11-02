@@ -13,19 +13,16 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.szte.tudastenger.models.User;
+import com.szte.tudastenger.repositories.AuthRepository;
 
 public class LoginViewModel extends AndroidViewModel {
-    private final FirebaseAuth mAuth;
-    private final FirebaseFirestore mFirestore;
-    private final CollectionReference mUsers;
+    private final AuthRepository authRepository;
     private final MutableLiveData<String> errorMessage = new MutableLiveData<>();
     private final MutableLiveData<Boolean> loginSuccess = new MutableLiveData<>();
 
     public LoginViewModel(Application application) {
         super(application);
-        mAuth = FirebaseAuth.getInstance();
-        mFirestore = FirebaseFirestore.getInstance();
-        mUsers = mFirestore.collection("Users");
+        authRepository = new AuthRepository();
     }
 
     public LiveData<String> getErrorMessage() {
@@ -37,14 +34,10 @@ public class LoginViewModel extends AndroidViewModel {
     }
 
     public void checkCurrentUser() {
-        FirebaseUser currentUser = mAuth.getCurrentUser();
-        if (currentUser != null) {
-            loginSuccess.setValue(true);
-        }
+        authRepository.checkCurrentUser(isLoggedIn -> loginSuccess.setValue(isLoggedIn));
     }
 
     public void login(String email, String password) {
-        // Input validation
         if (email.trim().isEmpty()) {
             errorMessage.setValue("Az email mező nem lehet üres");
             return;
@@ -60,68 +53,19 @@ public class LoginViewModel extends AndroidViewModel {
             return;
         }
 
-
-        mAuth.signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        loginSuccess.setValue(true);
-                    } else {
-                        errorMessage.setValue("Sikertelen belépés!");
-                    }
-                });
+        authRepository.login(
+                email,
+                password,
+                () -> loginSuccess.setValue(true),
+                error -> errorMessage.setValue(error)
+        );
     }
 
     public void handleGoogleSignIn(AuthCredential credential) {
-
-        mAuth.signInWithCredential(credential)
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        FirebaseUser firebaseUser = mAuth.getCurrentUser();
-                        if (firebaseUser != null) {
-                            handleGoogleUser(firebaseUser);
-                        }
-                    } else {
-                        errorMessage.setValue("Hiba a bejelentkezés során: " + task.getException().getMessage());
-                    }
-                });
-    }
-
-    private void handleGoogleUser(FirebaseUser firebaseUser) {
-        String uid = firebaseUser.getUid();
-        String email = firebaseUser.getEmail();
-        String displayName = firebaseUser.getDisplayName();
-
-        mUsers.document(uid).get()
-                .addOnCompleteListener(userTask -> {
-                    if (userTask.isSuccessful()) {
-                        if (!userTask.getResult().exists()) {
-                            createNewGoogleUser(uid, displayName, email);
-                        } else {
-                            loginSuccess.setValue(true);
-                        }
-                    } else {
-                        errorMessage.setValue("Hiba a felhasználó ellenőrzése során");
-                    }
-                });
-    }
-
-    private void createNewGoogleUser(String uid, String displayName, String email) {
-        FirebaseMessaging.getInstance().getToken()
-                .addOnCompleteListener(fcmTask -> {
-                    if (fcmTask.isSuccessful()) {
-                        String fcmToken = fcmTask.getResult();
-                        User user = new User(uid, displayName, email, fcmToken);
-
-                        mUsers.document(uid).set(user)
-                                .addOnSuccessListener(aVoid -> {
-                                    loginSuccess.setValue(true);
-                                })
-                                .addOnFailureListener(e -> {
-                                    errorMessage.setValue("Hiba a felhasználó létrehozása során");
-                                });
-                    } else {
-                        errorMessage.setValue("Hiba az FCM token lekérése során");
-                    }
-                });
+        authRepository.signInWithGoogle(
+                credential,
+                () -> loginSuccess.setValue(true),
+                error -> errorMessage.setValue(error)
+        );
     }
 }

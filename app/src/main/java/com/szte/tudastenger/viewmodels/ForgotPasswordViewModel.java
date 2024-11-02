@@ -7,16 +7,16 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.szte.tudastenger.repositories.UserRepository;
 
 public class ForgotPasswordViewModel extends AndroidViewModel {
-    private final FirebaseAuth mAuth;
-
+    private final UserRepository userRepository;
     private final MutableLiveData<String> errorMessage = new MutableLiveData<>();
     private final MutableLiveData<Boolean> isSuccess= new MutableLiveData<>();
 
     public ForgotPasswordViewModel(Application application) {
         super(application);
-        mAuth = FirebaseAuth.getInstance();
+        userRepository = new UserRepository();
     }
 
     public LiveData<String> getErrorMessage() { return errorMessage; }
@@ -28,12 +28,11 @@ public class ForgotPasswordViewModel extends AndroidViewModel {
             return;
         }
 
-        mAuth.sendPasswordResetEmail(email.trim())
-                .addOnSuccessListener(unused -> {
-                    isSuccess.setValue(true);
-                })
-                .addOnFailureListener(e -> {
-                    errorMessage.setValue("Hiba: " + e.getMessage());
-                });
+        userRepository.resetPassword(
+                email.trim(),
+                success -> isSuccess.setValue(true),
+                error -> errorMessage.setValue(error)
+        );
     }
+
 }

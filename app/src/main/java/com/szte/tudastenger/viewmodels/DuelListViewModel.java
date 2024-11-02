@@ -20,6 +20,9 @@ import com.google.firebase.firestore.QuerySnapshot;
 import com.szte.tudastenger.models.Duel;
 import com.szte.tudastenger.models.Question;
 import com.szte.tudastenger.models.User;
+import com.szte.tudastenger.repositories.CategoryRepository;
+import com.szte.tudastenger.repositories.DuelRepository;
+import com.szte.tudastenger.repositories.UserRepository;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -28,9 +31,9 @@ import java.util.List;
 import java.util.Set;
 
 public class DuelListViewModel extends AndroidViewModel {
-    private final FirebaseFirestore mFirestore;
-    private final FirebaseUser mUser;
-    private final CollectionReference mUsers;
+    private final CategoryRepository categoryRepository;
+    private final UserRepository userRepository;
+    private final DuelRepository duelRepository;
 
     private final MutableLiveData<User> currentUser = new MutableLiveData<>();
     private final MutableLiveData<List<Duel>> pendingDuels = new MutableLiveData<>();
@@ -40,9 +43,9 @@ public class DuelListViewModel extends AndroidViewModel {
 
     public DuelListViewModel(Application application) {
         super(application);
-        mFirestore = FirebaseFirestore.getInstance();
-        mUser = FirebaseAuth.getInstance().getCurrentUser();
-        mUsers = mFirestore.collection("Users");
+        duelRepository = new DuelRepository();
+        categoryRepository = new CategoryRepository();
+        userRepository = new UserRepository();
         loadUser();
     }
 
@@ -54,39 +57,21 @@ public class DuelListViewModel extends AndroidViewModel {
     public LiveData<String> getUsernames(Duel currentDuel) {
         MutableLiveData<String> usernames = new MutableLiveData<>();
 
-        mFirestore.collection("Users")
-                .document(currentDuel.getChallengerUid())
-                .get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists()) {
-                        mFirestore.collection("Users")
-                                .document(currentDuel.getChallengedUid())
-                                .get()
-                                .addOnSuccessListener(documentSnapshot2 -> {
-                                    if (documentSnapshot2.exists()) {
-                                        String challengedUsername = documentSnapshot2.getString("username");
-                                        String challengerUsername = documentSnapshot.getString("username");
-                                        String players = challengerUsername + " - " + challengedUsername;
-                                        usernames.setValue(players);
-                                        Log.d("ViewModel", players);
-                                    }
-                                });
-                    }
-                });
+        userRepository.getUsernamesForDuel(
+                currentDuel.getChallengerUid(),
+                currentDuel.getChallengedUid(),
+                playerUsernames -> usernames.setValue(playerUsernames)
+        );
+
         return usernames;
     }
 
     private void loadUser() {
-        if (mUser != null) {
-            mUsers.whereEqualTo("email", mUser.getEmail())
-                    .get()
-                    .addOnSuccessListener(queryDocumentSnapshots -> {
-                        for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                            currentUser.setValue(doc.toObject(User.class));
-                            loadDuels();
-                        }
-                    });
-        }
+        userRepository.loadCurrentUser(user -> {
+                    currentUser.setValue(user);
+                    loadDuels();
+                }
+        );
     }
 
     private void loadDuels() {
@@ -95,67 +80,33 @@ public class DuelListViewModel extends AndroidViewModel {
     }
 
     private void loadPendingDuels() {
-        mFirestore.collection("Duels")
-                .whereEqualTo("challengedUid", currentUser.getValue().getId())
-                .whereEqualTo("challengedUserResults", null) //függőben lévő
-                .orderBy("date", Query.Direction.DESCENDING)
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    List<Duel> pendingDuelsList = new ArrayList<>();
-                    for(QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                        Duel duel = document.toObject(Duel.class);
-                        pendingDuelsList.add(duel);
-                    }
-                    pendingDuels.setValue(pendingDuelsList);
-                });
+        User user = currentUser.getValue();
+        if (user != null) {
+            duelRepository.loadPendingDuels(
+                    user.getId(),
+                    pendingDuelsList -> pendingDuels.setValue(pendingDuelsList)
+            );
+        }
     }
 
     private void loadFinishedDuels() {
-        //azokat a párbajokat kérjük le, amelyek véget értek és a jelenlegi felhasználó volt a kihívott
-        Task<QuerySnapshot> queryA = mFirestore.collection("Duels")
-                .whereEqualTo("challengedUid", currentUser.getValue().getId())
-                .whereEqualTo("finished", true)
-                .orderBy("date", Query.Direction.DESCENDING)
-                .get();
-
-        //azokat a párbajokat kérjük le, amelyek véget értek és a jelenlegi felhasználó volt a kihívó
-        Task<QuerySnapshot> queryB = mFirestore.collection("Duels")
-                .whereEqualTo("challengerUid", currentUser.getValue().getId())
-                .whereEqualTo("finished", true)
-                .orderBy("date", Query.Direction.DESCENDING)
-                .get();
-
-        //egyesítjük őket
-        Tasks.whenAllSuccess(queryA, queryB)
-                .addOnSuccessListener(results -> {
-                    Set<String> docIds = new HashSet<>();
-                    List<Duel> mergedResults = new ArrayList<>();
-
-                    for (Object result : results) {
-                        QuerySnapshot querySnapshot = (QuerySnapshot) result;
-                        for (QueryDocumentSnapshot document : querySnapshot) {
-                            if (!docIds.contains(document.getId())) {
-                                docIds.add(document.getId());
-                                Duel duel = document.toObject(Duel.class);
-                                mergedResults.add(duel);
-                            }
-                        }
-                    }
-                    finishedDuels.setValue(mergedResults);
-                });
+        User user = currentUser.getValue();
+        if (user != null) {
+            duelRepository.loadFinishedDuels(
+                    user.getId(),
+                    pendingDuelsList -> finishedDuels.setValue(pendingDuelsList)
+            );
+        }
     }
 
     public void loadCategoryAndQuestionNumber(String categoryId, int questionCount) {
-        mFirestore.collection("Categories")
-                .document(categoryId)
-                .get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists()) {
-                        String categoryName = documentSnapshot.getString("name");
-                        String categoryAndQuestionNumberText = categoryName + " / " + questionCount + " db";
-                        categoryAndQuestionNumber.setValue(categoryAndQuestionNumberText);
-                    }
-                });
+        categoryRepository.loadCategoryData(
+                categoryId,
+                category -> {
+                    String categoryAndQuestionNumberText = category.getName() + " / " + questionCount + " db";
+                    categoryAndQuestionNumber.setValue(categoryAndQuestionNumberText);
+                },
+                url -> {}
+        );
     }
-
 }

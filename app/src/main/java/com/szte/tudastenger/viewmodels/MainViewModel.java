@@ -13,14 +13,14 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.szte.tudastenger.models.Category;
+import com.szte.tudastenger.repositories.CategoryRepository;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainViewModel extends AndroidViewModel {
     private static final String CHANNEL_ID = "FRIEND_REQUESTS_NOTIFICATION";
-    private FirebaseFirestore mFirestore;
-    private CollectionReference mCategories;
+    private CategoryRepository categoryRepository;
 
     private MutableLiveData<List<Category>> categoriesData = new MutableLiveData<>();
     private MutableLiveData<String> errorMessage = new MutableLiveData<>();
@@ -29,9 +29,7 @@ public class MainViewModel extends AndroidViewModel {
 
     public MainViewModel(Application application) {
         super(application);
-        mFirestore = FirebaseFirestore.getInstance();
-        mCategories = mFirestore.collection("Categories");
-
+        categoryRepository = new CategoryRepository();
         categoriesData.setValue(new ArrayList<>());
     }
 
@@ -39,19 +37,7 @@ public class MainViewModel extends AndroidViewModel {
     public LiveData<String> getErrorMessage() { return errorMessage; }
 
     public void loadCategories() {
-        mCategories.orderBy("name")
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    List<Category> categoryList = new ArrayList<>();
-                    for(QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                        Category category = document.toObject(Category.class);
-                        categoryList.add(category);
-                    }
-                    categoriesData.setValue(categoryList);
-                })
-                .addOnFailureListener(e -> {
-                    errorMessage.setValue(e.getMessage());
-                });
+        categoryRepository.loadCategories(categories -> categoriesData.setValue(categories), error -> errorMessage.setValue(error));
     }
 
     public void createNotificationChannel() {

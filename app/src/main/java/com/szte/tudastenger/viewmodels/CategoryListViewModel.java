@@ -6,18 +6,15 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.szte.tudastenger.models.Category;
+import com.szte.tudastenger.repositories.CategoryRepository;
+import com.szte.tudastenger.repositories.UserRepository;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class CategoryListViewModel extends AndroidViewModel {
-    private FirebaseFirestore mFirestore;
-    private FirebaseAuth mAuth;
+    private final CategoryRepository categoryRepository;
+    private final UserRepository userRepository;
 
     private MutableLiveData<List<Category>> categoriesData = new MutableLiveData<>();
     private MutableLiveData<Boolean> isAdmin = new MutableLiveData<>();
@@ -25,8 +22,8 @@ public class CategoryListViewModel extends AndroidViewModel {
 
     public CategoryListViewModel(Application application) {
         super(application);
-        mFirestore = FirebaseFirestore.getInstance();
-        mAuth = FirebaseAuth.getInstance();
+        categoryRepository = new CategoryRepository();
+        userRepository = new UserRepository();
     }
 
     public LiveData<List<Category>> getCategoriesData() { return categoriesData; }
@@ -34,38 +31,10 @@ public class CategoryListViewModel extends AndroidViewModel {
     public LiveData<String> getErrorMessage() { return errorMessage; }
 
     public void checkAdmin() {
-        FirebaseUser user = mAuth.getCurrentUser();
-        if (user == null || user.getEmail() == null) {
-            isAdmin.setValue(false);
-            return;
-        }
-
-        mFirestore.collection("Users")
-                .document(user.getUid())
-                .get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    boolean role = documentSnapshot.exists() &&
-                            "admin".equals(documentSnapshot.getString("role"));
-                    isAdmin.setValue(role);
-                })
-                .addOnFailureListener(e -> errorMessage.setValue(e.getMessage()));
+        userRepository.checkAdmin(isAdminStatus -> isAdmin.setValue(isAdminStatus), error -> errorMessage.setValue(error));
     }
 
     public void loadCategories() {
-        mFirestore.collection("Categories")
-                .orderBy("name")
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    List<Category> categoryList = new ArrayList<>();
-                    for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                        Category category = document.toObject(Category.class);
-                        categoryList.add(category);
-                    }
-                    categoriesData.setValue(categoryList);
-                })
-                .addOnFailureListener(e -> {
-                    errorMessage.setValue(e.getMessage());
-                });
+        categoryRepository.loadCategories(categories -> categoriesData.setValue(categories), error -> errorMessage.setValue(error));
     }
 }
-

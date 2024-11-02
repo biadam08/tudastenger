@@ -9,19 +9,16 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.szte.tudastenger.models.User;
+import com.szte.tudastenger.repositories.AuthRepository;
 
 public class RegistrationViewModel extends ViewModel {
-    private final FirebaseAuth mAuth;
-    private final FirebaseFirestore mFirestore;
-    private final CollectionReference mUsers;
+    private final AuthRepository authRepository;
 
     private final MutableLiveData<String> errorMessage = new MutableLiveData<>();
     private final MutableLiveData<Boolean> registrationSuccess = new MutableLiveData<>();
 
     public RegistrationViewModel() {
-        mAuth = FirebaseAuth.getInstance();
-        mFirestore = FirebaseFirestore.getInstance();
-        mUsers = mFirestore.collection("Users");
+        authRepository = new AuthRepository();
     }
 
     public LiveData<String> getErrorMessage() {
@@ -70,47 +67,20 @@ public class RegistrationViewModel extends ViewModel {
         }
 
 
-        mUsers.whereEqualTo("username", username)
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        if (!task.getResult().isEmpty()) {
-                            errorMessage.setValue("A megadott felhasználónévvel már létezik felhasználó");
-                        } else {
-                            createUserWithEmailAndPassword(username, email, password);
-                        }
+        authRepository.checkUsernameAvailability(
+                username,
+                isAvailable -> {
+                    if (isAvailable) {
+                        authRepository.registerUser( username, email, password,
+                                () -> registrationSuccess.setValue(true),
+                                error -> errorMessage.setValue(error)
+                        );
                     } else {
-                        errorMessage.setValue("Hiba történt a regisztráció során");
+                        errorMessage.setValue("A megadott felhasználónévvel már létezik felhasználó");
                     }
-                });
-    }
+                },
+                error -> errorMessage.setValue(error)
+        );
 
-    private void createUserWithEmailAndPassword(String username, String email, String password) {
-        mAuth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        String uid = task.getResult().getUser().getUid();
-                        FirebaseMessaging.getInstance().getToken()
-                                .addOnCompleteListener(tokenTask -> {
-                                    if (!tokenTask.isSuccessful()) {
-                                        errorMessage.setValue("FCM token lekérése sikertelen!");
-                                        return;
-                                    }
-
-                                    String fcmToken = tokenTask.getResult();
-                                    User user = new User(uid, username, email, fcmToken);
-
-                                    mUsers.document(uid).set(user)
-                                            .addOnSuccessListener(aVoid -> {
-                                                registrationSuccess.setValue(true);
-                                            })
-                                            .addOnFailureListener(e -> {
-                                                errorMessage.setValue("Sikertelen regisztráció!");
-                                            });
-                                });
-                    } else {
-                        errorMessage.setValue("Regisztráció sikertelen!");
-                    }
-                });
     }
 }

@@ -15,16 +15,17 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.szte.tudastenger.models.Category;
 import com.szte.tudastenger.models.Question;
 import com.szte.tudastenger.models.User;
+import com.szte.tudastenger.repositories.CategoryRepository;
+import com.szte.tudastenger.repositories.QuestionRepository;
+import com.szte.tudastenger.repositories.UserRepository;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class SavedQuestionsViewModel extends AndroidViewModel {
-    private final FirebaseFirestore mFirestore;
-    private final FirebaseUser mUser;
-    private final CollectionReference mUsers;
-    private final CollectionReference mQuestions;
-    private final CollectionReference mSavedQuestions;
+    private final UserRepository userRepository;
+    private final QuestionRepository questionRepository;
+    private final CategoryRepository categoryRepository;
 
     private final MutableLiveData<List<Category>> categories = new MutableLiveData<>();
     private final MutableLiveData<List<Question>> questions = new MutableLiveData<>();
@@ -33,12 +34,9 @@ public class SavedQuestionsViewModel extends AndroidViewModel {
 
     public SavedQuestionsViewModel(Application application) {
         super(application);
-        mFirestore = FirebaseFirestore.getInstance();
-        mUser = FirebaseAuth.getInstance().getCurrentUser();
-        mUsers = mFirestore.collection("Users");
-        mQuestions = mFirestore.collection("Questions");
-        mSavedQuestions = mFirestore.collection("SavedQuestions");
-
+        userRepository = new UserRepository();
+        questionRepository = new QuestionRepository();
+        categoryRepository = new CategoryRepository();
         initializeUser();
     }
 
@@ -59,34 +57,23 @@ public class SavedQuestionsViewModel extends AndroidViewModel {
     }
 
     private void initializeUser() {
-        if (mUser != null) {
-            mUsers.whereEqualTo("email", mUser.getEmail())
-                    .get()
-                    .addOnSuccessListener(queryDocumentSnapshots -> {
-                        for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                            User currentUser = doc.toObject(User.class);
-                            currentUserId.setValue(currentUser.getId());
-                            loadCategories();
-                        }
-                    });
-        }
+        userRepository.loadCurrentUser(
+                user -> {
+                    currentUserId.setValue(user.getId());
+                    loadCategories();
+                }
+        );
     }
 
-    private void loadCategories() {
-        List<Category> categoryList = new ArrayList<>();
-        categoryList.add(new Category("0", "Összes kategória", null));
 
-        mFirestore.collection("Categories")
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                        Category category = document.toObject(Category.class);
-                        category.setId(document.getId());
-                        categoryList.add(category);
-                    }
+    private void loadCategories() {
+        categoryRepository.loadCategoriesWithAll(
+                categoryList -> {
                     categories.setValue(categoryList);
                     queryQuestions("Összes kategória");
-                });
+                },
+                error -> {}
+        );
     }
 
     public void onCategorySelected(String category) {
@@ -95,86 +82,35 @@ public class SavedQuestionsViewModel extends AndroidViewModel {
 
     private void queryQuestions(String selectedCategory) {
         questions.setValue(new ArrayList<>());
-        ArrayList<Question> questionsList = new ArrayList<>();
+        String userId = currentUserId.getValue();
 
-        mSavedQuestions.whereEqualTo("userId", currentUserId.getValue())
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        if (task.getResult().isEmpty()) {
-                            showNoQuestions.setValue(true);
-                        } else {
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                String questionId = document.getString("questionId");
-                                loadQuestionDetails(questionId, selectedCategory, questionsList);
-                            }
-                        }
-                    }
-                });
+        questionRepository.loadSavedQuestions(
+                userId,
+                selectedCategory,
+                questionsList -> {
+                    questions.setValue(questionsList);
+                    showNoQuestions.setValue(questionsList.isEmpty());
+                },
+                () -> showNoQuestions.setValue(true),
+                error -> {}
+        );
     }
 
-    private void loadQuestionDetails(String questionId, String selectedCategory, List<Question> questionsList) {
-        mQuestions.document(questionId)
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful() && task.getResult().exists()) {
-                        DocumentSnapshot questionDoc = task.getResult();
-                        String categoryId = questionDoc.getString("category");
-
-                        mFirestore.collection("Categories")
-                                .document(categoryId)
-                                .get()
-                                .addOnSuccessListener(categoryDoc -> {
-                                    if (categoryDoc.exists()) {
-                                        String categoryName = categoryDoc.getString("name");
-                                        if (selectedCategory.equals("Összes kategória") || selectedCategory.equals(categoryName)) {
-                                            Question question = new Question(questionId,
-                                                    questionDoc.getString("questionText"),
-                                                    categoryName,
-                                                    (ArrayList<String>) questionDoc.get("answers"),
-                                                    questionDoc.getLong("correctAnswerIndex").intValue(),
-                                                    questionDoc.getString("image"),
-                                                    questionDoc.getString("explanationText")
-                                            );
-                                            questionsList.add(question);
-                                            updateQuestionsList(questionsList, selectedCategory);
-                                        } else {
-                                            updateQuestionsList(questionsList, selectedCategory);
-                                        }
-                                    }
-                                });
-                    }
-                });
-    }
-
-    private void updateQuestionsList(List<Question> questionsList, String selectedCategory) {
-        questions.setValue(questionsList);
-        if (!selectedCategory.equals("Összes kategória") && questionsList.isEmpty()) {
-            showNoQuestions.setValue(true);
-        } else {
-            showNoQuestions.setValue(questionsList.isEmpty());
-        }
-    }
 
     public void deleteQuestion(Question question) {
-        mSavedQuestions.whereEqualTo("userId", currentUserId.getValue())
-                .whereEqualTo("questionId", question.getId())
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    if (!queryDocumentSnapshots.isEmpty()) {
-                        for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
-                            mSavedQuestions.document(documentSnapshot.getId())
-                                    .delete()
-                                    .addOnSuccessListener(aVoid -> {
-                                        List<Question> currentQuestions = questions.getValue();
-                                        if (currentQuestions != null) {
-                                            currentQuestions.remove(question);
-                                            questions.setValue(currentQuestions);
-                                            showNoQuestions.setValue(currentQuestions.isEmpty());
-                                        }
-                                    });
-                        }
+        String userId = currentUserId.getValue();
+
+        questionRepository.deleteSavedQuestion(userId, question.getId(),
+                () -> {
+                    List<Question> currentQuestions = questions.getValue();
+                    if (currentQuestions != null) {
+                        currentQuestions.remove(question);
+                        questions.setValue(currentQuestions);
+                        showNoQuestions.setValue(currentQuestions.isEmpty());
                     }
-                });
+                }
+        );
     }
+
+
 }

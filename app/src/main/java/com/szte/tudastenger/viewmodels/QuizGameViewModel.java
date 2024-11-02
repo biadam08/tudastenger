@@ -18,6 +18,9 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.szte.tudastenger.models.AnsweredQuestion;
 import com.szte.tudastenger.models.Question;
 import com.szte.tudastenger.models.User;
+import com.szte.tudastenger.repositories.CategoryRepository;
+import com.szte.tudastenger.repositories.QuestionRepository;
+import com.szte.tudastenger.repositories.UserRepository;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,10 +28,9 @@ import java.util.List;
 import java.util.Random;
 
 public class QuizGameViewModel extends AndroidViewModel {
-    private final FirebaseFirestore mFirestore;
-    private final FirebaseAuth mAuth;
-    private final FirebaseUser mUser;
-    private final FirebaseStorage mStorage;
+    private final UserRepository userRepository;
+    private final QuestionRepository questionRepository;
+    private final CategoryRepository categoryRepository;
     private final MutableLiveData<Question> currentQuestion = new MutableLiveData<>();
     private final MutableLiveData<User> currentUser = new MutableLiveData<>();
     private final MutableLiveData<Boolean> isQuestionSaved = new MutableLiveData<>();
@@ -41,10 +43,9 @@ public class QuizGameViewModel extends AndroidViewModel {
 
     public QuizGameViewModel(Application application) {
         super(application);
-        mFirestore = FirebaseFirestore.getInstance();
-        mAuth = FirebaseAuth.getInstance();
-        mUser = mAuth.getCurrentUser();
-        mStorage = FirebaseStorage.getInstance();
+        userRepository = new UserRepository();
+        questionRepository = new QuestionRepository();
+        categoryRepository = new CategoryRepository();
         isQuestionSaved.setValue(false);
     }
 
@@ -59,18 +60,7 @@ public class QuizGameViewModel extends AndroidViewModel {
     public LiveData<Uri> getImageUri() { return imageUri; }
 
     public void loadCurrentUser() {
-        mFirestore.collection("Users")
-                .whereEqualTo("email", mUser.getEmail())
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                        User user = doc.toObject(User.class);
-                        currentUser.setValue(user);
-                        return;
-                    }
-                    errorMessage.setValue("User not found");
-                })
-                .addOnFailureListener(e -> errorMessage.setValue(e.getMessage()));
+        userRepository.loadCurrentUser(user -> currentUser.setValue(user));
     }
 
     public void loadQuestionImage(String imagePath) {
@@ -79,71 +69,44 @@ public class QuizGameViewModel extends AndroidViewModel {
             return;
         }
 
-        mStorage.getReference()
-                .child("images/" + imagePath)
-                .getDownloadUrl()
-                .addOnSuccessListener(uri -> {
-                    imageUri.setValue(uri);
-                })
-                .addOnFailureListener(e -> {
-                    errorMessage.setValue("Hiba a kép betöltésekor");
+        questionRepository.loadQuestionImage(
+                imagePath,
+                uri -> imageUri.setValue(Uri.parse(uri)),
+                error -> {
+                    errorMessage.setValue(error);
                     imageUri.setValue(null);
-                });
+                }
+        );
     }
+
     public void queryRandomQuestion(String categoryId, boolean isMixed) {
-        mFirestore.collection("AnsweredQuestions")
-                .whereEqualTo("userId", currentUser.getValue().getId())
-                .get()
-                .addOnSuccessListener(answeredQuestions -> {
-                    List<String> answeredQuestionIds = new ArrayList<>();
-                    for (QueryDocumentSnapshot doc : answeredQuestions) {
-                        answeredQuestionIds.add(doc.getString("questionId"));
+        User user = currentUser.getValue();
+
+        questionRepository.loadRandomQuestion(
+                user.getId(),
+                categoryId,
+                isMixed,
+                question -> {
+                    currentQuestion.setValue(question);
+                    isAnswerSelected.setValue(false);
+                    isHelpUsed.setValue(false);
+                    isQuestionSaved.setValue(false);
+                    savedQuestionId.setValue(null);
+
+                    if (question.getImage() != null && !question.getImage().isEmpty()) {
+                        loadQuestionImage(question.getImage());
                     }
 
-                    Query query = mFirestore.collection("Questions");
-                    if (!isMixed && categoryId != null) {
-                        query = query.whereEqualTo("category", categoryId);
+                    if(question.getExplanationText() != null) {
+                        explanationText.setValue(question.getExplanationText());
+                    } else {
+                        explanationText.setValue("Sajnos nincs megjelenítendő magyarázat ehhez a kérdéshez");
                     }
 
-                    query.get().addOnSuccessListener(questions -> {
-                                List<Question> availableQuestions = new ArrayList<>();
-                                for (QueryDocumentSnapshot doc : questions) {
-                                    if (!answeredQuestionIds.contains(doc.getId())) {
-                                        Question question = doc.toObject(Question.class);
-                                        question.setId(doc.getId());
-                                        availableQuestions.add(question);
-                                    }
-                                }
-
-                                if (availableQuestions.isEmpty()) {
-                                    errorMessage.setValue("Nincs több kérdés");
-                                    return;
-                                }
-
-                                Question randomQuestion = availableQuestions.get(new Random().nextInt(availableQuestions.size()));
-                                currentQuestion.setValue(randomQuestion);
-                                isAnswerSelected.setValue(false);
-                                isHelpUsed.setValue(false);
-                                isQuestionSaved.setValue(false);
-                                savedQuestionId.setValue(null);
-
-                                if (randomQuestion.getImage() != null && !randomQuestion.getImage().isEmpty()) {
-                                    loadQuestionImage(randomQuestion.getImage());
-                                }
-
-                                if(randomQuestion.getExplanationText() != null) {
-                                    explanationText.setValue(randomQuestion.getExplanationText());
-                                } else {
-                                    explanationText.setValue("Sajnos nincs megjelenítendő magyarázat ehhez a kérdéshez");
-                                }
-                            })
-                            .addOnFailureListener(e -> {
-                                errorMessage.setValue(e.getMessage());
-                            });
-                })
-                .addOnFailureListener(e -> {
-                    errorMessage.setValue(e.getMessage());
-                });
+                },
+                () -> errorMessage.setValue("Nincs több kérdés"),
+                error -> errorMessage.setValue(error)
+        );
     }
 
     public void submitAnswer(int selectedAnswerIndex) {
@@ -153,9 +116,8 @@ public class QuizGameViewModel extends AndroidViewModel {
 
         Question question = currentQuestion.getValue();
         User user = currentUser.getValue();
-        boolean isCorrect = selectedAnswerIndex == question.getCorrectAnswerIndex();
-        int goldChange = isCorrect ? 25 : -25;
 
+        boolean isCorrect = selectedAnswerIndex == question.getCorrectAnswerIndex();
         AnsweredQuestion answeredQuestion = new AnsweredQuestion(
                 question.getId(),
                 question.getCategory(),
@@ -164,54 +126,44 @@ public class QuizGameViewModel extends AndroidViewModel {
                 isCorrect
         );
 
-        mFirestore.collection("AnsweredQuestions")
-                .add(answeredQuestion)
-                .addOnSuccessListener(documentReference -> {
-                    mFirestore.collection("Users")
-                            .document(user.getId())
-                            .update("gold", goldChange)
-                            .addOnSuccessListener(aVoid -> {
-                                user.setGold(user.getGold() + goldChange);
-                                currentUser.setValue(user);
-                                isAnswerSelected.setValue(true);
-                            });
-
-                    DocumentReference questionRef = mFirestore.collection("Questions").document(question.getId());
-                    if (isCorrect) {
-                        questionRef.update("numCorrectAnswers", FieldValue.increment(1));
-                    } else {
-                        questionRef.update("numWrongAnswers", FieldValue.increment(1));
-                    }
-                })
-                .addOnFailureListener(e -> errorMessage.setValue(e.getMessage()));
+        questionRepository.submitAnswer(
+                answeredQuestion,
+                user.getId(),
+                isCorrect,
+                goldChange -> {
+                    user.setGold(user.getGold() + goldChange);
+                    currentUser.setValue(user);
+                    isAnswerSelected.setValue(true);
+                },
+                error -> errorMessage.setValue(error)
+        );
     }
+
 
     public void saveQuestion() {
         Question question = currentQuestion.getValue();
         User user = currentUser.getValue();
+        if (question == null || user == null) return;
 
-        if (isQuestionSaved.getValue()) {
-            mFirestore.collection("SavedQuestions")
-                    .document(savedQuestionId.getValue())
-                    .delete()
-                    .addOnSuccessListener(aVoid -> {
+        if (Boolean.TRUE.equals(isQuestionSaved.getValue())) {
+            questionRepository.removeSavedQuestion(
+                    savedQuestionId.getValue(),
+                    () -> {
                         isQuestionSaved.setValue(false);
                         savedQuestionId.setValue(null);
-                    })
-                    .addOnFailureListener(e -> errorMessage.setValue(e.getMessage()));
+                    },
+                    error -> errorMessage.setValue(error)
+            );
         } else {
-            HashMap<String, String> questionToSave = new HashMap<>();
-            questionToSave.put("userId", user.getId());
-            questionToSave.put("questionId", question.getId());
-            questionToSave.put("date", String.valueOf(Timestamp.now()));
-
-            mFirestore.collection("SavedQuestions")
-                    .add(questionToSave)
-                    .addOnSuccessListener(documentReference -> {
+            questionRepository.saveQuestion(
+                    user.getId(),
+                    question.getId(),
+                    documentId -> {
                         isQuestionSaved.setValue(true);
-                        savedQuestionId.setValue(documentReference.getId());
-                    })
-                    .addOnFailureListener(e -> errorMessage.setValue(e.getMessage()));
+                        savedQuestionId.setValue(documentId);
+                    },
+                    error -> errorMessage.setValue(error)
+            );
         }
     }
 
@@ -231,14 +183,18 @@ public class QuizGameViewModel extends AndroidViewModel {
             return false;
         }
 
-        mFirestore.collection("Users")
-                .document(user.getId())
-                .update("gold", -10)
-                .addOnSuccessListener(aVoid -> {
+        userRepository.updateGold(
+                user.getId(),
+                -10,
+                success -> {
                     user.setGold(user.getGold() - 10);
                     isHelpUsed.setValue(true);
                     currentUser.setValue(user);
-                });
+                },
+                error -> errorMessage.setValue(error)
+        );
         return true;
+
+
     }
 }

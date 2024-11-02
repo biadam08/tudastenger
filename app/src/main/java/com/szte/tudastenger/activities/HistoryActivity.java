@@ -44,7 +44,7 @@ public class HistoryActivity extends DrawerBaseActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 Category selectedCategory = (Category) parent.getItemAtPosition(position);
-                viewModel.onCategorySelected(selectedCategory.getName());
+                viewModel.queryAnsweredQuestions(selectedCategory.getName());
             }
 
             @Override

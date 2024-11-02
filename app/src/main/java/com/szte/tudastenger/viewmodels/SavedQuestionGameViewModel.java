@@ -22,16 +22,15 @@ import com.google.firebase.storage.StorageReference;
 import com.szte.tudastenger.R;
 import com.szte.tudastenger.models.Question;
 import com.szte.tudastenger.models.User;
+import com.szte.tudastenger.repositories.QuestionRepository;
+import com.szte.tudastenger.repositories.UserRepository;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class SavedQuestionGameViewModel extends AndroidViewModel {
-    private final FirebaseFirestore mFirestore;
-    private final FirebaseUser mUser;
-    private final CollectionReference mUsers;
-    private final CollectionReference mQuestions;
-    private final StorageReference mStorage;
+    private final UserRepository userRepository;
+    private final QuestionRepository questionRepository;
 
     private final MutableLiveData<Question> currentQuestion = new MutableLiveData<>();
     private final MutableLiveData<Boolean> isAnswerSelected = new MutableLiveData<>(false);
@@ -45,11 +44,8 @@ public class SavedQuestionGameViewModel extends AndroidViewModel {
 
     public SavedQuestionGameViewModel(Application application) {
         super(application);
-        mFirestore = FirebaseFirestore.getInstance();
-        mUser = FirebaseAuth.getInstance().getCurrentUser();
-        mUsers = mFirestore.collection("Users");
-        mQuestions = mFirestore.collection("Questions");
-        mStorage = FirebaseStorage.getInstance().getReference();
+        userRepository = new UserRepository();
+        questionRepository = new QuestionRepository();
     }
 
     public LiveData<Question> getCurrentQuestion() { return currentQuestion; }
@@ -66,38 +62,21 @@ public class SavedQuestionGameViewModel extends AndroidViewModel {
     }
 
     private void loadUser() {
-        if (mUser != null) {
-            mUsers.whereEqualTo("email", mUser.getEmail())
-                    .get()
-                    .addOnSuccessListener(queryDocumentSnapshots -> {
-                        for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                            User user = doc.toObject(User.class);
-                            currentUser.setValue(user);
-                            loadQuestion();
-                        }
-                    });
-        }
+        userRepository.loadCurrentUser(
+                user -> {
+                    currentUser.setValue(user);
+                    loadQuestion();
+                }
+        );
     }
 
     private void loadQuestion() {
-        mQuestions.document(savedQuestionId)
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful() && task.getResult() != null && task.getResult().exists()) {
-                        DocumentSnapshot doc = task.getResult();
-                        Question question = new Question(
-                                savedQuestionId,
-                                doc.getString("questionText"),
-                                doc.getString("category"),
-                                (ArrayList<String>) doc.get("answers"),
-                                doc.getLong("correctAnswerIndex").intValue(),
-                                doc.getString("image"),
-                                doc.getString("explanationText")
-                        );
-                        currentQuestion.setValue(question);
-                    }
-                });
+        questionRepository.loadSavedQuestion( savedQuestionId,
+                question -> currentQuestion.setValue(question),
+                error -> toastMessage.setValue(error)
+        );
     }
+
 
     public void handleAnswerClick(int clicked, int correct) {
         if (!Boolean.TRUE.equals(isAnswerSelected.getValue())) {
@@ -108,39 +87,29 @@ public class SavedQuestionGameViewModel extends AndroidViewModel {
     }
 
     public void saveQuestion() {
-        if (!Boolean.TRUE.equals(isQuestionSaved.getValue())) {
-            // Mentés
-            HashMap<String, Object> questionToSave = new HashMap<>();
-            questionToSave.put("userId", currentUser.getValue().getId());
-            questionToSave.put("questionId", savedQuestionId);
-            questionToSave.put("date", Timestamp.now());
+        User user = currentUser.getValue();
+        if (user == null) return;
 
-            mFirestore.collection("SavedQuestions")
-                    .add(questionToSave)
-                    .addOnSuccessListener(documentReference -> {
-                        savedDocumentId = documentReference.getId();
+        if (!Boolean.TRUE.equals(isQuestionSaved.getValue())) {
+            questionRepository.saveQuestion(
+                    user.getId(),
+                    savedQuestionId,
+                    (isSaved, documentId) -> {
+                        savedDocumentId = documentId;
                         isQuestionSaved.setValue(true);
                         toastMessage.setValue("Sikeresen elmentve");
-                    })
-                    .addOnFailureListener(e ->
-                            toastMessage.setValue("Nem sikerült elmenteni"));
+                    },
+                    error -> toastMessage.setValue(error)
+            );
         } else {
-            // Törlés
-            mFirestore.collection("SavedQuestions")
-                    .whereEqualTo("userId", currentUser.getValue().getId())
-                    .whereEqualTo("questionId", savedQuestionId)
-                    .get()
-                    .addOnSuccessListener(queryDocumentSnapshots -> {
-                        if (!queryDocumentSnapshots.isEmpty()) {
-                            for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                                doc.getReference().delete()
-                                        .addOnSuccessListener(aVoid -> {
-                                            isQuestionSaved.setValue(false);
-                                            toastMessage.setValue("Sikeresen eltávolítva");
-                                        });
-                            }
-                        }
-                    });
+            questionRepository.removeQuestionFromSaved(
+                    user.getId(),
+                    savedQuestionId,
+                    (isSaved, documentId) -> {
+                        isQuestionSaved.setValue(false);
+                        toastMessage.setValue("Sikeresen eltávolítva");
+                    }
+            );
         }
     }
 }
