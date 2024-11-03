@@ -19,6 +19,7 @@ import androidx.cardview.widget.CardView;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.bumptech.glide.Glide;
+import com.google.firebase.analytics.FirebaseAnalytics;
 import com.szte.tudastenger.R;
 import com.szte.tudastenger.databinding.ActivityQuizGameBinding;
 import com.szte.tudastenger.models.Question;
@@ -34,12 +35,14 @@ public class QuizGameActivity extends DrawerBaseActivity {
     private List<View> answerViews = new ArrayList<>();
     private String intentCategoryId;
     private boolean isMixed;
+    private FirebaseAnalytics mFirebaseAnalytics;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         binding = ActivityQuizGameBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
 
         viewModel = new ViewModelProvider(this).get(QuizGameViewModel.class);
 
@@ -150,7 +153,14 @@ public class QuizGameActivity extends DrawerBaseActivity {
             final int answerIndex = i;
             answerCardView.setOnClickListener(v -> {
                 if (!viewModel.getIsAnswerSelected().getValue()) {
-                    handleAnswerSelection(answerIndex, question);
+                    boolean userAnsweredCorrectly = handleAnswerSelection(answerIndex, question);
+                    Bundle bundle = new Bundle();
+                    bundle.putString(FirebaseAnalytics.Param.ITEM_ID, question.getId());
+                    bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, question.getQuestionText());
+                    bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "quiz_question");
+                    bundle.putString("answer", question.getAnswers().get(answerIndex));
+                    bundle.putBoolean("result", userAnsweredCorrectly);
+                    mFirebaseAnalytics.logEvent("quiz_answer_selected", bundle);
                 }
             });
 
@@ -159,14 +169,15 @@ public class QuizGameActivity extends DrawerBaseActivity {
         }
     }
 
-    private void handleAnswerSelection(int selectedIndex, Question question) {
+    private boolean handleAnswerSelection(int selectedIndex, Question question) {
         viewModel.submitAnswer(selectedIndex);
+        int correctAnswerIndex = question.getCorrectAnswerIndex();
+        boolean userAnsweredCorrectly = selectedIndex == correctAnswerIndex;
 
         // válasz cardview-ok háttérszíneinek módosítása a válasz alapján
         for (int i = 0; i < answerViews.size(); i++) {
             View answerView = answerViews.get(i);
             CardView cardView = answerView.findViewById(R.id.cardView);
-            int correctAnswerIndex = question.getCorrectAnswerIndex();
             boolean isCorrect = i == correctAnswerIndex;
 
             if (isCorrect) {
@@ -184,6 +195,7 @@ public class QuizGameActivity extends DrawerBaseActivity {
             binding.numCorrectAnswersTextView.setText(statsText);
             binding.numCorrectAnswersTextView.setVisibility(View.VISIBLE);
         }
+        return userAnsweredCorrectly;
     }
 
     public void popUpExplanation() {

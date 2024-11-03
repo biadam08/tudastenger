@@ -12,6 +12,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -32,12 +33,14 @@ public class RegistrationActivity extends DrawerBaseActivity {
     private EditText usernameEditText;
     private TextView emailEditText, passwordEditText, passwordAgainEditText;
     private TextView loginRedirectText;
+    private FirebaseAnalytics mFirebaseAnalytics;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         binding = ActivityRegistrationBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
 
         viewModel = new ViewModelProvider(this).get(RegistrationViewModel.class);
 
@@ -81,6 +84,10 @@ public class RegistrationActivity extends DrawerBaseActivity {
         String passwordAgain = passwordAgainEditText.getText().toString();
 
         viewModel.register(username, email, password, passwordAgain);
+
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.METHOD, "Registration");
+        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SIGN_UP, bundle);
     }
 
     private void showDialog(String title, String message) {

@@ -23,6 +23,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.google.firebase.analytics.FirebaseAnalytics;
 import com.szte.tudastenger.InputFilterMinMax;
 import com.szte.tudastenger.R;
 import com.szte.tudastenger.adapters.DuelCategoryAdapter;
@@ -37,12 +38,14 @@ public class DuelActivity extends DrawerBaseActivity {
     private DuelViewModel viewModel;
     private DuelCategoryAdapter mAdapter;
     private String challengerUserId;
+    private FirebaseAnalytics mFirebaseAnalytics;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         binding = ActivityDuelBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
 
         viewModel = new ViewModelProvider(this).get(DuelViewModel.class);
 
@@ -181,6 +184,12 @@ public class DuelActivity extends DrawerBaseActivity {
             if (!input.isEmpty() && viewModel.getCategoriesData().getValue() != null) {
                 viewModel.initializeQuestions(Integer.parseInt(input));
                 popupWindow.dismiss();
+
+                Bundle bundle = new Bundle();
+                bundle.putString(FirebaseAnalytics.Param.METHOD, "start_duel_button");
+                bundle.putString("category_name", viewModel.getCategory());
+                bundle.putInt("number_of_questions", Integer.parseInt(input));
+                mFirebaseAnalytics.logEvent("start_duel", bundle);
             }
         });
 

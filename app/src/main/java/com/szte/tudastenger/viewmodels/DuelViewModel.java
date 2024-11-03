@@ -84,6 +84,10 @@ public class DuelViewModel extends AndroidViewModel {
     public LiveData<Boolean> getShowButtonsLayout() { return showButtonsLayout; }
     public LiveData<String> getToastMessage() { return toastMessage; }
 
+    public String getCategory() {
+        return category;
+    }
+
     public void init(String challengerId, String challengedId, String duelId) {
         this.challengerUserId = challengerId;
         this.challengedUserId = challengedId;
