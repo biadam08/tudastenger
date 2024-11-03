@@ -33,9 +33,12 @@ public class FriendRepository {
                         DocumentSnapshot document = task.getResult();
                         if (document.exists()) {
                             Map<String, Object> friends = document.getData();
+                            boolean hasFriends = false;
+
                             if (friends != null) {
                                 for (Map.Entry<String, Object> entry : friends.entrySet()) {
                                     if ((boolean) entry.getValue()) {
+                                        hasFriends = true;
                                         String friendId = entry.getKey();
                                         mUsers.document(friendId).get()
                                                 .addOnSuccessListener(documentSnapshot -> {
@@ -46,7 +49,13 @@ public class FriendRepository {
                                                 });
                                     }
                                 }
+
                             }
+                            if (!hasFriends) {
+                                noFriendsCallback.onNoFriends();
+                            }
+                        } else {
+                            noFriendsCallback.onNoFriends();
                         }
                     } else {
                         noFriendsCallback.onNoFriends();
@@ -54,7 +63,7 @@ public class FriendRepository {
                 });
     }
 
-    public void queryFriendRequests(String userId, RequestLoadedCallback callback, NoRequestsCallback noRequestsCallback) {
+    public void queryFriendRequests(String userId, RequestLoadedCallback requestLoadedCallback, NoRequestsCallback noRequestsCallback) {
         // Bejövő barátkérelmek
         mFriendRequests.whereEqualTo("user_uid1", userId)
                 .get()
@@ -66,8 +75,7 @@ public class FriendRepository {
                                     .addOnSuccessListener(documentSnapshot -> {
                                         if (documentSnapshot.exists()) {
                                             User friend = documentSnapshot.toObject(User.class);
-                                            callback.onRequestLoaded(friend);
-                                            noRequestsCallback.onRequestExists();
+                                            requestLoadedCallback.onRequestLoaded(friend);
                                         }
                                     });
                         }
@@ -88,8 +96,7 @@ public class FriendRepository {
                                     .addOnSuccessListener(documentSnapshot -> {
                                         if (documentSnapshot.exists()) {
                                             User friend = documentSnapshot.toObject(User.class);
-                                            callback.onRequestLoaded(friend);
-                                            noRequestsCallback.onRequestExists();
+                                            requestLoadedCallback.onRequestLoaded(friend);
                                         }
                                     });
                         }
@@ -247,8 +254,6 @@ public class FriendRepository {
 
     public interface NoRequestsCallback {
         void onNoRequests();
-
-        void onRequestExists();
     }
 
     public interface FriendshipStatusCallback {

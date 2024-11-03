@@ -32,8 +32,8 @@ public class FriendsViewModel extends AndroidViewModel {
     private final MutableLiveData<ArrayList<User>> mFriendsData = new MutableLiveData<>(new ArrayList<>());
     private final MutableLiveData<ArrayList<User>> mFriendRequestsData = new MutableLiveData<>(new ArrayList<>());
     private final MutableLiveData<ArrayList<User>> mUsersData = new MutableLiveData<>(new ArrayList<>());
-    private final MutableLiveData<Boolean> noFriendsVisibility = new MutableLiveData<>();
-    private final MutableLiveData<Boolean> noRequestsVisibility = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> noFriendsVisibility = new MutableLiveData<>(false);
+    private final MutableLiveData<Boolean> noRequestsVisibility = new MutableLiveData<>(false);
     private final MutableLiveData<Map<String, Boolean>> friendButtonStates = new MutableLiveData<>(new HashMap<>());
     private final MutableLiveData<User> friendRequestSent = new MutableLiveData<>();
 
@@ -99,8 +99,12 @@ public class FriendsViewModel extends AndroidViewModel {
                     currentList.add(friend);
                     mFriendsData.setValue(currentList);
                     noFriendsVisibility.setValue(false);
+                    Log.d("FriendsVWM noFriendsVisibility", noFriendsVisibility.getValue().toString());
                 },
-                () -> noFriendsVisibility.setValue(true)
+                () -> {
+                    noFriendsVisibility.setValue(true);
+                    Log.d("FriendsVWM noFriendsVisibility", noFriendsVisibility.getValue().toString());
+                }
         );
 
         friendRepository.queryFriendRequests(
@@ -109,18 +113,9 @@ public class FriendsViewModel extends AndroidViewModel {
                     ArrayList<User> currentList = mFriendRequestsData.getValue();
                     currentList.add(request);
                     mFriendRequestsData.setValue(currentList);
+                    noRequestsVisibility.setValue(false);
                 },
-                new FriendRepository.NoRequestsCallback() {
-                    @Override
-                    public void onNoRequests() {
-                        noRequestsVisibility.setValue(true);
-                    }
-
-                    @Override
-                    public void onRequestExists() {
-                        noRequestsVisibility.setValue(false);
-                    }
-                }
+                () -> noRequestsVisibility.setValue(true)
         );
     }
 

@@ -169,7 +169,6 @@ public class UserRepository {
 
     public void loadUsers(UsersLoadedCallback callback) {
         mFirestore.collection("Users").orderBy("username")
-                .limit(10)
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     List<User> usersList = new ArrayList<>();

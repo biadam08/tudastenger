@@ -77,6 +77,9 @@ public class FriendsActivity extends DrawerBaseActivity implements OnFriendReque
         viewModel.getFriendsData().observe(this, friends -> {
             if (mFriendAdapter != null) {
                 mFriendAdapter.updateData(friends);
+                binding.noFriendsYetTextView.setVisibility(View.GONE);
+            } else{
+                binding.noFriendsYetTextView.setVisibility(View.VISIBLE);
             }
         });
 
@@ -89,16 +92,11 @@ public class FriendsActivity extends DrawerBaseActivity implements OnFriendReque
 
         viewModel.getNoFriendsVisibility().observe(this, showNoFriends -> {
             binding.noFriendsYetTextView.setVisibility(showNoFriends ? View.VISIBLE : View.GONE);
-            if (showNoFriends) {
-                binding.noFriendsYetTextView.setText("Jelenleg nincs barátod");
-            }
         });
 
         viewModel.getNoRequestsVisibility().observe(this, showNoRequests -> {
             binding.noFriendRequestsTextView.setVisibility(showNoRequests ? View.VISIBLE : View.GONE);
-            if (showNoRequests) {
-                binding.noFriendRequestsTextView.setText("Jelenleg nincs függő barátkérelem");
-            }
+
         });
 
         viewModel.getFriendRequestSent().observe(this, user -> {
