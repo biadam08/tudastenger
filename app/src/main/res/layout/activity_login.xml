@@ -83,7 +83,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/forgotPasswordTextView"
-                android:text="Elfelejtettem a jelszam"
+                android:text="Elfelejtettem a jelszavam"
                 android:layout_gravity="center"
                 android:textSize="18sp"
                 />
@@ -98,6 +98,12 @@
                 android:layout_marginTop="12dp"
                 />
 
+            <View
+                android:layout_width="match_parent"
+                android:layout_marginTop="20dp"
+                android:layout_height="2dp"
+                android:background="#AAAAAA"/>
+
             <com.google.android.gms.common.SignInButton
                 android:id="@+id/loginWithGoogleButton"
                 android:layout_width="match_parent"
@@ -105,16 +111,17 @@
                 android:layout_centerInParent="true"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="16dp"
-                android:layout_marginEnd="16dp"
-                android:layout_marginBottom="16dp" />
+                android:layout_marginEnd="16dp"/>
 
             <Button
                 android:id="@+id/biometricLoginButton"
                 android:layout_gravity="center"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Biometrikus bejelentkezés"
+                android:layout_marginStart="16dp"
                 android:layout_marginTop="16dp"
+                android:layout_marginEnd="16dp"
                 android:background="@drawable/custom_shape_rectangle_button"/>
 
 
