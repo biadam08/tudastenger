@@ -44,4 +44,6 @@
     <string name="edit_questions">Kérdések szerkesztése</string>
     <string name="edit_categories">Kategória szerkesztése</string>
     <string name="import_questions">Kérdések importálása</string>
+    <string name="friends">Barátok</string>
+    <string name="saved_questions">Mentett kérdések</string>
 </resources>

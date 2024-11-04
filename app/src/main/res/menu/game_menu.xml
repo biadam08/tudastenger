@@ -29,6 +29,10 @@
                     android:title="@string/profile"
                     android:icon="@drawable/ic_account" />
                 <item
+                    android:id="@+id/nav_friends"
+                    android:title="@string/friends"
+                    android:icon="@drawable/ic_nav_friends" />
+                <item
                     android:id="@+id/nav_duels"
                     android:title="@string/duels"
                     android:icon="@drawable/ic_duels" />
@@ -36,6 +40,10 @@
                     android:id="@+id/nav_history"
                     android:title="@string/history"
                     android:icon="@drawable/ic_history" />
+                <item
+                    android:id="@+id/nav_saved_questions"
+                    android:title="@string/saved_questions"
+                    android:icon="@drawable/ic_nav_bookmarks" />
                 <item
                     android:id="@+id/nav_leaderboard"
                     android:title="@string/rankings"
@@ -65,10 +73,6 @@
                 <item
                     android:id="@+id/nav_add_a_category"
                     android:title="@string/add_a_category"
-                    android:icon="@drawable/ic_add_a_category" />
-                <item
-                    android:id="@+id/nav_list_import_questions"
-                    android:title="@string/import_questions"
                     android:icon="@drawable/ic_add_a_category" />
             </group>
         </menu>

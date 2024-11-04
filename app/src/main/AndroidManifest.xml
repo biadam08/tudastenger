@@ -30,9 +30,6 @@
         android:theme="@style/Theme.Tudastenger"
         tools:targetApi="31">
         <activity
-            android:name=".activities.ImportQuestionsActivity"
-            android:exported="false" />
-        <activity
             android:name=".activities.CategoryListActivity"
             android:exported="false" />
         <activity

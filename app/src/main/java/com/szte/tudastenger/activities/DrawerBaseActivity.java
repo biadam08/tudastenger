@@ -130,11 +130,17 @@ public class DrawerBaseActivity extends AppCompatActivity implements NavigationV
         if(itemId == R.id.nav_profile){
             startActivity(new Intent(DrawerBaseActivity.this, ProfileActivity.class));
         }
+        if(itemId == R.id.nav_friends){
+            startActivity(new Intent(DrawerBaseActivity.this, FriendsActivity.class));
+        }
         if(itemId == R.id.nav_duels){
             startActivity(new Intent(DrawerBaseActivity.this, DuelListingActivity.class));
         }
         if(itemId == R.id.nav_history){
             startActivity(new Intent(DrawerBaseActivity.this, HistoryActivity.class));
+        }
+        if(itemId == R.id.nav_saved_questions){
+            startActivity(new Intent(DrawerBaseActivity.this, SavedQuestionsActivity.class));
         }
         if(itemId == R.id.nav_registration){
             startActivity(new Intent(DrawerBaseActivity.this, RegistrationActivity.class));
@@ -162,11 +168,6 @@ public class DrawerBaseActivity extends AppCompatActivity implements NavigationV
         if(itemId == R.id.nav_list_categories){
             if(user != null && currentUserRole.equals("admin")) {
                 startActivity(new Intent(DrawerBaseActivity.this, CategoryListActivity.class));
-            }
-        }
-        if(itemId == R.id.nav_list_import_questions){
-            if(user != null && currentUserRole.equals("admin")) {
-                startActivity(new Intent(DrawerBaseActivity.this, ImportQuestionsActivity.class));
             }
         }
 
