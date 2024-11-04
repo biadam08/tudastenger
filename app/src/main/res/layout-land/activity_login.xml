@@ -11,16 +11,18 @@
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="20dp"
         app:cardCornerRadius="20dp"
-        android:layout_gravity="center">
-
+        android:layout_marginStart="150dp"
+        android:layout_marginEnd="150dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="20dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="20dp"
+            android:layout_marginBottom="20dp"
             android:background="@color/cardview_light_background">
 
             <TextView
@@ -41,23 +43,32 @@
                 android:hint="@string/email"
                 android:drawableLeft="@drawable/ic_email"
                 android:drawablePadding="8dp"
-                android:padding="8dp"
+                android:padding="12dp"
                 android:layout_margin="12dp"
                 android:inputType="textEmailAddress"
                 />
 
-            <EditText
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/passwordLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/custom_shape_edittext"
-                android:id="@+id/passwordEditText"
-                android:hint="@string/password"
-                android:drawableLeft="@drawable/ic_password"
-                android:drawablePadding="8dp"
-                android:padding="8dp"
-                android:layout_margin="12dp"
-                android:inputType="textPassword"
-                />
+                app:passwordToggleEnabled="true">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/custom_shape_edittext"
+                    android:id="@+id/loginPasswordEditText"
+                    android:hint="@string/password"
+                    android:drawableLeft="@drawable/ic_password"
+                    android:drawablePadding="8dp"
+                    android:padding="12dp"
+                    android:layout_margin="12dp"
+                    android:inputType="textPassword" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
 
             <Button
                 android:layout_width="match_parent"
@@ -68,18 +79,53 @@
                 android:backgroundTint="@color/browne"
                 android:textColor="@color/white"
                 android:background="@drawable/custom_shape_rounded_button"
-                android:layout_marginBottom="12dp"
-                android:onClick="login"
+                android:layout_marginBottom="12dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/forgotPasswordTextView"
+                android:text="Elfelejtettem a jelszavam"
+                android:layout_gravity="center"
+                android:textSize="18sp"
                 />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/regRedirect"
+                android:id="@+id/regRedirectTextView"
                 android:text="@string/not_a_user_yet"
                 android:layout_gravity="center"
                 android:textSize="18sp"
+                android:layout_marginTop="12dp"
                 />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_marginTop="20dp"
+                android:layout_height="2dp"
+                android:background="#AAAAAA"/>
+
+            <com.google.android.gms.common.SignInButton
+                android:id="@+id/loginWithGoogleButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginEnd="16dp"/>
+
+            <Button
+                android:id="@+id/biometricLoginButton"
+                android:layout_gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Biometrikus bejelentkezés"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginEnd="16dp"
+                android:background="@drawable/custom_shape_rectangle_button"/>
+
 
         </LinearLayout>
 

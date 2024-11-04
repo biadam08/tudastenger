@@ -46,6 +46,7 @@ public class DuelViewModel extends AndroidViewModel {
 
     private final MutableLiveData<User> currentUser = new MutableLiveData<>();
     private final MutableLiveData<ArrayList<Category>> mCategoriesData = new MutableLiveData<>(new ArrayList<>());
+    private final MutableLiveData<String> selectedCategory = new MutableLiveData<>();
     private final MutableLiveData<ArrayList<Question>> questionsList = new MutableLiveData<>(new ArrayList<>());
     private final MutableLiveData<ArrayList<String>> questionIdsList = new MutableLiveData<>(new ArrayList<>());
     private final MutableLiveData<ArrayList<Boolean>> challengerUserResults = new MutableLiveData<>(new ArrayList<>());
@@ -72,6 +73,7 @@ public class DuelViewModel extends AndroidViewModel {
 
     public LiveData<User> getCurrentUser() { return currentUser; }
     public LiveData<ArrayList<Category>> getCategoriesData() { return mCategoriesData; }
+    public LiveData<String> getSelectedCategory() { return selectedCategory; }
     public LiveData<ArrayList<Question>> getQuestionsList() { return questionsList; }
     public LiveData<Question> getCurrentQuestion() { return currentQuestion; }
     public LiveData<String> getExplanationText() { return explanationText; }
@@ -129,9 +131,11 @@ public class DuelViewModel extends AndroidViewModel {
         if(!categoryName.equals("Vegyes kategória")) {
             categoryRepository.selectCategory(categoryName, selectedCategoryId  -> categoryId = selectedCategoryId);
             category = categoryName;
+            selectedCategory.setValue(categoryName);
         } else {
             categoryId = null;
             category = "mixed";
+            selectedCategory.setValue("mixed");
         }
     }
 

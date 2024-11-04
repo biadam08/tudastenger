@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     tools:context=".activities.ProfileActivity">
 
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -32,7 +33,7 @@
                     app:civ_border_color="#000000" />
 
                 <ImageView
-                    android:id="@+id/settingsIcon"
+                    android:id="@+id/settingsImageView"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
                     android:layout_gravity="top|end"
@@ -62,7 +63,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="-8dp"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:layout_marginStart="150dp"
+            android:layout_marginEnd="150dp">
 
             <LinearLayout
                 android:id="@+id/bookmarkLinearLayout"
@@ -153,6 +156,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:nestedScrollingEnabled="false"
-            android:layout_marginTop="16dp"/>
+            android:layout_marginTop="16dp"
+            android:layout_marginStart="150dp"
+            android:layout_marginEnd="150dp"/>
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

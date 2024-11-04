@@ -168,7 +168,7 @@ public class DuelActivity extends DrawerBaseActivity {
     private void showDuelConfigDialog() {
         View dialogView = getLayoutInflater().inflate(R.layout.popup_start_a_duel, null);
         PopupWindow popupWindow = new PopupWindow(dialogView,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 true);
 
@@ -181,7 +181,7 @@ public class DuelActivity extends DrawerBaseActivity {
 
         startDuelButton.setOnClickListener(v -> {
             String input = questionNumberInput.getText().toString();
-            if (!input.isEmpty() && viewModel.getCategoriesData().getValue() != null) {
+            if (!input.isEmpty() && viewModel.getSelectedCategory().getValue() != null) {
                 viewModel.initializeQuestions(Integer.parseInt(input));
                 popupWindow.dismiss();
 
