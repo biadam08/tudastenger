@@ -16,8 +16,11 @@ import androidx.lifecycle.ViewModelProvider;
 import com.bumptech.glide.Glide;
 import com.szte.tudastenger.databinding.ActivityCategoryUploadBinding;
 import com.szte.tudastenger.viewmodels.CategoryEditUploadViewModel;
-import com.theartofdev.edmodo.cropper.CropImage;
-import com.theartofdev.edmodo.cropper.CropImageView;
+
+import com.yalantis.ucrop.UCrop;
+
+import java.io.File;
+import java.util.UUID;
 
 
 public class CategoryUploadActivity extends DrawerBaseActivity {
@@ -46,7 +49,7 @@ public class CategoryUploadActivity extends DrawerBaseActivity {
         binding.uploadImageButton.setOnClickListener(v -> {
             Intent pickIntent = new Intent(Intent.ACTION_PICK,
                     android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-            startActivityForResult(pickIntent, CropImage.PICK_IMAGE_CHOOSER_REQUEST_CODE);
+            startActivityForResult(pickIntent, 1001);
         });
 
         binding.deleteImageButton.setOnClickListener(v -> {
@@ -59,7 +62,7 @@ public class CategoryUploadActivity extends DrawerBaseActivity {
         binding.modifyImageButton.setOnClickListener(v -> {
             Intent pickIntent = new Intent(Intent.ACTION_PICK,
                     android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-            startActivityForResult(pickIntent, CropImage.PICK_IMAGE_CHOOSER_REQUEST_CODE);
+            startActivityForResult(pickIntent, 1001);
         });
 
         binding.backButton.setOnClickListener(v ->
@@ -127,40 +130,34 @@ public class CategoryUploadActivity extends DrawerBaseActivity {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == CropImage.PICK_IMAGE_CHOOSER_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
-            Uri selectedImageUri = CropImage.getPickImageResultUri(this, data);
-            if (CropImage.isReadExternalStoragePermissionsRequired(this, selectedImageUri)) {
-                requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 0);
-            } else {
+        if (requestCode == 1001 && resultCode == Activity.RESULT_OK && data != null) {
+            Uri selectedImageUri = data.getData();
+            if (selectedImageUri != null) {
                 startCrop(selectedImageUri);
             }
-        }
+        } else if (resultCode == RESULT_OK && requestCode == UCrop.REQUEST_CROP) {
+            final Uri resultUri = UCrop.getOutput(data);
+            viewModel.setImageUri(resultUri);
+            Glide.with(this)
+                    .load(resultUri)
+                    .into(binding.categoryImagePreview);
 
-        if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
-            CropImage.ActivityResult result = CropImage.getActivityResult(data);
-            if (resultCode == RESULT_OK) {
-                viewModel.setImageUri(result.getUri());
-                Glide.with(this)
-                        .load(result.getUri())
-                        .into(binding.categoryImagePreview);
-
-                binding.categoryImagePreview.setVisibility(View.VISIBLE);
-                binding.uploadImageButton.setVisibility(View.GONE);
-                binding.manageImageLinearLayout.setVisibility(View.VISIBLE);
-
-            } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
-                Exception error = result.getError();
-                Toast.makeText(this, "Hiba a kép vágásakor: " + error.getMessage(),
-                        Toast.LENGTH_SHORT).show();
-            }
+            binding.categoryImagePreview.setVisibility(View.VISIBLE);
+            binding.uploadImageButton.setVisibility(View.GONE);
+            binding.manageImageLinearLayout.setVisibility(View.VISIBLE);
+        } else if (resultCode == UCrop.RESULT_ERROR) {
+            final Throwable cropError = UCrop.getError(data);
+            Toast.makeText(this, "Hiba a kép vágásakor: " + cropError.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 
     private void startCrop(Uri imageUri) {
-        CropImage.activity(imageUri)
-                .setCropMenuCropButtonTitle("Beállítás")
-                .setGuidelines(CropImageView.Guidelines.ON)
-                .setMultiTouchEnabled(true)
+        String destinationFileName = UUID.randomUUID().toString() + ".jpg";
+        Uri destinationUri = Uri.fromFile(new File(getCacheDir(), destinationFileName));
+
+        UCrop.of(imageUri, destinationUri)
+                .withAspectRatio(1, 1)
+                .withMaxResultSize(800, 800)
                 .start(this);
     }
 
