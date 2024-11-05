@@ -9,6 +9,9 @@ import android.widget.Toast;
 import com.szte.tudastenger.databinding.ActivityForgotPasswordBinding;
 import com.szte.tudastenger.viewmodels.ForgotPasswordViewModel;
 
+import dagger.hilt.android.AndroidEntryPoint;
+
+@AndroidEntryPoint
 public class ForgotPasswordActivity extends DrawerBaseActivity {
     private ActivityForgotPasswordBinding binding;
     private ForgotPasswordViewModel viewModel;

@@ -31,7 +31,9 @@ import com.szte.tudastenger.viewmodels.FriendsViewModel;
 
 import java.util.ArrayList;
 
+import dagger.hilt.android.AndroidEntryPoint;
 
+@AndroidEntryPoint
 public class FriendsActivity extends DrawerBaseActivity implements OnFriendRequestAdded, OnFriendAdded, OnFriendRequestRemoved, OnFriendRemoved {
     private ActivityFriendsBinding binding;
     private FriendsViewModel viewModel;

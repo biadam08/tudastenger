@@ -20,6 +20,11 @@ import com.szte.tudastenger.repositories.UserRepository;
 
 import java.util.UUID;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.lifecycle.HiltViewModel;
+
+@HiltViewModel
 public class EditProfileViewModel extends AndroidViewModel {
     private final UserRepository userRepository;
 
@@ -31,9 +36,10 @@ public class EditProfileViewModel extends AndroidViewModel {
     private final MutableLiveData<Integer> uploadProgress = new MutableLiveData<>();
     private final MutableLiveData<Boolean> accountDeleted = new MutableLiveData<>();
 
-    public EditProfileViewModel(Application application) {
+    @Inject
+    public EditProfileViewModel(Application application, UserRepository userRepository) {
         super(application);
-        userRepository = new UserRepository();
+        this.userRepository = userRepository;
     }
 
     public LiveData<String> getUsername() { return username; }

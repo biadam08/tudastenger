@@ -27,6 +27,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.lifecycle.HiltViewModel;
+
+@HiltViewModel
 public class HistoryViewModel extends AndroidViewModel {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
@@ -38,13 +43,13 @@ public class HistoryViewModel extends AndroidViewModel {
     private final MutableLiveData<Boolean> showNoQuestions = new MutableLiveData<>();
     private final MutableLiveData<String> currentUserId = new MutableLiveData<>();
     private ArrayList<AnsweredQuestion> mAnsweredQuestionsData = new ArrayList<>();
-
-    public HistoryViewModel(Application application) {
+    @Inject
+    public HistoryViewModel(Application application, UserRepository userRepository, CategoryRepository categoryRepository, QuestionRepository questionRepository, AnsweredQuestionsRepository answeredQuestionsRepository) {
         super(application);
-        userRepository = new UserRepository();
-        categoryRepository = new CategoryRepository();
-        questionRepository = new QuestionRepository();
-        answeredQuestionsRepository = new AnsweredQuestionsRepository();
+        this.userRepository = userRepository;
+        this.categoryRepository = categoryRepository;
+        this.questionRepository = questionRepository;
+        this.answeredQuestionsRepository = answeredQuestionsRepository;
 
         initializeUser();
     }

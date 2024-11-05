@@ -9,14 +9,20 @@ import androidx.lifecycle.MutableLiveData;
 import com.google.firebase.auth.FirebaseAuth;
 import com.szte.tudastenger.repositories.UserRepository;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.lifecycle.HiltViewModel;
+
+@HiltViewModel
 public class ForgotPasswordViewModel extends AndroidViewModel {
     private final UserRepository userRepository;
     private final MutableLiveData<String> errorMessage = new MutableLiveData<>();
     private final MutableLiveData<Boolean> isSuccess= new MutableLiveData<>();
 
-    public ForgotPasswordViewModel(Application application) {
+    @Inject
+    public ForgotPasswordViewModel(Application application, UserRepository userRepository) {
         super(application);
-        userRepository = new UserRepository();
+        this.userRepository = userRepository;
     }
 
     public LiveData<String> getErrorMessage() { return errorMessage; }

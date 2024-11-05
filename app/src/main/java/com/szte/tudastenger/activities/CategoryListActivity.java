@@ -13,6 +13,9 @@ import com.szte.tudastenger.viewmodels.CategoryListViewModel;
 
 import java.util.ArrayList;
 
+import dagger.hilt.android.AndroidEntryPoint;
+
+@AndroidEntryPoint
 public class CategoryListActivity extends DrawerBaseActivity {
     private ActivityCategoryListBinding binding;
     private CategoryListViewModel viewModel;

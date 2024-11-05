@@ -20,7 +20,9 @@ import com.yalantis.ucrop.UCrop;
 import java.io.File;
 import java.util.UUID;
 
+import dagger.hilt.android.AndroidEntryPoint;
 
+@AndroidEntryPoint
 public class EditProfileActivity extends DrawerBaseActivity {
     private EditProfileViewModel viewModel;
     private ActivityEditProfileBinding binding;

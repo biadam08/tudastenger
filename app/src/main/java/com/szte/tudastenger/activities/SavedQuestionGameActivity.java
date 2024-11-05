@@ -25,6 +25,9 @@ import com.szte.tudastenger.viewmodels.SavedQuestionGameViewModel;
 
 import java.util.ArrayList;
 
+import dagger.hilt.android.AndroidEntryPoint;
+
+@AndroidEntryPoint
 public class SavedQuestionGameActivity extends DrawerBaseActivity {
     private ActivitySavedQuestionGameBinding binding;
     private SavedQuestionGameViewModel viewModel;

@@ -27,6 +27,9 @@ import com.szte.tudastenger.databinding.ActivityRegistrationBinding;
 import com.szte.tudastenger.models.User;
 import com.szte.tudastenger.viewmodels.RegistrationViewModel;
 
+import dagger.hilt.android.AndroidEntryPoint;
+
+@AndroidEntryPoint
 public class RegistrationActivity extends DrawerBaseActivity {
     private RegistrationViewModel viewModel;
     private ActivityRegistrationBinding binding;

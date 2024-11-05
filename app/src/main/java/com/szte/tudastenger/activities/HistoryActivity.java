@@ -15,6 +15,9 @@ import com.szte.tudastenger.viewmodels.HistoryViewModel;
 
 import java.util.ArrayList;
 
+import dagger.hilt.android.AndroidEntryPoint;
+
+@AndroidEntryPoint
 public class HistoryActivity extends DrawerBaseActivity {
     private HistoryViewModel viewModel;
     private ActivityHistoryBinding binding;

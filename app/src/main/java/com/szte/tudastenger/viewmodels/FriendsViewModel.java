@@ -24,6 +24,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.lifecycle.HiltViewModel;
+
+@HiltViewModel
 public class FriendsViewModel extends AndroidViewModel {
     private final FriendRepository friendRepository;
     private final UserRepository userRepository;
@@ -37,11 +42,11 @@ public class FriendsViewModel extends AndroidViewModel {
     private final MutableLiveData<Map<String, Boolean>> friendButtonStates = new MutableLiveData<>(new HashMap<>());
     private final MutableLiveData<User> friendRequestSent = new MutableLiveData<>();
 
-
-    public FriendsViewModel(Application application) {
+    @Inject
+    public FriendsViewModel(Application application, UserRepository userRepository, FriendRepository friendRepository) {
         super(application);
-        userRepository = new UserRepository();
-        friendRepository = new FriendRepository();
+        this.userRepository = userRepository;
+        this.friendRepository = friendRepository;
 
         initCurrentUser();
     }

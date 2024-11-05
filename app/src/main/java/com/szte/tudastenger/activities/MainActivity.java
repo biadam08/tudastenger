@@ -21,11 +21,17 @@ import com.szte.tudastenger.viewmodels.MainViewModel;
 
 import java.util.ArrayList;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.AndroidEntryPoint;
+
+@AndroidEntryPoint
 public class MainActivity extends DrawerBaseActivity {
     private static final String LOG_TAG = MainActivity.class.getName();
     private static final int NOTIFICATION_PERMISSION_CODE = 100;
 
     private ActivityMainBinding binding;
+
     private MainViewModel viewModel;
     private CategoryAdapter adapter;
 

@@ -28,6 +28,11 @@ import com.szte.tudastenger.repositories.UserRepository;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.lifecycle.HiltViewModel;
+
+@HiltViewModel
 public class SavedQuestionGameViewModel extends AndroidViewModel {
     private final UserRepository userRepository;
     private final QuestionRepository questionRepository;
@@ -42,10 +47,11 @@ public class SavedQuestionGameViewModel extends AndroidViewModel {
     private String savedQuestionId;
     private String savedDocumentId;
 
-    public SavedQuestionGameViewModel(Application application) {
+    @Inject
+    public SavedQuestionGameViewModel(Application application, UserRepository userRepository, QuestionRepository questionRepository) {
         super(application);
-        userRepository = new UserRepository();
-        questionRepository = new QuestionRepository();
+        this.userRepository = userRepository;
+        this.questionRepository = questionRepository;
     }
 
     public LiveData<Question> getCurrentQuestion() { return currentQuestion; }

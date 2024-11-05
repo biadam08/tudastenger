@@ -27,18 +27,22 @@ import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 
+import javax.inject.Inject;
+
 public class QuestionRepository {
     private final FirebaseFirestore mFirestore;
     private final StorageReference mStorage;
     private final FirebaseFunctions mFunctions;
     private final CollectionReference mQuestions;
 
-    public QuestionRepository() {
-        mFirestore = FirebaseFirestore.getInstance();
-        mStorage = FirebaseStorage.getInstance().getReference();
-        mFunctions = FirebaseFunctions.getInstance();
-        mQuestions = mFirestore.collection("Questions");
+    @Inject
+    public QuestionRepository(FirebaseFirestore firestore, StorageReference storage, FirebaseFunctions functions) {
+        this.mFirestore = firestore;
+        this.mStorage = storage;
+        this.mFunctions = functions;
+        this.mQuestions = mFirestore.collection("Questions");
     }
+
 
     public void loadQuestionData(String questionId, QuestionReceivedCallback questionReceivedCallback, ImageUrlCallback imageUrlCallback, ErrorCallback errorCallback) {
         if (questionId == null) return;

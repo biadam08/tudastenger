@@ -18,19 +18,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.inject.Inject;
+
 public class UserRepository {
     private final FirebaseFirestore mFirestore;
     private final FirebaseAuth mAuth;
     private final StorageReference mStorage;
     private final FirebaseUser mCurrentUser;
 
-    public UserRepository() {
-        this.mFirestore = FirebaseFirestore.getInstance();
-        this.mAuth = FirebaseAuth.getInstance();
-        this.mStorage = FirebaseStorage.getInstance().getReference();
+    @Inject
+    public UserRepository(FirebaseFirestore firestore, FirebaseAuth auth, StorageReference storage) {
+        this.mFirestore = firestore;
+        this.mAuth = auth;
+        this.mStorage = storage;
         this.mCurrentUser = mAuth.getCurrentUser();
     }
-
     public void checkAdmin(AdminStatusCallback adminStatusCallback, ErrorCallback errorCallback) {
         if (mCurrentUser == null || mCurrentUser.getEmail() == null) {
             adminStatusCallback.onCheckAdmin(false);

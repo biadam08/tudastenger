@@ -12,6 +12,11 @@ import com.szte.tudastenger.repositories.UserRepository;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.lifecycle.HiltViewModel;
+
+@HiltViewModel
 public class CategoryListViewModel extends AndroidViewModel {
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
@@ -20,10 +25,11 @@ public class CategoryListViewModel extends AndroidViewModel {
     private MutableLiveData<Boolean> isAdmin = new MutableLiveData<>();
     private MutableLiveData<String> errorMessage = new MutableLiveData<>();
 
-    public CategoryListViewModel(Application application) {
+    @Inject
+    public CategoryListViewModel(Application application, CategoryRepository categoryRepository, UserRepository userRepository) {
         super(application);
-        categoryRepository = new CategoryRepository();
-        userRepository = new UserRepository();
+        this.categoryRepository = categoryRepository;
+        this.userRepository = userRepository;
     }
 
     public LiveData<List<Category>> getCategoriesData() { return categoriesData; }

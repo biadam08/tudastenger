@@ -29,6 +29,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import dagger.hilt.android.AndroidEntryPoint;
+
+@AndroidEntryPoint
 public class QuizGameActivity extends DrawerBaseActivity {
     private ActivityQuizGameBinding binding;
     private QuizGameViewModel viewModel;

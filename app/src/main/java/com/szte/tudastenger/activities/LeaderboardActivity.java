@@ -22,6 +22,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 
+import dagger.hilt.android.AndroidEntryPoint;
+
+@AndroidEntryPoint
 public class LeaderboardActivity extends DrawerBaseActivity {
     private LeaderboardViewModel viewModel;
     private ActivityLeaderboardBinding binding;

@@ -24,6 +24,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.lifecycle.HiltViewModel;
+
+@HiltViewModel
 public class LeaderboardViewModel extends AndroidViewModel {
     private final CategoryRepository categoryRepository;
     private final AnsweredQuestionsRepository answeredQuestionsRepository;
@@ -37,10 +42,11 @@ public class LeaderboardViewModel extends AndroidViewModel {
     private Date endDate;
     private String selectedCategoryId = "0";
 
-    public LeaderboardViewModel(Application application) {
+    @Inject
+    public LeaderboardViewModel(Application application, CategoryRepository categoryRepository, AnsweredQuestionsRepository answeredQuestionsRepository) {
         super(application);
-        categoryRepository = new CategoryRepository();
-        answeredQuestionsRepository = new AnsweredQuestionsRepository();
+        this.categoryRepository = categoryRepository;
+        this.answeredQuestionsRepository = answeredQuestionsRepository;
         loadCategories();
     }
 

@@ -11,6 +11,11 @@ import com.szte.tudastenger.models.Category;
 import com.szte.tudastenger.repositories.CategoryRepository;
 import com.szte.tudastenger.repositories.*;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.lifecycle.HiltViewModel;
+
+@HiltViewModel
 public class CategoryEditUploadViewModel extends AndroidViewModel {
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
@@ -27,10 +32,11 @@ public class CategoryEditUploadViewModel extends AndroidViewModel {
     private final MutableLiveData<Integer> uploadProgress = new MutableLiveData<>();
     private final MutableLiveData<Category> categoryData = new MutableLiveData<>();
 
-    public CategoryEditUploadViewModel(Application application) {
+    @Inject
+    public CategoryEditUploadViewModel(Application application, CategoryRepository categoryRepository, UserRepository userRepository) {
         super(application);
-        categoryRepository = new CategoryRepository();
-        userRepository = new UserRepository();
+        this.categoryRepository = categoryRepository;
+        this.userRepository = userRepository;
     }
 
     public LiveData<String> getCategoryId() { return categoryId; }
@@ -87,7 +93,12 @@ public class CategoryEditUploadViewModel extends AndroidViewModel {
                 } else {
                     addNewCategory(filename);
                 }
-            }, error -> errorMessage.setValue(error), progress -> uploadProgress.setValue(progress));
+            },
+            error -> {
+                errorMessage.setValue(error);
+                isImageUploading.setValue(false);
+            },
+            progress -> uploadProgress.setValue(progress));
         } else {
             if (categoryId.getValue() != null) {
                 updateCategory(null);

@@ -18,11 +18,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Inject;
+
 public class DuelRepository {
     private final FirebaseFirestore mFirestore;
 
-    public DuelRepository() {
-        this.mFirestore = FirebaseFirestore.getInstance();
+    @Inject
+    public DuelRepository(FirebaseFirestore firestore) {
+        this.mFirestore = firestore;
     }
 
 

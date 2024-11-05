@@ -33,6 +33,9 @@ import com.szte.tudastenger.viewmodels.DuelViewModel;
 
 import java.util.ArrayList;
 
+import dagger.hilt.android.AndroidEntryPoint;
+
+@AndroidEntryPoint
 public class DuelActivity extends DrawerBaseActivity {
     private ActivityDuelBinding binding;
     private DuelViewModel viewModel;

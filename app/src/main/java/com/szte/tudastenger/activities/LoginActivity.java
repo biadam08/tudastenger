@@ -27,6 +27,9 @@ import com.szte.tudastenger.viewmodels.LoginViewModel;
 
 import java.util.concurrent.Executor;
 
+import dagger.hilt.android.AndroidEntryPoint;
+
+@AndroidEntryPoint
 public class LoginActivity extends DrawerBaseActivity {
     private LoginViewModel viewModel;
     private ActivityLoginBinding binding;

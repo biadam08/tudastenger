@@ -11,6 +11,10 @@ import com.szte.tudastenger.databinding.ActivityDuelListingBinding;
 import com.szte.tudastenger.viewmodels.DuelListViewModel;
 
 import java.util.ArrayList;
+
+import dagger.hilt.android.AndroidEntryPoint;
+
+@AndroidEntryPoint
 public class DuelListingActivity extends DrawerBaseActivity {
     private ActivityDuelListingBinding binding;
     private DuelListViewModel viewModel;

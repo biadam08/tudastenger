@@ -22,6 +22,11 @@ import com.szte.tudastenger.repositories.UserRepository;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.lifecycle.HiltViewModel;
+
+@HiltViewModel
 public class SavedQuestionsViewModel extends AndroidViewModel {
     private final UserRepository userRepository;
     private final QuestionRepository questionRepository;
@@ -32,11 +37,12 @@ public class SavedQuestionsViewModel extends AndroidViewModel {
     private final MutableLiveData<Boolean> showNoQuestions = new MutableLiveData<>();
     private final MutableLiveData<String> currentUserId = new MutableLiveData<>();
 
-    public SavedQuestionsViewModel(Application application) {
+    @Inject
+    public SavedQuestionsViewModel(Application application, UserRepository userRepository, QuestionRepository questionRepository, CategoryRepository categoryRepository) {
         super(application);
-        userRepository = new UserRepository();
-        questionRepository = new QuestionRepository();
-        categoryRepository = new CategoryRepository();
+        this.userRepository = userRepository;
+        this.questionRepository = questionRepository;
+        this.categoryRepository = categoryRepository;
         initializeUser();
     }
 

@@ -7,11 +7,14 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.storage.StorageReference;
 import com.szte.tudastenger.models.User;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.inject.Inject;
 
 public class FriendRepository {
     private final FirebaseFirestore mFirestore;
@@ -19,11 +22,12 @@ public class FriendRepository {
     private final CollectionReference mFriends;
     private final CollectionReference mFriendRequests;
 
-    public FriendRepository() {
-        mFirestore = FirebaseFirestore.getInstance();
-        mUsers = mFirestore.collection("Users");
-        mFriends = mFirestore.collection("Friends");
-        mFriendRequests = mFirestore.collection("FriendRequests");
+    @Inject
+    public FriendRepository(FirebaseFirestore firestore) {
+        this.mFirestore = firestore;
+        this.mUsers = mFirestore.collection("Users");
+        this.mFriends = mFirestore.collection("Friends");
+        this.mFriendRequests = mFirestore.collection("FriendRequests");
     }
 
     public void queryFriends(String userId, FriendLoadedCallback friendCallback, NoFriendsCallback noFriendsCallback) {

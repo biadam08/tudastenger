@@ -8,15 +8,18 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.szte.tudastenger.models.User;
 
+import javax.inject.Inject;
+
 public class AuthRepository {
     private final FirebaseAuth mAuth;
     private final CollectionReference mUsers;
     private final FirebaseMessaging mFirebaseMessaging;
 
-    public AuthRepository() {
-        this.mAuth = FirebaseAuth.getInstance();
-        this.mUsers = FirebaseFirestore.getInstance().collection("Users");
-        this.mFirebaseMessaging = FirebaseMessaging.getInstance();
+    @Inject
+    public AuthRepository(FirebaseAuth auth, FirebaseFirestore firestore, FirebaseMessaging firebaseMessaging) {
+        this.mAuth = auth;
+        this.mUsers = firestore.collection("Users");
+        this.mFirebaseMessaging = firebaseMessaging;
     }
 
     public void checkCurrentUser(AuthStateCallback callback) {

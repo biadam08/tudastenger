@@ -20,14 +20,18 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.inject.Inject;
+
 public class AnsweredQuestionsRepository {
     private final FirebaseFirestore mFirestore;
     private final CollectionReference mAnsweredQuestions;
 
-    public AnsweredQuestionsRepository() {
-        this.mFirestore = FirebaseFirestore.getInstance();
+    @Inject
+    public AnsweredQuestionsRepository(FirebaseFirestore firestore) {
+        this.mFirestore = firestore;
         this.mAnsweredQuestions = mFirestore.collection("AnsweredQuestions");
     }
+
 
     public void loadCategoryScore(String userId, String categoryId, CategoryScoreCallback scoreCallback, ErrorCallback errorCallback) {
         mAnsweredQuestions

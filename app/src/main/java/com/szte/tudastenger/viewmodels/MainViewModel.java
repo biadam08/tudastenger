@@ -18,6 +18,11 @@ import com.szte.tudastenger.repositories.CategoryRepository;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.lifecycle.HiltViewModel;
+
+@HiltViewModel
 public class MainViewModel extends AndroidViewModel {
     private static final String CHANNEL_ID = "FRIEND_REQUESTS_NOTIFICATION";
     private CategoryRepository categoryRepository;
@@ -26,10 +31,10 @@ public class MainViewModel extends AndroidViewModel {
     private MutableLiveData<String> errorMessage = new MutableLiveData<>();
     private MutableLiveData<Boolean> areNotificationsEnabled = new MutableLiveData<>();
 
-
-    public MainViewModel(Application application) {
+    @Inject
+    public MainViewModel(Application application, CategoryRepository categoryRepository) {
         super(application);
-        categoryRepository = new CategoryRepository();
+        this.categoryRepository = categoryRepository;
         categoriesData.setValue(new ArrayList<>());
     }
 

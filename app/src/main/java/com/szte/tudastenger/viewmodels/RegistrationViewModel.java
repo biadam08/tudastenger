@@ -1,5 +1,8 @@
 package com.szte.tudastenger.viewmodels;
 
+import android.app.Application;
+
+import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -11,14 +14,21 @@ import com.google.firebase.messaging.FirebaseMessaging;
 import com.szte.tudastenger.models.User;
 import com.szte.tudastenger.repositories.AuthRepository;
 
-public class RegistrationViewModel extends ViewModel {
+import javax.inject.Inject;
+
+import dagger.hilt.android.lifecycle.HiltViewModel;
+
+@HiltViewModel
+public class RegistrationViewModel extends AndroidViewModel {
     private final AuthRepository authRepository;
 
     private final MutableLiveData<String> errorMessage = new MutableLiveData<>();
     private final MutableLiveData<Boolean> registrationSuccess = new MutableLiveData<>();
 
-    public RegistrationViewModel() {
-        authRepository = new AuthRepository();
+    @Inject
+    public RegistrationViewModel(Application application, AuthRepository authRepository) {
+        super(application);
+        this.authRepository = authRepository;
     }
 
     public LiveData<String> getErrorMessage() {

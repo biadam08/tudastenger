@@ -19,6 +19,11 @@ import com.google.firebase.messaging.FirebaseMessaging;
 import com.szte.tudastenger.models.User;
 import com.szte.tudastenger.repositories.AuthRepository;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.lifecycle.HiltViewModel;
+
+@HiltViewModel
 public class LoginViewModel extends AndroidViewModel {
     private final AuthRepository authRepository;
     private final SharedPreferences sharedPreferences;
@@ -27,9 +32,10 @@ public class LoginViewModel extends AndroidViewModel {
     private final MutableLiveData<Boolean> canUseBiometric = new MutableLiveData<>();
     private final MutableLiveData<Pair<String, String>> savedCredentials = new MutableLiveData<>();
 
-    public LoginViewModel(Application application) {
+    @Inject
+    public LoginViewModel(Application application, AuthRepository authRepository) {
         super(application);
-        authRepository = new AuthRepository();
+        this.authRepository = authRepository;
         sharedPreferences = application.getSharedPreferences("loginData", Context.MODE_PRIVATE);
     }
 

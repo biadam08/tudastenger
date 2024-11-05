@@ -31,6 +31,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.lifecycle.HiltViewModel;
+
+@HiltViewModel
 public class DuelViewModel extends AndroidViewModel {
     private final QuestionRepository questionRepository;
     private final CategoryRepository categoryRepository;
@@ -62,13 +67,13 @@ public class DuelViewModel extends AndroidViewModel {
     private final MutableLiveData<Boolean> showButtonsLayout = new MutableLiveData<>(true);
     private final MutableLiveData<String> toastMessage = new MutableLiveData<>();
 
-
-    public DuelViewModel(Application application) {
+    @Inject
+    public DuelViewModel(Application application, QuestionRepository questionRepository, DuelRepository duelRepository, CategoryRepository categoryRepository, UserRepository userRepository) {
         super(application);
-        questionRepository = new QuestionRepository();
-        duelRepository = new DuelRepository();
-        categoryRepository = new CategoryRepository();
-        userRepository = new UserRepository();
+        this.questionRepository = questionRepository;
+        this.duelRepository = duelRepository;
+        this.categoryRepository = categoryRepository;
+        this.userRepository = userRepository;
     }
 
     public LiveData<User> getCurrentUser() { return currentUser; }

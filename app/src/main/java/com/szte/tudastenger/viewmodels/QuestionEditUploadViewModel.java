@@ -15,6 +15,11 @@ import com.szte.tudastenger.repositories.UserRepository;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.lifecycle.HiltViewModel;
+
+@HiltViewModel
 public class QuestionEditUploadViewModel extends AndroidViewModel {
     private final QuestionRepository questionRepository;
     private final UserRepository userRepository;
@@ -34,11 +39,12 @@ public class QuestionEditUploadViewModel extends AndroidViewModel {
     private MutableLiveData<Boolean> deleteSuccess = new MutableLiveData<>();
     private MutableLiveData<Boolean> isAdmin = new MutableLiveData<>();
 
-    public QuestionEditUploadViewModel(Application application) {
+    @Inject
+    public QuestionEditUploadViewModel(Application application, QuestionRepository questionRepository, UserRepository userRepository, CategoryRepository categoryRepository) {
         super(application);
-        questionRepository = new QuestionRepository();
-        userRepository = new UserRepository();
-        categoryRepository = new CategoryRepository();
+        this.questionRepository = questionRepository;
+        this.userRepository = userRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     public LiveData<List<Category>> getCategories() { return categories; }

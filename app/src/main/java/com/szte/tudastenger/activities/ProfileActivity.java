@@ -13,7 +13,9 @@ import com.szte.tudastenger.viewmodels.ProfileViewModel;
 
 import java.util.ArrayList;
 
+import dagger.hilt.android.AndroidEntryPoint;
 
+@AndroidEntryPoint
 public class ProfileActivity extends DrawerBaseActivity {
     private ActivityProfileBinding binding;
     private ProfileViewModel viewModel;

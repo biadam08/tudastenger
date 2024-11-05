@@ -22,9 +22,14 @@ import com.yalantis.ucrop.UCrop;
 import java.io.File;
 import java.util.UUID;
 
+import javax.inject.Inject;
 
+import dagger.hilt.android.AndroidEntryPoint;
+
+@AndroidEntryPoint
 public class CategoryUploadActivity extends DrawerBaseActivity {
     private ActivityCategoryUploadBinding binding;
+
     private CategoryEditUploadViewModel viewModel;
     private ProgressDialog progressDialog;
 

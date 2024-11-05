@@ -30,6 +30,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.lifecycle.HiltViewModel;
+
+@HiltViewModel
 public class DuelListViewModel extends AndroidViewModel {
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
@@ -40,12 +45,12 @@ public class DuelListViewModel extends AndroidViewModel {
     private final MutableLiveData<List<Duel>> finishedDuels = new MutableLiveData<>();
     private final MutableLiveData<String> categoryAndQuestionNumber = new MutableLiveData<>();
 
-
-    public DuelListViewModel(Application application) {
+    @Inject
+    public DuelListViewModel(Application application, DuelRepository duelRepository, CategoryRepository categoryRepository, UserRepository userRepository) {
         super(application);
-        duelRepository = new DuelRepository();
-        categoryRepository = new CategoryRepository();
-        userRepository = new UserRepository();
+        this.duelRepository = duelRepository;
+        this.categoryRepository = categoryRepository;
+        this.userRepository = userRepository;
         loadUser();
     }
 

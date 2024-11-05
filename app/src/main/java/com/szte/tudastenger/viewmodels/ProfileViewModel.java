@@ -21,6 +21,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.lifecycle.HiltViewModel;
+
+@HiltViewModel
 public class ProfileViewModel extends AndroidViewModel {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
@@ -32,11 +37,12 @@ public class ProfileViewModel extends AndroidViewModel {
     private MutableLiveData<String> profilePictureUrl = new MutableLiveData<>();
     private MutableLiveData<String> errorMessage = new MutableLiveData<>();
 
-    public ProfileViewModel(Application application) {
+    @Inject
+    public ProfileViewModel(Application application, UserRepository userRepository, CategoryRepository categoryRepository, AnsweredQuestionsRepository answeredQuestionsRepository) {
         super(application);
-        userRepository = new UserRepository();
-        categoryRepository = new CategoryRepository();
-        answeredQuestionsRepository = new AnsweredQuestionsRepository();
+        this.userRepository = userRepository;
+        this.categoryRepository = categoryRepository;
+        this.answeredQuestionsRepository = answeredQuestionsRepository;
         categoryScores.setValue(new HashMap<>());
     }
 

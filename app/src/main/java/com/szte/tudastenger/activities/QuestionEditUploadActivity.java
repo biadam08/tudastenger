@@ -34,7 +34,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.UUID;
 
+import dagger.hilt.android.AndroidEntryPoint;
 
+@AndroidEntryPoint
 public class QuestionEditUploadActivity extends DrawerBaseActivity {
     private ActivityQuestionEditUploadBinding binding;
     private QuestionEditUploadViewModel viewModel;

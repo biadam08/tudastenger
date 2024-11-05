@@ -27,6 +27,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.lifecycle.HiltViewModel;
+
+@HiltViewModel
 public class QuizGameViewModel extends AndroidViewModel {
     private final UserRepository userRepository;
     private final QuestionRepository questionRepository;
@@ -41,11 +46,12 @@ public class QuizGameViewModel extends AndroidViewModel {
     private final MutableLiveData<Boolean> isAnswerSelected = new MutableLiveData<>(false);
     private final MutableLiveData<Uri> imageUri = new MutableLiveData<>();
 
-    public QuizGameViewModel(Application application) {
+    @Inject
+    public QuizGameViewModel(Application application, UserRepository userRepository, QuestionRepository questionRepository, CategoryRepository categoryRepository) {
         super(application);
-        userRepository = new UserRepository();
-        questionRepository = new QuestionRepository();
-        categoryRepository = new CategoryRepository();
+        this.userRepository = userRepository;
+        this.questionRepository = questionRepository;
+        this.categoryRepository = categoryRepository;
         isQuestionSaved.setValue(false);
     }
 

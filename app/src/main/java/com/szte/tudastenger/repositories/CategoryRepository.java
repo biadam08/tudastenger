@@ -18,15 +18,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.inject.Inject;
+
 public class CategoryRepository {
     private final FirebaseFirestore mFirestore;
     private final CollectionReference mCategories;
     private final StorageReference mStorage;
 
-    public CategoryRepository() {
-        mFirestore = FirebaseFirestore.getInstance();
-        mCategories = mFirestore.collection("Categories");
-        mStorage = FirebaseStorage.getInstance().getReference();
+    @Inject
+    public CategoryRepository(FirebaseFirestore firestore, StorageReference storage) {
+        this.mFirestore = firestore;
+        this.mCategories = mFirestore.collection("Categories");
+        this.mStorage = storage;
     }
 
     public void loadCategoryData(String categoryId, CategoryReceivedCallback categoryReceivedCallback, ImageUrlCallback imageUrlCallback) {

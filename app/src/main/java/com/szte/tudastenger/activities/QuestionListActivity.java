@@ -17,6 +17,9 @@ import com.szte.tudastenger.viewmodels.QuestionListViewModel;
 
 import java.util.ArrayList;
 
+import dagger.hilt.android.AndroidEntryPoint;
+
+@AndroidEntryPoint
 public class QuestionListActivity extends DrawerBaseActivity {
     private ActivityQuestionListBinding binding;
     private QuestionListViewModel viewModel;
