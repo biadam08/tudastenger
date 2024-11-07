@@ -194,7 +194,7 @@ public class UserRepository {
                     if (task.isSuccessful()) {
                         if (!task.getResult().isEmpty()) {
                             DocumentSnapshot document = task.getResult().getDocuments().get(0);
-                            String rankName = document.getString("rankname");
+                            String rankName = document.getString("rankName");
                             callback.onSuccess(rankName);
                         } else {
                             errorCallback.onError("-");
