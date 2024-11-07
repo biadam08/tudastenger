@@ -172,6 +172,16 @@ public class DrawerBaseActivity extends AppCompatActivity implements NavigationV
                 startActivity(new Intent(DrawerBaseActivity.this, CategoryListActivity.class));
             }
         }
+        if(itemId == R.id.nav_add_a_rank){
+            if(user != null && currentUserRole.equals("admin")) {
+                startActivity(new Intent(DrawerBaseActivity.this, RankEditUploadActivity.class));
+            }
+        }
+        if(itemId == R.id.nav_list_ranks){
+            if(user != null && currentUserRole.equals("admin")) {
+                startActivity(new Intent(DrawerBaseActivity.this, RankListActivity.class));
+            }
+        }
 
         if(itemId == R.id.nav_logout){
             FirebaseAuth.AuthStateListener authStateListener = new FirebaseAuth.AuthStateListener() {

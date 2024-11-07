@@ -140,7 +140,7 @@ public class LeaderboardViewModel extends AndroidViewModel {
                 @Override
                 public void onError(String errorMessage) {
                     entryList.add(new LeaderboardEntry(username, points, ""));
-                    
+
                     // ellenőrizzük, hogy az összes lekérdezés befejeződött
                     if (counter.decrementAndGet() == 0) {
                         entryList.sort((e1, e2) -> Integer.compare(e2.getPoints(), e1.getPoints()));

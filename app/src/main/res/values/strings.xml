@@ -46,4 +46,8 @@
     <string name="import_questions">Kérdések importálása</string>
     <string name="friends">Barátok</string>
     <string name="saved_questions">Mentett kérdések</string>
+    <string name="create_rank">Rang létrehozása</string>
+    <string name="rank_name">Rang neve</string>
+    <string name="threshold">Ponthatár</string>
+    <string name="edit_rank">Rang szerkesztése</string>
 </resources>

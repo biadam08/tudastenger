@@ -20,6 +20,7 @@
     </queries>
 
     <application
+        android:name=".MyApp"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -28,8 +29,13 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Tudastenger"
-        android:name=".MyApp"
         tools:targetApi="31">
+        <activity
+            android:name=".activities.RankListActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activities.RankEditUploadActivity"
+            android:exported="false" />
         <activity
             android:name=".activities.CategoryListActivity"
             android:exported="false" />
@@ -101,7 +107,7 @@
         <activity
             android:name="com.yalantis.ucrop.UCropActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

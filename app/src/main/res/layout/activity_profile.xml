@@ -136,7 +136,7 @@
                     android:id="@+id/imageView6"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
-                    app:srcCompat="@drawable/ic_rank"
+                    app:srcCompat="@drawable/ic_add_a_rank"
                     app:tint="@color/browne"/>
 
                 <TextView
