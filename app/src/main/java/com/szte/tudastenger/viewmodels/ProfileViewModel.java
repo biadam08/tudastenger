@@ -36,6 +36,7 @@ public class ProfileViewModel extends AndroidViewModel {
     private MutableLiveData<Map<String, String>> categoryScores = new MutableLiveData<>();
     private MutableLiveData<String> profilePictureUrl = new MutableLiveData<>();
     private MutableLiveData<String> errorMessage = new MutableLiveData<>();
+    private MutableLiveData<String> userRank = new MutableLiveData<>();
 
     @Inject
     public ProfileViewModel(Application application, UserRepository userRepository, CategoryRepository categoryRepository, AnsweredQuestionsRepository answeredQuestionsRepository) {
@@ -51,16 +52,25 @@ public class ProfileViewModel extends AndroidViewModel {
     public LiveData<Map<String, String>> getCategoryScores() { return categoryScores; }
     public LiveData<String> getProfilePictureUrl() { return profilePictureUrl; }
     public LiveData<String> getErrorMessage() { return errorMessage; }
+    public LiveData<String> getUserRank() { return userRank; }
 
     public void loadUserData() {
         userRepository.loadCurrentUser(
                 user -> {
                     currentUser.setValue(user);
                     loadProfilePicture(user.getProfilePicture());
+                    loadUserRank();
                     loadCategories();
                 }
         );
+    }
 
+    private void loadUserRank() {
+        userRepository.getUserRank(
+                currentUser.getValue().getGold(),
+                rank -> userRank.setValue(rank),
+                error -> userRank.setValue(error)
+        );
     }
 
     private void loadProfilePicture(String profilePicturePath) {

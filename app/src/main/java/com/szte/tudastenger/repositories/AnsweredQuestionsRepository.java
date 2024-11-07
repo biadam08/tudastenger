@@ -160,7 +160,12 @@ public class AnsweredQuestionsRepository {
 
         query.get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
-                processLeaderboardData(task.getResult(), leaderboardCallback, noDataCallback);
+                QuerySnapshot result = task.getResult();
+                if (result != null && !result.isEmpty()) {
+                    processLeaderboardData(result, leaderboardCallback, noDataCallback);
+                } else {
+                    errorCallback.onError("Nincs adat");
+                }
             } else {
                 errorCallback.onError(task.getException().getMessage());
             }
@@ -177,9 +182,6 @@ public class AnsweredQuestionsRepository {
         }
 
         List<Map.Entry<String, Integer>> userList = new ArrayList<>(userPoints.entrySet());
-        Collections.sort(userList, (entry1, entry2) -> entry2.getValue().compareTo(entry1.getValue()));
-
-        final CountDownLatch latch = new CountDownLatch(userList.size());
         HashMap<String, Integer> sortedMapWithUsernames = new HashMap<>();
 
         for (Map.Entry<String, Integer> entry : userList) {
@@ -189,25 +191,18 @@ public class AnsweredQuestionsRepository {
                             String username = userTask.getResult().getString("username");
                             sortedMapWithUsernames.put(username, sortedMapWithUsernames.getOrDefault(username, 0) + entry.getValue());
                         }
-                        latch.countDown();
+
+                        // az utolsó lekérdezés után hívjuk meg a callback-et
+                        if (sortedMapWithUsernames.size() == userList.size()) {
+                            if (sortedMapWithUsernames.isEmpty()) {
+                                noDataCallback.onNoData();
+                            } else {
+                                leaderboardCallback.onLeaderboardLoaded(new ArrayList<>(sortedMapWithUsernames.entrySet()));
+                            }
+                        }
                     });
         }
 
-        new Thread(() -> {
-            try {
-                latch.await();
-                List<Map.Entry<String, Integer>> finalList = new ArrayList<>(sortedMapWithUsernames.entrySet());
-                Collections.sort(finalList, (entry1, entry2) -> entry2.getValue().compareTo(entry1.getValue()));
-
-                if (finalList.isEmpty()) {
-                    noDataCallback.onNoData();
-                } else {
-                    leaderboardCallback.onLeaderboardLoaded(finalList);
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }).start();
     }
 
 

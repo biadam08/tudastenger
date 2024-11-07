@@ -13,16 +13,18 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.szte.tudastenger.activities.QuizGameActivity;
 import com.szte.tudastenger.R;
 import com.szte.tudastenger.models.Category;
+import com.szte.tudastenger.models.LeaderboardEntry;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class UserLeaderboardAdapter extends RecyclerView.Adapter<UserLeaderboardAdapter.ViewHolder> {
-    private List<Map.Entry<String, Integer>> mUserList;
+    private List<LeaderboardEntry> mUserList;
     private Context mContext;
 
-    public UserLeaderboardAdapter(Context context, List<Map.Entry<String, Integer>> userList){
+    public UserLeaderboardAdapter(Context context, List<LeaderboardEntry> userList){
         this.mUserList = userList;
         this.mContext = context;
     }
@@ -35,13 +37,16 @@ public class UserLeaderboardAdapter extends RecyclerView.Adapter<UserLeaderboard
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        Map.Entry<String, Integer> userEntry = mUserList.get(position);
+        LeaderboardEntry userEntry = mUserList.get(position);
         holder.bindTo(userEntry, position);
     }
 
     @Override
     public int getItemCount() {
-        return mUserList.size();
+        if(mUserList != null) {
+            return mUserList.size();
+        }
+        return 0;
     }
 
     class ViewHolder extends RecyclerView.ViewHolder{
@@ -57,17 +62,21 @@ public class UserLeaderboardAdapter extends RecyclerView.Adapter<UserLeaderboard
             pointsTextView = itemView.findViewById(R.id.pointsTextView);
         }
 
-        public void bindTo(Map.Entry<String, Integer> userEntry, int position) {
-            orderNumber.setText(String.valueOf(position+1) + ".");
-            usernameTextView.setText(userEntry.getKey());
-            pointsTextView.setText(String.valueOf(userEntry.getValue()));
+        public void bindTo(LeaderboardEntry userEntry, int position) {
+            String orderText = position + 1 + ".";
+            orderNumber.setText(orderText);
+
+            String text = userEntry.getUsername();
+            if(userEntry.getRank() != null && !Objects.equals(userEntry.getRank(), "")){
+                text += " (" + userEntry.getRank() + ")";
+            }
+            usernameTextView.setText(text);
+
+            pointsTextView.setText(String.valueOf(userEntry.getPoints()));
         }
     }
-    public void updateData(List<Map.Entry<String, Integer>> newData) {
-        mUserList.clear();
-        if(newData != null) {
-            mUserList.addAll(newData);
-        }
+    public void updateData(List<LeaderboardEntry> newEntries) {
+        this.mUserList = newEntries;
         notifyDataSetChanged();
     }
 }

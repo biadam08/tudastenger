@@ -12,6 +12,7 @@ import com.szte.tudastenger.databinding.ActivityProfileBinding;
 import com.szte.tudastenger.viewmodels.ProfileViewModel;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
@@ -57,6 +58,13 @@ public class ProfileActivity extends DrawerBaseActivity {
         viewModel.getCurrentUser().observe(this, user -> {
             if (user != null) {
                 binding.userNameTextView.setText(user.getUsername());
+            }
+        });
+
+        viewModel.getUserRank().observe(this, rank -> {
+            if (!Objects.equals(rank, "-")) {
+                String text = binding.userNameTextView.getText() + " (" + rank + ")";
+                binding.userNameTextView.setText(text);
             }
         });
 

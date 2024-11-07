@@ -7,8 +7,10 @@ import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
@@ -179,6 +181,44 @@ public class UserRepository {
                         usersList.add(user);
                     }
                     callback.onUsersLoaded(usersList);
+                });
+    }
+
+    public void getUserRank(Integer gold, SuccessCallback callback, ErrorCallback errorCallback){
+        mFirestore.collection("Ranks")
+                .whereLessThanOrEqualTo("threshold", gold)
+                .orderBy("threshold", Query.Direction.DESCENDING) // legmagasabb threshold-ot kapjuk meg először
+                .limit(1)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        if (!task.getResult().isEmpty()) {
+                            DocumentSnapshot document = task.getResult().getDocuments().get(0);
+                            String rankName = document.getString("rankname");
+                            callback.onSuccess(rankName);
+                        } else {
+                            errorCallback.onError("-");
+                        }
+                    }
+                });
+    }
+
+    public void getUserRankByName(String username, SuccessCallback callback, ErrorCallback errorCallback) {
+        mFirestore.collection("Users")
+                .whereEqualTo("username", username)
+                .limit(1)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful() && !task.getResult().isEmpty()) {
+                        DocumentSnapshot userDocument = task.getResult().getDocuments().get(0);
+
+                        // Felhasználó arany értékének lekérése
+                        Long gold = userDocument.getLong("gold");
+                        // rang lekérése
+                        if(gold != null) {
+                            getUserRank(Math.toIntExact(gold), callback, errorCallback);
+                        }
+                    }
                 });
     }
 

@@ -76,7 +76,7 @@ public class LeaderboardActivity extends DrawerBaseActivity {
             binding.spinner.setAdapter(adapter);
         });
 
-        viewModel.getLeaderboardData().observe(this, data -> {
+        viewModel.getProcessedLeaderboardData().observe(this, data -> {
             adapter.updateData(data);
         });
 
