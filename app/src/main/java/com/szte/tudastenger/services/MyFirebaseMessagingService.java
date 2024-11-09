@@ -62,7 +62,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         String channelId = "TUDASTENGER_NOTIFICATION_CHANNEL";
         NotificationCompat.Builder notificationBuilder =
                 new NotificationCompat.Builder(this, channelId)
-                        .setSmallIcon(R.drawable.coins)
+                        .setSmallIcon(R.drawable.points)
                         .setContentTitle("Új értesítés")
                         .setContentText(messageBody)
                         .setAutoCancel(true)

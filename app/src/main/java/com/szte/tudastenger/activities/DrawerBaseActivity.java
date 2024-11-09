@@ -126,6 +126,10 @@ public class DrawerBaseActivity extends AppCompatActivity implements NavigationV
             intent.putExtra("mixed", "true");
             startActivity(intent);
         }
+        if(itemId == R.id.nav_challenge) {
+            Intent intent = new Intent(DrawerBaseActivity.this, ChallengeActivity.class);
+            startActivity(intent);
+        }
         if(itemId == R.id.nav_login){
             startActivity(new Intent(DrawerBaseActivity.this, LoginActivity.class));
         }

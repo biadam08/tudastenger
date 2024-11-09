@@ -50,4 +50,5 @@
     <string name="rank_name">Rang neve</string>
     <string name="threshold">Ponthatár</string>
     <string name="edit_rank">Rang szerkesztése</string>
+    <string name="daily_challenge">Napi kihívás</string>
 </resources>

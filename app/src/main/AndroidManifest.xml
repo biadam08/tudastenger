@@ -96,6 +96,9 @@
             android:name=".activities.MainActivity"
             android:exported="false" />
         <activity
+            android:name=".activities.ChallengeActivity"
+            android:exported="false" />
+        <activity
             android:name=".activities.LoginActivity"
             android:exported="true">
             <intent-filter>
