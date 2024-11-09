@@ -7,6 +7,8 @@ import android.util.Log;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+
+import com.prolificinteractive.materialcalendarview.CalendarDay;
 import com.szte.tudastenger.models.Challenge;
 import com.szte.tudastenger.models.Question;
 import com.szte.tudastenger.models.User;
@@ -15,6 +17,8 @@ import com.szte.tudastenger.repositories.QuestionRepository;
 import com.szte.tudastenger.repositories.UserRepository;
 
 import java.util.ArrayList;
+import java.util.Map;
+
 import javax.inject.Inject;
 import dagger.hilt.android.lifecycle.HiltViewModel;
 
@@ -37,8 +41,7 @@ public class ChallengeViewModel extends AndroidViewModel {
     private final MutableLiveData<Uri> imageUri = new MutableLiveData<>();
     private final MutableLiveData<User> currentUser = new MutableLiveData<>();
     private final MutableLiveData<String> errorMessage = new MutableLiveData<>();
-
-
+    private final MutableLiveData<Map<CalendarDay, String>> challengeResults = new MutableLiveData<>();
 
     @Inject
     public ChallengeViewModel(Application application, QuestionRepository questionRepository, ChallengeRepository challengeRepository, UserRepository userRepository) {
@@ -62,6 +65,7 @@ public class ChallengeViewModel extends AndroidViewModel {
         return currentUser;
     }
     public LiveData<String> getErrorMessage() { return errorMessage; }
+    public LiveData<Map<CalendarDay, String>> getChallengeResults() { return challengeResults; }
 
 
     public void init() {
@@ -72,8 +76,16 @@ public class ChallengeViewModel extends AndroidViewModel {
         userRepository.loadCurrentUser(
                 user -> {
                     currentUser.setValue(user);
+                    loadResults();
                     loadTodaysChallenge();
                 }
+        );
+    }
+
+    private void loadResults() {
+        challengeRepository.getChallengeResultsByUser(
+                currentUser.getValue().getId(),
+                results -> challengeResults.setValue(results)
         );
     }
 

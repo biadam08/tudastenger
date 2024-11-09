@@ -156,6 +156,10 @@ public class DrawerBaseActivity extends AppCompatActivity implements NavigationV
             startActivity(new Intent(DrawerBaseActivity.this, LeaderboardActivity.class));
         }
 
+        if(itemId == R.id.nav_challenge_history){
+            startActivity(new Intent(DrawerBaseActivity.this, ChallengeResultListing.class));
+        }
+
         if(itemId == R.id.nav_add_a_category){
             if(user != null && currentUserRole.equals("admin")) {
                 startActivity(new Intent(DrawerBaseActivity.this, CategoryUploadActivity.class));

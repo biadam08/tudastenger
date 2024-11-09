@@ -2,12 +2,17 @@ package com.szte.tudastenger.repositories;
 
 import android.util.Log;
 
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
+
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.prolificinteractive.materialcalendarview.CalendarDay;
 import com.szte.tudastenger.models.Challenge;
 import com.szte.tudastenger.models.Question;
 import com.szte.tudastenger.models.ChallengeResult;
@@ -16,7 +21,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 
 import javax.inject.Inject;
@@ -113,6 +120,40 @@ public class ChallengeRepository {
                 });
     }
 
+    public void getChallengeResultsByUser(String userId, ResultsLoadedCallback resultsLoadedCallback) {
+        Map<CalendarDay, String> results = new HashMap<>();
+
+        mFirestore.collection("ChallengeResults")
+                .whereEqualTo("userId", userId)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
+                        Date completedAtDate = document.getDate("completedAt");
+
+                        Calendar calendar = Calendar.getInstance();
+                        calendar.setTime(completedAtDate);
+                        int year = calendar.get(Calendar.YEAR);
+                        int month = calendar.get(Calendar.MONTH) + 1;
+                        int dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
+
+                        CalendarDay calendarDay = CalendarDay.from(year, month, dayOfMonth);
+
+                        int correctAnswers = document.getLong("correctAnswers").intValue();
+                        List<Boolean> resultList = (List<Boolean>) document.get("results");
+                        int totalQuestions = resultList != null ? resultList.size() : 0;
+
+                        double successRate = (double) correctAnswers / totalQuestions;
+
+                        String result = "unsuccessful";
+                        if(successRate >= 0.5){
+                            result = "successful";
+                        }
+
+                        results.put(calendarDay, result);
+                    }
+                    resultsLoadedCallback.onResultsLoaded(results);
+                });
+    }
     public interface ChallengeLoadedCallback {
         void onChallengeLoaded(Challenge challenge);
     }
@@ -127,5 +168,8 @@ public class ChallengeRepository {
 
     public interface CompletionCheckCallback {
         void onCompletionChecked(boolean hasCompleted);
+    }
+    public interface ResultsLoadedCallback {
+        void onResultsLoaded(Map<CalendarDay, String> results);
     }
 }
