@@ -7,13 +7,37 @@
     android:layout_height="match_parent"
     tools:context=".activities.ChallengeResultListing">
 
+    <Button
+        android:id="@+id/startDailyChallangeButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Napi kihívás indítása"
+        android:layout_marginTop="10dp"
+        android:visibility="gone"
+        android:background="@drawable/custom_shape_rectangle_button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/noMoreChallangeTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="A mai kihívást már teljesítetted!"
+        android:textSize="20sp"
+        android:layout_marginTop="10dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@+id/startDailyChallangeButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"/>
+
     <com.prolificinteractive.materialcalendarview.MaterialCalendarView
         android:id="@+id/calendarView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/noMoreChallangeTextView"
         app:mcv_showOtherDates="all" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

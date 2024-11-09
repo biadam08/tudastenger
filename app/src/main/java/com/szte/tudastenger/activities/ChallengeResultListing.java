@@ -3,7 +3,9 @@ package com.szte.tudastenger.activities;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 
 import com.prolificinteractive.materialcalendarview.CalendarDay;
 import com.prolificinteractive.materialcalendarview.MaterialCalendarView;
@@ -54,6 +56,22 @@ public class ChallengeResultListing extends DrawerBaseActivity {
                 } else {
                     calendarView.addDecorator(new DefaultDayDecorator(day));
                 }
+            }
+        });
+
+        viewModel.getUserHasCompleted().observe(this, hasCompleted -> {
+            if(hasCompleted){
+                binding.noMoreChallangeTextView.setVisibility(View.VISIBLE);
+            } else{
+                binding.noMoreChallangeTextView.setVisibility(View.GONE);
+                binding.startDailyChallangeButton.setVisibility(View.VISIBLE);
+                binding.startDailyChallangeButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Intent intent = new Intent(ChallengeResultListing.this, ChallengeActivity.class);
+                        startActivity(intent);
+                    }
+                });
             }
         });
     }

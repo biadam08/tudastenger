@@ -42,6 +42,7 @@ public class ChallengeViewModel extends AndroidViewModel {
     private final MutableLiveData<User> currentUser = new MutableLiveData<>();
     private final MutableLiveData<String> errorMessage = new MutableLiveData<>();
     private final MutableLiveData<Map<CalendarDay, String>> challengeResults = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> userHasCompleted = new MutableLiveData<>();
 
     @Inject
     public ChallengeViewModel(Application application, QuestionRepository questionRepository, ChallengeRepository challengeRepository, UserRepository userRepository) {
@@ -66,6 +67,7 @@ public class ChallengeViewModel extends AndroidViewModel {
     }
     public LiveData<String> getErrorMessage() { return errorMessage; }
     public LiveData<Map<CalendarDay, String>> getChallengeResults() { return challengeResults; }
+    public LiveData<Boolean> getUserHasCompleted() { return userHasCompleted; }
 
 
     public void init() {
@@ -98,8 +100,10 @@ public class ChallengeViewModel extends AndroidViewModel {
                         challenge.getId(),
                         hasCompleted -> {
                             if(!hasCompleted){
+                                userHasCompleted.setValue(false);
                                 loadQuestions(challenge.getQuestionIds());
                             } else{
+                                userHasCompleted.setValue(true);
                                 errorMessage.setValue("A mai kihívást már kitöltötted!");
                             }
                         });
