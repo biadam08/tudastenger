@@ -3,12 +3,16 @@ package com.szte.tudastenger.viewmodels;
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 import androidx.biometric.BiometricManager;
 import androidx.core.util.Pair;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+import androidx.security.crypto.EncryptedSharedPreferences;
+import androidx.security.crypto.MasterKey;
+import androidx.security.crypto.MasterKeys;
 
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.FirebaseAuth;
@@ -19,6 +23,9 @@ import com.google.firebase.messaging.FirebaseMessaging;
 import com.szte.tudastenger.models.User;
 import com.szte.tudastenger.repositories.AuthRepository;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+
 import javax.inject.Inject;
 
 import dagger.hilt.android.lifecycle.HiltViewModel;
@@ -26,7 +33,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel;
 @HiltViewModel
 public class LoginViewModel extends AndroidViewModel {
     private final AuthRepository authRepository;
-    private final SharedPreferences sharedPreferences;
+    private SharedPreferences sharedPreferences;
     private final MutableLiveData<String> errorMessage = new MutableLiveData<>();
     private final MutableLiveData<Boolean> loginSuccess = new MutableLiveData<>();
     private final MutableLiveData<Boolean> canUseBiometric = new MutableLiveData<>();
@@ -36,7 +43,22 @@ public class LoginViewModel extends AndroidViewModel {
     public LoginViewModel(Application application, AuthRepository authRepository) {
         super(application);
         this.authRepository = authRepository;
-        sharedPreferences = application.getSharedPreferences("loginData", Context.MODE_PRIVATE);
+
+        try {
+            MasterKey masterKey = new MasterKey.Builder(application)
+                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                    .build();
+
+            sharedPreferences = EncryptedSharedPreferences.create(
+                    application,
+                    "secret_shared_prefs",
+                    masterKey,
+                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            );
+        } catch (GeneralSecurityException | IOException e) {
+            throw new RuntimeException("Failed to initialize EncryptedSharedPreferences", e);
+        }
     }
 
     public LiveData<String> getErrorMessage() {
@@ -76,6 +98,7 @@ public class LoginViewModel extends AndroidViewModel {
                     editor.putString("email", email);
                     editor.putString("password", password);
                     editor.apply();
+
                     loginSuccess.setValue(true);
                 },
                 error -> errorMessage.setValue(error)
