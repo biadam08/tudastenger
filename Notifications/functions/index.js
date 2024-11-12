@@ -1,9 +1,11 @@
 const functions = require('firebase-functions');
 const { SecretManagerServiceClient } = require('@google-cloud/secret-manager');
+const { onSchedule } = require("firebase-functions/v2/scheduler");
 const admin = require('firebase-admin');
 const axios = require("axios");
 admin.initializeApp();
 
+const db = admin.firestore();
 const client = new SecretManagerServiceClient();
 
 exports.sendFriendRequestNotification = functions.firestore
@@ -90,6 +92,48 @@ exports.sendDuelRequestNotification = functions.firestore
             });
     });
 
+exports.createDailyChallenge = onSchedule("every day 00:00", async (event) => {
+    try {
+      const activeChallengesSnapshot = await db.collection("Challenges")
+        .where("isActive", "==", true)
+        .get();
+      
+      activeChallengesSnapshot.forEach(async (doc) => {
+        await doc.ref.update({ isActive: false });
+      });
+
+      const questionsSnapshot = await db.collection("Questions").get();
+	  const allQuestionIds = questionsSnapshot.docs.map(doc => doc.id);
+      
+      if (allQuestionIds.length < 5) {
+        return;
+      }
+      
+      const selectedQuestionIds  = [];
+
+      while (selectedQuestionIds.length < 5) {
+        const random = Math.floor(Math.random() * allQuestionIds.length);
+        const questionId = allQuestionIds[random];
+
+        if (!selectedQuestionIds.includes(questionId)) {
+          selectedQuestionIds.push(questionId);
+        }
+      }
+      
+      const challengeRef = db.collection("Challenges").doc();
+
+      const challengeData = {
+        id: challengeRef.id,
+        date: admin.firestore.Timestamp.now(),
+        questionIds: selectedQuestionIds,
+        isActive: true,
+      };
+
+      await challengeRef.set(challengeData);
+    } catch (error) {
+        console.error("Hiba a létrehozás során: ", error);
+    }
+  });
 
 exports.getChatGPTResponse = functions.https.onCall(async (data, context) => {
   try {
