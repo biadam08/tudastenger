@@ -70,9 +70,9 @@ public class RankEditAdapter extends RecyclerView.Adapter<RankEditAdapter.ViewHo
         }
 
         public void bindTo(Rank currentRank) {
-            String text = currentRank.getRankName() + " pont";
-            rankName.setText(text);
-            threshold.setText(currentRank.getThreshold().toString());
+            rankName.setText(currentRank.getRankName());
+            String thresholdText = currentRank.getThreshold().toString() + " pont";
+            threshold.setText(thresholdText);
         }
     }
 }

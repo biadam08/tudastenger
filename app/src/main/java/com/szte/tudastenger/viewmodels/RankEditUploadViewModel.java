@@ -71,7 +71,7 @@ public class RankEditUploadViewModel extends AndroidViewModel {
         try {
             Rank rank = new Rank(
                     rankId.getValue(),
-                    rankName.getValue(),
+                    rankName.getValue().trim(),
                     Long.parseLong(threshold.getValue())
             );
 
@@ -82,13 +82,15 @@ public class RankEditUploadViewModel extends AndroidViewModel {
             }, error -> errorMessage.setValue(error));
         } catch (NumberFormatException e) {
             errorMessage.setValue("A ponthatár szám legyen");
+        } catch (Exception e){
+            errorMessage.setValue("Hiba a feltöltés során");
         }
     }
 
     private void addNewRank() {
         try {
             Rank rank = new Rank(
-                    rankId.getValue(),
+                    rankId.getValue().trim(),
                     rankName.getValue(),
                     Long.parseLong(threshold.getValue())
             );
@@ -100,6 +102,8 @@ public class RankEditUploadViewModel extends AndroidViewModel {
 
         } catch (NumberFormatException e) {
             errorMessage.setValue("A ponthatár szám legyen");
+        } catch (Exception e){
+            errorMessage.setValue("Hiba a feltöltés során");
         }
     }
 

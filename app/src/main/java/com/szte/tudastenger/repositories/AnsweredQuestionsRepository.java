@@ -172,8 +172,14 @@ public class AnsweredQuestionsRepository {
         });
     }
 
+
     private void processLeaderboardData(QuerySnapshot querySnapshot, LeaderboardLoadedCallback leaderboardCallback, NoDataCallback noDataCallback) {
         HashMap<String, Integer> userPoints = new HashMap<>();
+
+        if (querySnapshot.isEmpty()) {
+            noDataCallback.onNoData();
+            return;
+        }
 
         for (QueryDocumentSnapshot document : querySnapshot) {
             String userId = document.getString("userId");
@@ -182,7 +188,14 @@ public class AnsweredQuestionsRepository {
         }
 
         List<Map.Entry<String, Integer>> userList = new ArrayList<>(userPoints.entrySet());
+
+        if (userList.isEmpty()) {
+            noDataCallback.onNoData();
+            return;
+        }
+
         HashMap<String, Integer> sortedMapWithUsernames = new HashMap<>();
+        CountDownLatch latch = new CountDownLatch(userList.size());
 
         for (Map.Entry<String, Integer> entry : userList) {
             mFirestore.collection("Users").document(entry.getKey()).get()
@@ -191,9 +204,10 @@ public class AnsweredQuestionsRepository {
                             String username = userTask.getResult().getString("username");
                             sortedMapWithUsernames.put(username, sortedMapWithUsernames.getOrDefault(username, 0) + entry.getValue());
                         }
+                        latch.countDown();
 
-                        // az utolsó lekérdezés után hívjuk meg a callback-et
-                        if (sortedMapWithUsernames.size() == userList.size()) {
+                        // ha minden lekérés befejeződött
+                        if (latch.getCount() == 0) {
                             if (sortedMapWithUsernames.isEmpty()) {
                                 noDataCallback.onNoData();
                             } else {
@@ -202,7 +216,6 @@ public class AnsweredQuestionsRepository {
                         }
                     });
         }
-
     }
 
 
