@@ -90,8 +90,8 @@ public class RankEditUploadViewModel extends AndroidViewModel {
     private void addNewRank() {
         try {
             Rank rank = new Rank(
-                    rankId.getValue().trim(),
-                    rankName.getValue(),
+                    null,
+                    rankName.getValue().trim(),
                     Long.parseLong(threshold.getValue())
             );
 

@@ -17,6 +17,7 @@ import dagger.hilt.android.AndroidEntryPoint;
 public class RankEditUploadActivity extends DrawerBaseActivity {
     private ActivityRankEditUploadBinding binding;
     private RankEditUploadViewModel viewModel;
+    private String rankId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,7 +29,7 @@ public class RankEditUploadActivity extends DrawerBaseActivity {
 
         viewModel.checkAdmin();
 
-        String rankId = getIntent().getStringExtra("rankId");
+        rankId = getIntent().getStringExtra("rankId");
 
         viewModel.init(rankId);
 
@@ -71,7 +72,11 @@ public class RankEditUploadActivity extends DrawerBaseActivity {
 
         viewModel.getSuccessMessage().observe(this, message -> {
             if (message != null) {
-                showSuccessDialog("Sikeres módosítás", message);
+                if(rankId != null) {
+                    showSuccessDialog("Sikeres módosítás", message);
+                } else{
+                    showSuccessDialog("Sikeres feltöltés", message);
+                }
             }
         });
     }
