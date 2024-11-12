@@ -1,0 +1,154 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    android:background="@drawable/tudastenger_bg"
+    tools:context=".activities.CategoryUploadActivity"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingTop="20dp"
+        android:paddingBottom="40dp">
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="150dp"
+            android:layout_marginEnd="150dp"
+            app:cardCornerRadius="20dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:id="@+id/editBarLinearLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:visibility="gone">
+
+                    <Button
+                        android:id="@+id/backButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:textColor="#FFFFFF"
+                        android:layout_marginRight="1dp"
+                        android:background="@drawable/custom_shape_rectangle_button"
+                        android:text="VISSZA" />
+
+                    <Button
+                        android:id="@+id/deleteButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:textColor="#FFFFFF"
+                        android:layout_marginLeft="1dp"
+                        android:background="@drawable/custom_shape_rectangle_button"
+                        android:text="TÖRLÉS" />
+                </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/cardview_light_background"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:id="@+id/addCategoryTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Kategória hozzáadása"
+                    android:textSize="36sp"
+                    android:textAlignment="center"
+                    android:layout_marginBottom="12dp"
+                    android:textColor="@color/browne"
+                    />
+
+                <Button
+                    android:id="@+id/uploadImageButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="16dp"
+                    android:background="@drawable/custom_shape_rectangle_button"
+                    android:text="@string/add_an_image"
+                    android:textColor="@color/white" />
+
+                <LinearLayout
+                    android:id="@+id/manageImageLinearLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="16dp"
+                    android:visibility="gone">
+
+                    <Button
+                        android:id="@+id/modifyImageButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:textColor="#FFFFFF"
+                        android:layout_marginRight="1dp"
+                        android:background="@drawable/custom_shape_rectangle_button"
+                        android:text="Kép módosítása" />
+
+                    <Button
+                        android:id="@+id/deleteImageButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:textColor="#FFFFFF"
+                        android:layout_marginLeft="1dp"
+                        android:background="@drawable/custom_shape_rectangle_button"
+                        android:text="Kép törlése" />
+                </LinearLayout>
+
+
+                <ImageView
+                    android:id="@+id/categoryImagePreview"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:layout_marginTop="16dp"
+                    android:scaleType="centerCrop"
+                    android:visibility="gone" />
+
+                <EditText
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/custom_shape_edittext"
+                    android:id="@+id/categoryName"
+                    android:hint="@string/category_name"
+                    android:padding="8dp"
+                    android:layout_margin="12dp"
+                    android:inputType="text"
+                    />
+
+                <Button
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/hozzaadas"
+                    android:id="@+id/addCategoryButton"
+                    android:layout_marginTop="16dp"
+                    android:backgroundTint="@color/browne"
+                    android:textColor="@color/white"
+                    android:background="@drawable/custom_shape_rounded_button"
+                    android:layout_marginBottom="12dp"
+                    android:onClick="uploadCategory"
+                    />
+            </LinearLayout>
+
+        </LinearLayout>
+
+     </androidx.cardview.widget.CardView>
+    </LinearLayout>
+
+</ScrollView>
