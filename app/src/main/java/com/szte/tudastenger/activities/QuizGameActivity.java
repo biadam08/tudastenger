@@ -98,12 +98,6 @@ public class QuizGameActivity extends DrawerBaseActivity {
                 binding.buttonsLinearLayout.setVisibility(View.VISIBLE);
             }
         });
-
-        viewModel.getIsHelpUsed().observe(this, isHelpUsed -> {
-            if (isHelpUsed) {
-                removeWrongAnswer();
-            }
-        });
     }
     private void setupClickListeners() {
         binding.helpButton.setOnClickListener(v -> {

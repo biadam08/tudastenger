@@ -195,12 +195,10 @@ public class QuizGameViewModel extends AndroidViewModel {
                 success -> {
                     user.setGold(user.getGold() - 10);
                     isHelpUsed.setValue(true);
-                    currentUser.setValue(user);
+                    currentUser.setValue(user); //pont frissítése
                 },
                 error -> errorMessage.setValue(error)
         );
         return true;
-
-
     }
 }
