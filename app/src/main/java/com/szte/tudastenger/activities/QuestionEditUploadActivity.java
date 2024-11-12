@@ -10,6 +10,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -51,17 +52,19 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
 
         viewModel = new ViewModelProvider(this).get(QuestionEditUploadViewModel.class);
 
+        viewModel.checkAdmin();
+
         questionId = getIntent().getStringExtra("questionId");
         setupViews();
         setupObservers();
         setupClickListeners();
 
         viewModel.loadCategories();
+
         if (questionId != null) {
             binding.editBarLinearLayout.setVisibility(View.VISIBLE);
             binding.addQuestionTextView.setText("Kérdés szerkesztése");
             binding.addQuestionButton.setText("Kérdés módosítása");
-            viewModel.checkAdmin();
             viewModel.loadQuestionData(questionId);
         }
     }
@@ -84,6 +87,10 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
                     android.R.layout.simple_spinner_item, categories);
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             binding.questionCategory.setAdapter(adapter);
+
+            if (questionId != null) {
+                viewModel.loadQuestionData(questionId);
+            }
         });
 
         viewModel.getCurrentQuestion().observe(this, question -> {
@@ -158,9 +165,17 @@ public class QuestionEditUploadActivity extends DrawerBaseActivity {
         binding.questionName.setText(question.getQuestionText());
 
         if (question.getCategory() != null) {
+            Log.d("QEUActivity", "in if != null");
+            Log.d("QEUActivity", "binding.questionCategory.getCount()" + binding.questionCategory.getCount());
+
             for (int i = 0; i < binding.questionCategory.getCount(); i++) {
+                Log.d("QEUActivity", "in for");
+
                 Category category = (Category) binding.questionCategory.getItemAtPosition(i);
+                Log.d("QEUActivity", "category Id + question.getCategory()" + category.getId() + "+" + question.getCategory());
+
                 if (category.getId().equals(question.getCategory())) {
+                    Log.d("QUEActivity", "in final if set selection" + i);
                     binding.questionCategory.setSelection(i);
                     break;
                 }
