@@ -146,7 +146,7 @@ public class ChallengeActivity extends DrawerBaseActivity {
         });
 
         finishButton.setOnClickListener(v -> {
-            startActivity(new Intent(this, MainActivity.class));
+            startActivity(new Intent(this, ChallengeResultListing.class));
             finish();
         });
 

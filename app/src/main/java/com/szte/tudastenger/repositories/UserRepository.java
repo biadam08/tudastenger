@@ -146,7 +146,68 @@ public class UserRepository {
     public void deleteAccount(SuccessCallback successCallback, ErrorCallback errorCallback) {
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser != null) {
-            mFirestore.collection("Users").document(currentUser.getUid())
+            String userId = currentUser.getUid();
+
+            // töröljük a összes kapcsolódó barát bejegyzést
+            mFirestore.collection("Friends").document(userId)
+                    .get()
+                    .addOnSuccessListener(documentSnapshot -> {
+                        if (documentSnapshot.exists()) {
+                            documentSnapshot.getReference().delete();
+                        }
+                    });
+
+            // töröljük azokat a bejegyzéseket is, ahol ő szerepel barátként
+            mFirestore.collection("Friends")
+                    .get()
+                    .addOnSuccessListener(queryDocumentSnapshots -> {
+                        for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
+                            if (document.contains(userId)) {
+                                document.getReference().update(userId, FieldValue.delete());
+                            }
+                        }
+                    });
+
+            // töröljük FriendRequests kollekcióban a felhasználóhoz kapcsolódó bejegyzéseket (kérelmező vagy címzett)
+            mFirestore.collection("FriendRequests")
+                    .whereEqualTo("user_uid1", userId)
+                    .get()
+                    .addOnSuccessListener(queryDocumentSnapshots -> {
+                        for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
+                            document.getReference().delete();
+                        }
+                    });
+
+            mFirestore.collection("FriendRequests")
+                    .whereEqualTo("user_uid2", userId)
+                    .get()
+                    .addOnSuccessListener(queryDocumentSnapshots -> {
+                        for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
+                            document.getReference().delete();
+                        }
+                    });
+
+            // töröljük a Duels kollekcióban az összes kapcsolódó párbajt
+            mFirestore.collection("Duels")
+                    .whereEqualTo("challengerUid", userId)
+                    .get()
+                    .addOnSuccessListener(queryDocumentSnapshots -> {
+                        for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
+                            document.getReference().delete();
+                        }
+                    });
+
+            mFirestore.collection("Duels")
+                    .whereEqualTo("challengedUid", userId)
+                    .get()
+                    .addOnSuccessListener(queryDocumentSnapshots -> {
+                        for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
+                            document.getReference().delete();
+                        }
+                    });
+
+            // töröljük a felhasználót
+            mFirestore.collection("Users").document(userId)
                     .delete()
                     .addOnSuccessListener(aVoid ->
                             currentUser.delete()
