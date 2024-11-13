@@ -66,6 +66,8 @@ public class DuelViewModel extends AndroidViewModel {
     private final MutableLiveData<Uri> imageUri = new MutableLiveData<>();
     private final MutableLiveData<Boolean> showButtonsLayout = new MutableLiveData<>(true);
     private final MutableLiveData<String> toastMessage = new MutableLiveData<>();
+    private final MutableLiveData<String> errorMessage = new MutableLiveData<>();
+
 
     @Inject
     public DuelViewModel(Application application, QuestionRepository questionRepository, DuelRepository duelRepository, CategoryRepository categoryRepository, UserRepository userRepository) {
@@ -93,6 +95,10 @@ public class DuelViewModel extends AndroidViewModel {
 
     public String getCategory() {
         return category;
+    }
+
+    public LiveData<String> getErrorMessage() {
+        return errorMessage;
     }
 
     public void init(String challengerId, String challengedId, String duelId) {
@@ -127,7 +133,8 @@ public class DuelViewModel extends AndroidViewModel {
                 questions -> {
                     questionsList.setValue(questions);
                     startDuel();
-                }
+                },
+                error -> errorMessage.setValue(error)
         );
     }
 

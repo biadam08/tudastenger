@@ -80,7 +80,7 @@ public class DuelRepository {
                 });
     }
 
-    public void loadDuelWithQuestions(String duelId, DuelLoadedCallback duelCallback, QuestionsLoadedCallback questionsCallback) {
+    public void loadDuelWithQuestions(String duelId, DuelLoadedCallback duelCallback, QuestionsLoadedCallback questionsCallback, ErrorCallback errorCallback) {
         mFirestore.collection("Duels").document(duelId)
                 .get()
                 .addOnSuccessListener(documentSnapshot -> {
@@ -94,17 +94,36 @@ public class DuelRepository {
                             tasks.add(mFirestore.collection("Questions").document(questionId).get());
                         }
 
-                        Tasks.whenAllSuccess(tasks).addOnSuccessListener(list -> {
-                            ArrayList<Question> questionList = new ArrayList<>();
-                            for (Object object : list) {
-                                DocumentSnapshot document = (DocumentSnapshot) object;
-                                Question question = document.toObject(Question.class);
-                                questionList.add(question);
-                            }
-                            questionsCallback.onQuestionsLoaded(questionList);
-                        });
+                        try {
+                            Tasks.whenAllSuccess(tasks).addOnSuccessListener(list -> {
+                                ArrayList<Question> questionList = new ArrayList<>();
+                                for (Object object : list) {
+                                    DocumentSnapshot document = (DocumentSnapshot) object;
+                                    if (document.exists()) {
+                                        Question question = document.toObject(Question.class);
+                                        questionList.add(question);
+                                    } else {
+                                        errorCallback.onError("Ez a párbaj már nem elérhető, mert nem elérhető a benne lévő összes kérdés");
+                                        deleteDuel(duelId);
+                                        return;
+                                    }
+                                }
+                                questionsCallback.onQuestionsLoaded(questionList);
+                            }).addOnFailureListener(e -> errorCallback.onError("Ez a párbaj már nem elérhető, mert nem elérhető a benne lévő összes kérdés"));
+                        } catch (Exception e) {
+                            errorCallback.onError(e.getMessage());
+                        }
+                    } else {
+                        errorCallback.onError("A párbaj nem található");
                     }
-                });
+                })
+                .addOnFailureListener(e -> errorCallback.onError("Hiba történt a párbaj betöltése során: " + e.getMessage()));
+    }
+
+    private void deleteDuel(String duelId) {
+        mFirestore.collection("Duels")
+                .document(duelId)
+                .delete();
     }
 
     public void createNewDuel(Duel duel, DuelCreatedCallback duelCreatedCallback) {
@@ -160,5 +179,7 @@ public class DuelRepository {
     public interface DuelByIdLoadedCallback {
         void onDuelLoaded(ArrayList<Boolean> challengerResults);
     }
-
+    public interface ErrorCallback {
+        void onError(String error);
+    }
 }

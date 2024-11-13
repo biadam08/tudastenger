@@ -5,7 +5,9 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputFilter;
@@ -124,6 +126,12 @@ public class DuelActivity extends DrawerBaseActivity {
             if (message != null && !message.isEmpty()) {
                 Toast.makeText(this, message, Toast.LENGTH_LONG).show();
                 showDuelConfigDialog();
+            }
+        });
+
+        viewModel.getErrorMessage().observe(this, error -> {
+            if (error != null) {
+                showErrorDialog("Hiba", error);
             }
         });
     }
@@ -284,4 +292,18 @@ public class DuelActivity extends DrawerBaseActivity {
         p.dimAmount = 0.5f;
         wm.updateViewLayout(container, p);
     }
+
+    private void showErrorDialog(String title, String message) {
+        new AlertDialog.Builder(this)
+                .setTitle(title)
+                .setMessage(message)
+                .setPositiveButton("Rendben", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        startActivity(new Intent(DuelActivity.this, DuelListingActivity.class));
+                    }
+                })
+                .show();
+    }
+
 }
