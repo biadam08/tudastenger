@@ -2,6 +2,7 @@ plugins {
     id 'com.android.application'
     id 'com.google.gms.google-services'
     id 'com.google.dagger.hilt.android'
+    id 'com.google.firebase.firebase-perf'
 }
 
 android {
@@ -64,6 +65,7 @@ dependencies {
     annotationProcessor "com.google.dagger:hilt-compiler:2.51.1"
     implementation 'com.github.prolificinteractive:material-calendarview:2.0.0'
     implementation 'androidx.security:security-crypto:1.1.0-alpha03'
+    implementation("com.google.firebase:firebase-perf")
 
     testImplementation 'org.mockito:mockito-core:2.25.1'
     testImplementation "com.google.truth:truth:1.0"
