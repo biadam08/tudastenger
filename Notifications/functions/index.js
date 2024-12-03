@@ -92,7 +92,7 @@ exports.sendDuelRequestNotification = functions.firestore
             });
     });
 
-exports.createDailyChallenge = onSchedule("every day 00:00", async (event) => {
+exports.createDailyChallenge = onSchedule("every day 23:00", async (event) => {
     try {
       const activeChallengesSnapshot = await db.collection("Challenges")
         .where("isActive", "==", true)
