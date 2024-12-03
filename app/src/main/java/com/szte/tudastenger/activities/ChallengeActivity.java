@@ -44,6 +44,8 @@ public class ChallengeActivity extends DrawerBaseActivity {
     }
 
     private void setupViews() {
+        viewModel.loadTodaysChallenge();
+
         binding.nextQuestionButton.setOnClickListener(v -> {
             if(viewModel.getIsLastQuestion().getValue()) {
                 viewModel.finishChallenge();

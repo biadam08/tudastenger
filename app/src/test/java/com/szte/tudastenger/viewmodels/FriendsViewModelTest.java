@@ -214,9 +214,9 @@ public class FriendsViewModelTest {
             FriendRepository.FriendshipStatusCallback callback = invocation.getArgument(2);
             callback.onStatusChecked(targetUserId, canSendRequest);
             return null;
-        }).when(friendRepository).checkFriendship(any(), any(), any());
+        }).when(friendRepository).checkFriendshipAndFriendRequest(any(), any(), any());
 
-        viewModel.checkFriendship(testCurrentUser.getId(), targetUserId);
+        viewModel.checkFriendshipAndFriendRequest(testCurrentUser.getId(), targetUserId);
 
         Map<String, Boolean> expectedStates = new HashMap<>();
         expectedStates.put(targetUserId, canSendRequest);

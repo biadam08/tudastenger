@@ -104,11 +104,9 @@ public class FriendsViewModel extends AndroidViewModel {
                     currentList.add(friend);
                     mFriendsData.setValue(currentList);
                     noFriendsVisibility.setValue(false);
-                    Log.d("FriendsVWM noFriendsVisibility", noFriendsVisibility.getValue().toString());
                 },
                 () -> {
                     noFriendsVisibility.setValue(true);
-                    Log.d("FriendsVWM noFriendsVisibility", noFriendsVisibility.getValue().toString());
                 }
         );
 
@@ -149,8 +147,8 @@ public class FriendsViewModel extends AndroidViewModel {
         );
     }
 
-    public void checkFriendship(String currentUserId, String userId) {
-        friendRepository.checkFriendship(
+    public void checkFriendshipAndFriendRequest(String currentUserId, String userId) {
+        friendRepository.checkFriendshipAndFriendRequest(
                 currentUserId,
                 userId,
                 (checkedUserId, canSendRequest) -> {

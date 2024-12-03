@@ -120,7 +120,7 @@ public class FriendRepository {
                 .addOnSuccessListener(aVoid -> successCallback.onSuccess());
     }
 
-    public void checkFriendship(String currentUserId, String userId, FriendshipStatusCallback callback) {
+    public void checkFriendshipAndFriendRequest(String currentUserId, String userId, FriendshipStatusCallback callback) {
         mFriends.document(currentUserId)
                 .get()
                 .addOnCompleteListener(task -> {

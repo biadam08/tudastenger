@@ -61,9 +61,9 @@ public class ChallengeResultListing extends DrawerBaseActivity {
 
         viewModel.getUserHasCompleted().observe(this, hasCompleted -> {
             if(hasCompleted){
-                binding.noMoreChallangeTextView.setVisibility(View.VISIBLE);
+                binding.errorTextView.setVisibility(View.VISIBLE);
             } else{
-                binding.noMoreChallangeTextView.setVisibility(View.GONE);
+                binding.errorTextView.setVisibility(View.GONE);
                 binding.startDailyChallangeButton.setVisibility(View.VISIBLE);
                 binding.startDailyChallangeButton.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -72,6 +72,15 @@ public class ChallengeResultListing extends DrawerBaseActivity {
                         startActivity(intent);
                     }
                 });
+            }
+        });
+
+        viewModel.getErrorMessage().observe(this, error -> {
+            if(!error.isEmpty()) {
+                binding.errorTextView.setVisibility(View.VISIBLE);
+                binding.errorTextView.setText(error);
+            } else{
+                binding.errorTextView.setVisibility(View.GONE);
             }
         });
     }

@@ -79,7 +79,7 @@ public class ChallengeViewModel extends AndroidViewModel {
                 user -> {
                     currentUser.setValue(user);
                     loadResults();
-                    loadTodaysChallenge();
+                    getTodaysChallenge();
                 }
         );
     }
@@ -91,7 +91,27 @@ public class ChallengeViewModel extends AndroidViewModel {
         );
     }
 
-    private void loadTodaysChallenge() {
+    private void getTodaysChallenge() {
+        challengeRepository.getTodaysChallenge(
+                challenge -> {
+                    currentChallenge = challenge;
+                    challengeRepository.checkIfUserCompleted(
+                            currentUser.getValue().getId(),
+                            challenge.getId(),
+                            hasCompleted -> {
+                                if(!hasCompleted){
+                                    userHasCompleted.setValue(false);
+                                } else{
+                                    userHasCompleted.setValue(true);
+                                    errorMessage.setValue("A mai kihívást már kitöltötted!");
+                                }
+                            });
+                },
+                error -> { errorMessage.setValue(error); }
+        );
+    }
+
+    public void loadTodaysChallenge() {
         challengeRepository.getTodaysChallenge(
             challenge -> {
                 currentChallenge = challenge;
@@ -108,7 +128,7 @@ public class ChallengeViewModel extends AndroidViewModel {
                             }
                         });
             },
-            error -> {}
+            error -> { errorMessage.setValue(error); }
         );
     }
 

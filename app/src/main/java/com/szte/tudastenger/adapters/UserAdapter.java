@@ -59,7 +59,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> im
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         User currentUser = mUsers.get(position);
-        viewModel.checkFriendship(mCurrentUserId, currentUser.getId());
+        viewModel.checkFriendshipAndFriendRequest(mCurrentUserId, currentUser.getId());
         viewModel.getFriendButtonStates().observe((LifecycleOwner) mContext, states -> {
             Boolean isVisible = states.get(currentUser.getId());
             if (isVisible != null) {
