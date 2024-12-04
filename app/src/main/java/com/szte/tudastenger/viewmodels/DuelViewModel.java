@@ -67,6 +67,9 @@ public class DuelViewModel extends AndroidViewModel {
     private final MutableLiveData<Boolean> showButtonsLayout = new MutableLiveData<>(true);
     private final MutableLiveData<String> toastMessage = new MutableLiveData<>();
     private final MutableLiveData<String> errorMessage = new MutableLiveData<>();
+    private final MutableLiveData<Integer> selectedAnswer = new MutableLiveData<>(-1);
+    private final MutableLiveData<Integer> correctAnswer = new MutableLiveData<>(-1);
+    private MutableLiveData<Boolean> isDuelConfigured = new MutableLiveData<>(false);
 
 
     @Inject
@@ -92,6 +95,16 @@ public class DuelViewModel extends AndroidViewModel {
     public LiveData<Integer> getActualQuestionNumber() { return actualQuestionNumber; }
     public LiveData<Boolean> getShowButtonsLayout() { return showButtonsLayout; }
     public LiveData<String> getToastMessage() { return toastMessage; }
+    public LiveData<Integer> getSelectedAnswer() { return selectedAnswer; }
+    public LiveData<Integer> getCorrectAnswer() { return correctAnswer; }
+    public LiveData<Boolean> isDuelConfigured() {
+        return isDuelConfigured;
+    }
+    public void setShowButtonsLayout(boolean show){ showButtonsLayout.setValue(show); }
+
+    public void setDuelConfigured(boolean configured) {
+        isDuelConfigured.setValue(configured);
+    }
 
     public String getCategory() {
         return category;
@@ -114,10 +127,8 @@ public class DuelViewModel extends AndroidViewModel {
             currentUser.setValue(user);
 
             if(user.getId().equals(challengerUserId)) {
-                showButtonsLayout.setValue(true);
                 loadCategories();
             } else {
-                showButtonsLayout.setValue(false);
                 loadDuelData();
             }
         });
@@ -137,7 +148,6 @@ public class DuelViewModel extends AndroidViewModel {
                 error -> errorMessage.setValue(error)
         );
     }
-
 
     public void selectCategory(String categoryName) {
         if(!categoryName.equals("Vegyes kategória")) {
@@ -170,7 +180,6 @@ public class DuelViewModel extends AndroidViewModel {
         }
 
         this.questionNumber = questionCount;
-        showButtonsLayout.setValue(false);
 
         questionRepository.initializeDuelQuestions(
                 categoryId,
@@ -190,7 +199,6 @@ public class DuelViewModel extends AndroidViewModel {
         );
     }
 
-
     public void startDuel() {
         showButtonsLayout.setValue(false);
         actualQuestionNumber.setValue(actualQuestionNumber.getValue() + 1);
@@ -198,6 +206,8 @@ public class DuelViewModel extends AndroidViewModel {
         currentQuestion.setValue(questionsList.getValue().get(actualQuestionNumber.getValue() - 1));
         showNavigationButtons.setValue(false);
         isSelectedAnswer.setValue(false);
+        selectedAnswer.setValue(null);
+        correctAnswer.setValue(null);
 
         if(currentQuestion.getValue().getExplanationText() != null) {
             explanationText.setValue(currentQuestion.getValue().getExplanationText());
@@ -208,7 +218,7 @@ public class DuelViewModel extends AndroidViewModel {
         loadQuestionImage();
     }
 
-    public void loadQuestionImage(){
+    public void loadQuestionImage() {
         Question question = currentQuestion.getValue();
         questionRepository.loadQuestionImage(question.getImage(), uri -> imageUri.setValue(Uri.parse(uri)), error -> imageUri.setValue(null));
     }
@@ -216,11 +226,11 @@ public class DuelViewModel extends AndroidViewModel {
     public void handleAnswerClick(int clickedIndex, int correctAnswerIndex) {
         if (!isSelectedAnswer.getValue()) {
             isSelectedAnswer.setValue(true);
-            Question question = currentQuestion.getValue();
-            boolean isCorrect = clickedIndex == correctAnswerIndex;
+            selectedAnswer.setValue(clickedIndex);
+            correctAnswer.setValue(correctAnswerIndex);
 
-            ArrayList<Boolean> results = currentUser.getValue().getId().equals(challengerUserId) ?
-                    challengerUserResults.getValue() : challengedUserResults.getValue();
+            boolean isCorrect = clickedIndex == correctAnswerIndex;
+            ArrayList<Boolean> results = currentUser.getValue().getId().equals(challengerUserId) ? challengerUserResults.getValue() : challengedUserResults.getValue();
             results.add(isCorrect);
 
             if (currentUser.getValue().getId().equals(challengerUserId)) {
@@ -253,12 +263,13 @@ public class DuelViewModel extends AndroidViewModel {
         }
     }
 
-
     private void getDuelResult() {
         if(currentUser.getValue().getId().equals(challengerUserId)) {
             int correctAnswers = 0;
             for (Boolean res : challengerUserResults.getValue()) {
-                if (res) correctAnswers++;
+                if (res) {
+                    correctAnswers++;
+                }
             }
             result.setValue("Eredményed: " + correctAnswers + "/" + questionIdsList.getValue().size());
         } else {
@@ -281,5 +292,7 @@ public class DuelViewModel extends AndroidViewModel {
     public void resetForNextQuestion() {
         isSelectedAnswer.setValue(false);
         showNavigationButtons.setValue(false);
+        selectedAnswer.setValue(-1);
+        correctAnswer.setValue(-1);
     }
 }

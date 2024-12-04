@@ -138,6 +138,10 @@ public class QuizGameActivity extends DrawerBaseActivity {
             binding.questionImage.setVisibility(View.GONE);
         }
 
+        int hiddenIndex = viewModel.getHiddenAnswerIndex().getValue();
+        int correctIndex = viewModel.getCorrectAnswerIndex().getValue();
+        int selectedIndex = viewModel.getSelectedAnswerIndex().getValue();
+
         for (int i = 0; i < question.getAnswers().size(); i++) {
             String answer = question.getAnswers().get(i);
             View answerCardView = getLayoutInflater().inflate(R.layout.answer_card, null);
@@ -147,19 +151,31 @@ public class QuizGameActivity extends DrawerBaseActivity {
             CardView cardView = answerCardView.findViewById(R.id.cardView);
             cardView.setCardBackgroundColor(getResources().getColor(R.color.lightbrowne));
 
-            final int answerIndex = i;
-            answerCardView.setOnClickListener(v -> {
-                if (!viewModel.getIsAnswerSelected().getValue()) {
-                    boolean userAnsweredCorrectly = handleAnswerSelection(answerIndex, question);
-                    Bundle bundle = new Bundle();
-                    bundle.putString(FirebaseAnalytics.Param.ITEM_ID, question.getId());
-                    bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, question.getQuestionText());
-                    bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "quiz_question");
-                    bundle.putString("answer", question.getAnswers().get(answerIndex));
-                    bundle.putBoolean("result", userAnsweredCorrectly);
-                    mFirebaseAnalytics.logEvent("quiz_answer_selected", bundle);
+            if (hiddenIndex == i) {
+                answerCardView.setVisibility(View.INVISIBLE);
+                answerCardView.setClickable(false);
+            } else {
+                final int answerIndex = i;
+                answerCardView.setOnClickListener(v -> {
+                    if (!viewModel.getIsAnswerSelected().getValue()) {
+                        boolean userAnsweredCorrectly = handleAnswerSelection(answerIndex, question);
+                        Bundle bundle = new Bundle();
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, question.getId());
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, question.getQuestionText());
+                        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "quiz_question");
+                        bundle.putString("answer", question.getAnswers().get(answerIndex));
+                        bundle.putBoolean("result", userAnsweredCorrectly);
+                        mFirebaseAnalytics.logEvent("quiz_answer_selected", bundle);
+                    }
+                });
+
+                //képernyőforgatás esetén jelölés visszaáállítása
+                if (correctIndex == i) {
+                    cardView.setCardBackgroundColor(getResources().getColor(R.color.correct_green));
+                } else if (selectedIndex == i) {
+                    cardView.setCardBackgroundColor(getResources().getColor(R.color.incorrect_red));
                 }
-            });
+            }
 
             binding.answersLayout.addView(answerCardView);
             answerViews.add(answerCardView);
@@ -170,6 +186,10 @@ public class QuizGameActivity extends DrawerBaseActivity {
         viewModel.submitAnswer(selectedIndex);
         int correctAnswerIndex = question.getCorrectAnswerIndex();
         boolean userAnsweredCorrectly = selectedIndex == correctAnswerIndex;
+
+        // helyes és választott válasz indexének mentése
+        viewModel.setCorrectAnswerIndex(correctAnswerIndex);
+        viewModel.setSelectedAnswerIndex(selectedIndex);
 
         // válasz cardview-ok háttérszíneinek módosítása a válasz alapján
         for (int i = 0; i < answerViews.size(); i++) {
@@ -279,6 +299,7 @@ public class QuizGameActivity extends DrawerBaseActivity {
 
         if (!incorrectAnswers.isEmpty()) {
             int randomIncorrectIndex = incorrectAnswers.get(new Random().nextInt(incorrectAnswers.size()));
+            viewModel.setHiddenAnswerIndex(randomIncorrectIndex);
             View incorrectAnswerView = answerViews.get(randomIncorrectIndex);
             incorrectAnswerView.setVisibility(View.INVISIBLE);
             incorrectAnswerView.setClickable(false);

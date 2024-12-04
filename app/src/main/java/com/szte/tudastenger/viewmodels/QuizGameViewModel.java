@@ -45,6 +45,10 @@ public class QuizGameViewModel extends AndroidViewModel {
     private final MutableLiveData<String> explanationText = new MutableLiveData<>();
     private final MutableLiveData<Boolean> isAnswerSelected = new MutableLiveData<>(false);
     private final MutableLiveData<Uri> imageUri = new MutableLiveData<>();
+    private final MutableLiveData<Integer> hiddenAnswerIndex = new MutableLiveData<>(-1);
+    private final MutableLiveData<Integer> correctAnswerIndex = new MutableLiveData<>(-1);
+    private final MutableLiveData<Integer> selectedAnswerIndex = new MutableLiveData<>(-1);
+
 
     @Inject
     public QuizGameViewModel(Application application, UserRepository userRepository, QuestionRepository questionRepository, CategoryRepository categoryRepository) {
@@ -64,6 +68,17 @@ public class QuizGameViewModel extends AndroidViewModel {
     public LiveData<String> getExplanationText() { return explanationText; }
     public LiveData<Boolean> getIsAnswerSelected() { return isAnswerSelected; }
     public LiveData<Uri> getImageUri() { return imageUri; }
+
+    public LiveData<Integer> getHiddenAnswerIndex() { return hiddenAnswerIndex; }
+
+    public void setHiddenAnswerIndex(int index) { hiddenAnswerIndex.setValue(index); }
+    public LiveData<Integer> getCorrectAnswerIndex() { return correctAnswerIndex; }
+
+    public LiveData<Integer> getSelectedAnswerIndex() { return selectedAnswerIndex; }
+
+    public void setCorrectAnswerIndex(int index) { correctAnswerIndex.setValue(index); }
+
+    public void setSelectedAnswerIndex(int index) { selectedAnswerIndex.setValue(index); }
 
     public void loadCurrentUser() {
         userRepository.loadCurrentUser(user -> currentUser.setValue(user));
@@ -86,6 +101,11 @@ public class QuizGameViewModel extends AndroidViewModel {
     }
 
     public void queryRandomQuestion(String categoryId, boolean isMixed) {
+        hiddenAnswerIndex.setValue(-1);
+        correctAnswerIndex.setValue(-1);
+        selectedAnswerIndex.setValue(-1);
+        imageUri.setValue(null);
+
         User user = currentUser.getValue();
 
         questionRepository.loadRandomQuestion(

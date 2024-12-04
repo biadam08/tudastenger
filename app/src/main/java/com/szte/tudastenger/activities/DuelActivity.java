@@ -64,6 +64,7 @@ public class DuelActivity extends DrawerBaseActivity {
         observeViewModel();
     }
 
+
     private void setupViews() {
         binding.configureDuelButton.setOnClickListener(v -> showDuelConfigDialog());
 
@@ -83,10 +84,15 @@ public class DuelActivity extends DrawerBaseActivity {
     }
 
     private void observeViewModel() {
-
         viewModel.getCurrentUser().observe(this, user -> {
             if (user != null && user.getId().equals(challengerUserId)) {
-                showDuelConfigDialog();
+                viewModel.isDuelConfigured().observe(this, isConfigured -> {
+                    if (!isConfigured) {
+                        showDuelConfigDialog();
+                    } else{
+                        viewModel.setShowButtonsLayout(false);
+                    }
+                });
             }
         });
 
@@ -94,8 +100,8 @@ public class DuelActivity extends DrawerBaseActivity {
 
         viewModel.getActualQuestionNumber().observe(this, number -> {
             if (number != null && viewModel.getQuestionsList().getValue() != null) {
-                binding.questionNumberTextView.setText(number + "/" +
-                        viewModel.getQuestionsList().getValue().size());
+                String questionNumberText = number + "/" + viewModel.getQuestionsList().getValue().size();
+                binding.questionNumberTextView.setText(questionNumberText);
             }
         });
 
@@ -137,7 +143,7 @@ public class DuelActivity extends DrawerBaseActivity {
     }
 
     private void displayQuestion(Question question) {
-        if (question == null){
+        if (question == null) {
             return;
         }
 
@@ -162,6 +168,15 @@ public class DuelActivity extends DrawerBaseActivity {
 
             binding.answersLayout.addView(answerCardView);
         }
+
+        // színek visszaállítása
+        Integer selected = viewModel.getSelectedAnswer().getValue();
+        Integer correct = viewModel.getCorrectAnswer().getValue();
+
+        if (selected != null && selected != -1 && correct != null && correct != -1) {
+            updateAnswerCardColors(selected, correct);
+        }
+
     }
 
     private void updateAnswerCardColors(int clickedIndex, int correctIndex) {
@@ -177,11 +192,16 @@ public class DuelActivity extends DrawerBaseActivity {
     }
 
     private void showDuelConfigDialog() {
+        if (isFinishing() || isDestroyed()) {
+            return;
+        }
+
         View dialogView = getLayoutInflater().inflate(R.layout.popup_start_a_duel, null);
         PopupWindow popupWindow = new PopupWindow(dialogView,
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 true);
+
 
         RecyclerView recyclerView = dialogView.findViewById(R.id.catRecyclerView);
         EditText questionNumberInput = dialogView.findViewById(R.id.questionNumberEditText);
@@ -194,6 +214,7 @@ public class DuelActivity extends DrawerBaseActivity {
             String input = questionNumberInput.getText().toString();
             if (!input.isEmpty() && viewModel.getSelectedCategory().getValue() != null) {
                 viewModel.initializeQuestions(Integer.parseInt(input));
+                viewModel.setDuelConfigured(true);
                 popupWindow.dismiss();
 
                 Bundle bundle = new Bundle();
@@ -204,8 +225,10 @@ public class DuelActivity extends DrawerBaseActivity {
             }
         });
 
-        popupWindow.showAtLocation(binding.getRoot(), Gravity.CENTER, 0, 0);
-        dimBehind(popupWindow);
+        if (!isFinishing() && !isDestroyed()) {
+            popupWindow.showAtLocation(binding.getRoot(), Gravity.CENTER, 0, 0);
+            dimBehind(popupWindow);
+        }
     }
 
     private void setupQuestionNumberInput(EditText input) {
@@ -219,9 +242,7 @@ public class DuelActivity extends DrawerBaseActivity {
 
     private void setupCategoryRecyclerView(RecyclerView recyclerView) {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        mAdapter = new DuelCategoryAdapter(this,
-                new ArrayList<>(),
-                categoryName -> viewModel.selectCategory(categoryName));
+        mAdapter = new DuelCategoryAdapter(this, new ArrayList<>(), categoryName -> viewModel.selectCategory(categoryName));
         recyclerView.setAdapter(mAdapter);
 
         viewModel.getCategoriesData().observe(this, categories -> {
@@ -232,6 +253,8 @@ public class DuelActivity extends DrawerBaseActivity {
     }
 
     private void showResultDialog() {
+        if (isFinishing() || isDestroyed()) return;
+
         View dialogView = getLayoutInflater().inflate(R.layout.popup_quiz_result, null);
         PopupWindow popupWindow = new PopupWindow(dialogView,
                 LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -252,11 +275,15 @@ public class DuelActivity extends DrawerBaseActivity {
             finish();
         });
 
-        popupWindow.showAtLocation(binding.getRoot(), Gravity.CENTER, 0, 0);
-        dimBehind(popupWindow);
+        if (!isFinishing() && !isDestroyed()) {
+            popupWindow.showAtLocation(binding.getRoot(), Gravity.CENTER, 0, 0);
+            dimBehind(popupWindow);
+        }
     }
 
     private void popUpExplanation() {
+        if (isFinishing() || isDestroyed()) return;
+
         LayoutInflater inflater = (LayoutInflater)
                 getSystemService(LAYOUT_INFLATER_SERVICE);
         View popupView = inflater.inflate(R.layout.popup_correct_answer_explanation, null);
@@ -280,8 +307,10 @@ public class DuelActivity extends DrawerBaseActivity {
 
         closeButton.setOnClickListener(v -> popupWindow.dismiss());
 
-        popupWindow.showAtLocation(binding.getRoot(), Gravity.CENTER, 0, 0);
-        dimBehind(popupWindow);
+        if (!isFinishing() && !isDestroyed()) {
+            popupWindow.showAtLocation(binding.getRoot(), Gravity.CENTER, 0, 0);
+            dimBehind(popupWindow);
+        }
     }
 
     private void dimBehind(PopupWindow popupWindow) {
@@ -297,13 +326,9 @@ public class DuelActivity extends DrawerBaseActivity {
         new AlertDialog.Builder(this)
                 .setTitle(title)
                 .setMessage(message)
-                .setPositiveButton("Rendben", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        startActivity(new Intent(DuelActivity.this, DuelListingActivity.class));
-                    }
+                .setPositiveButton("Rendben", (dialogInterface, i) -> {
+                    startActivity(new Intent(DuelActivity.this, DuelListingActivity.class));
                 })
                 .show();
     }
-
 }
