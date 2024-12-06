@@ -29,7 +29,6 @@ import dagger.hilt.android.AndroidEntryPoint;
 public class SavedQuestionGameActivity extends DrawerBaseActivity {
     private ActivitySavedQuestionGameBinding binding;
     private SavedQuestionGameViewModel viewModel;
-    private String explanationText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -160,7 +159,12 @@ public class SavedQuestionGameActivity extends DrawerBaseActivity {
         TextView explanationTextView = popupView.findViewById(R.id.explanationTextView);
         Button closeButton = popupView.findViewById(R.id.closeButton);
 
-        explanationTextView.setText(explanationText);
+        viewModel.getExplanationText().observe(this, explanation -> {
+            if (explanation != null) {
+                explanationTextView.setText(explanation);
+            }
+        });
+
         closeButton.setOnClickListener(v -> popupWindow.dismiss());
 
         popupWindow.setTouchable(true);

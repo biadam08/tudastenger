@@ -46,6 +46,7 @@ public class SavedQuestionGameViewModel extends AndroidViewModel {
     private final MutableLiveData<String> toastMessage = new MutableLiveData<>();
     private final MutableLiveData<User> currentUser = new MutableLiveData<>();
     private final MutableLiveData<Uri> imageUri = new MutableLiveData<>();
+    private final MutableLiveData<String> explanationText = new MutableLiveData<>();
 
     private String savedQuestionId;
     private String savedDocumentId;
@@ -65,6 +66,7 @@ public class SavedQuestionGameViewModel extends AndroidViewModel {
     public LiveData<String> getToastMessage() { return toastMessage; }
     public LiveData<User> getCurrentUser() { return currentUser; }
     public LiveData<Uri> getImageUri() { return imageUri; }
+    public LiveData<String> getExplanationText() { return explanationText; }
 
 
     public void init(String questionId) {
@@ -85,6 +87,13 @@ public class SavedQuestionGameViewModel extends AndroidViewModel {
         questionRepository.loadSavedQuestion( savedQuestionId,
                 question -> {
                     currentQuestion.setValue(question);
+
+                    if(question.getExplanationText() != null) {
+                        explanationText.setValue(question.getExplanationText());
+                    } else {
+                        explanationText.setValue("Sajnos nincs megjelenítendő magyarázat ehhez a kérdéshez");
+                    }
+
                     loadQuestionImage();
                 },
                 error -> toastMessage.setValue(error)
