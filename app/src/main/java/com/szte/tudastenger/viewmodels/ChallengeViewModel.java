@@ -43,6 +43,9 @@ public class ChallengeViewModel extends AndroidViewModel {
     private final MutableLiveData<String> errorMessage = new MutableLiveData<>();
     private final MutableLiveData<Map<CalendarDay, String>> challengeResults = new MutableLiveData<>();
     private final MutableLiveData<Boolean> userHasCompleted = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> isChallengeStarted = new MutableLiveData<>(false);
+    private final MutableLiveData<Integer> selectedAnswer = new MutableLiveData<>(-1);
+    private final MutableLiveData<Integer> correctAnswer = new MutableLiveData<>(-1);
 
     @Inject
     public ChallengeViewModel(Application application, QuestionRepository questionRepository, ChallengeRepository challengeRepository, UserRepository userRepository) {
@@ -68,6 +71,9 @@ public class ChallengeViewModel extends AndroidViewModel {
     public LiveData<String> getErrorMessage() { return errorMessage; }
     public LiveData<Map<CalendarDay, String>> getChallengeResults() { return challengeResults; }
     public LiveData<Boolean> getUserHasCompleted() { return userHasCompleted; }
+    public LiveData<Boolean> getIsChallengeStarted() { return isChallengeStarted; }
+    public LiveData<Integer> getSelectedAnswer() { return selectedAnswer; }
+    public LiveData<Integer> getCorrectAnswer() { return correctAnswer; }
 
 
     public void init() {
@@ -122,6 +128,7 @@ public class ChallengeViewModel extends AndroidViewModel {
                             if(!hasCompleted){
                                 userHasCompleted.setValue(false);
                                 loadQuestions(challenge.getQuestionIds());
+                                isChallengeStarted.setValue(true);
                             } else{
                                 userHasCompleted.setValue(true);
                                 errorMessage.setValue("A mai kihívást már kitöltötted!");
@@ -166,6 +173,9 @@ public class ChallengeViewModel extends AndroidViewModel {
     public void handleAnswerClick(int clickedIndex, int correctAnswerIndex) {
         if (!isSelectedAnswer.getValue()) {
             isSelectedAnswer.setValue(true);
+            selectedAnswer.setValue(clickedIndex);
+            correctAnswer.setValue(correctAnswerIndex);
+
             boolean isCorrect = clickedIndex == correctAnswerIndex;
             userResults.add(isCorrect);
             showNavigationButtons.setValue(true);
@@ -191,6 +201,8 @@ public class ChallengeViewModel extends AndroidViewModel {
     public void resetForNextQuestion() {
         isSelectedAnswer.setValue(false);
         showNavigationButtons.setValue(false);
+        selectedAnswer.setValue(-1);
+        correctAnswer.setValue(-1);
     }
 
 }

@@ -13,11 +13,8 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.szte.tudastenger.R;
-import com.szte.tudastenger.activities.CategoryListActivity;
-import com.szte.tudastenger.activities.CategoryUploadActivity;
-import com.szte.tudastenger.activities.QuestionEditUploadActivity;
+import com.szte.tudastenger.activities.CategoryEditUploadActivity;
 import com.szte.tudastenger.models.Category;
-import com.szte.tudastenger.models.Question;
 
 import java.util.ArrayList;
 
@@ -101,7 +98,7 @@ public class CategoryEditAdapter extends RecyclerView.Adapter<CategoryEditAdapte
                     int position = getAdapterPosition();
                     if (position != RecyclerView.NO_POSITION) {
                         Category clickedCategory = mCategoriesData.get(position);
-                        Intent intent = new Intent(mContext, CategoryUploadActivity.class);
+                        Intent intent = new Intent(mContext, CategoryEditUploadActivity.class);
                         intent.putExtra("categoryId", clickedCategory.getId());
                         mContext.startActivity(intent);
                     }

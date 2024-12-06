@@ -72,7 +72,7 @@
             android:exported="false"
             android:label="Előzmények" />
         <activity
-            android:name=".activities.SavedQuestionsActivity"
+            android:name=".activities.SavedQuestionListActivity"
             android:exported="false"
             android:label="Mentett kérdések" />
         <activity
@@ -84,7 +84,7 @@
             android:exported="false"
             android:label="Kvízjáték" />
         <activity
-            android:name=".activities.CategoryUploadActivity"
+            android:name=".activities.CategoryEditUploadActivity"
             android:exported="false" />
         <activity
             android:name=".activities.QuestionEditUploadActivity"

@@ -2,48 +2,34 @@ package com.szte.tudastenger.activities;
 
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Spinner;
-import android.widget.TextView;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.CollectionReference;
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.szte.tudastenger.R;
 import com.szte.tudastenger.adapters.SavedQuestionAdapter;
-import com.szte.tudastenger.databinding.ActivitySavedQuestionsBinding;
+import com.szte.tudastenger.databinding.ActivitySavedQuestionListBinding;
 import com.szte.tudastenger.models.Category;
-import com.szte.tudastenger.models.Question;
-import com.szte.tudastenger.models.User;
-import com.szte.tudastenger.viewmodels.SavedQuestionsViewModel;
+import com.szte.tudastenger.viewmodels.SavedQuestionListViewModel;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
-public class SavedQuestionsActivity extends DrawerBaseActivity {
-    private SavedQuestionsViewModel viewModel;
-    private ActivitySavedQuestionsBinding binding;
+public class SavedQuestionListActivity extends DrawerBaseActivity {
+    private SavedQuestionListViewModel viewModel;
+    private ActivitySavedQuestionListBinding binding;
     private SavedQuestionAdapter mAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding = ActivitySavedQuestionsBinding.inflate(getLayoutInflater());
+        binding = ActivitySavedQuestionListBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        viewModel = new ViewModelProvider(this).get(SavedQuestionsViewModel.class);
+        viewModel = new ViewModelProvider(this).get(SavedQuestionListViewModel.class);
 
         setupRecyclerView();
         setupSpinner();

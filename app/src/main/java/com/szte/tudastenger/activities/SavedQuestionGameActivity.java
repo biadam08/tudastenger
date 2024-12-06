@@ -23,8 +23,6 @@ import com.szte.tudastenger.databinding.ActivitySavedQuestionGameBinding;
 import com.szte.tudastenger.models.Question;
 import com.szte.tudastenger.viewmodels.SavedQuestionGameViewModel;
 
-import java.util.ArrayList;
-
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
@@ -54,7 +52,7 @@ public class SavedQuestionGameActivity extends DrawerBaseActivity {
 
     private void setupButtons() {
         binding.backButton.setOnClickListener(v ->
-                startActivity(new Intent(this, SavedQuestionsActivity.class)));
+                startActivity(new Intent(this, SavedQuestionListActivity.class)));
 
         binding.showExplanationButton.setOnClickListener(v -> popUpExplanation());
         binding.saveQuestionButton.setOnClickListener(v -> viewModel.saveQuestion());
@@ -86,74 +84,67 @@ public class SavedQuestionGameActivity extends DrawerBaseActivity {
                 Integer correct = viewModel.getCorrectIndex().getValue();
 
                 if (clicked != null && correct != null) {
-                    View clickedView = binding.answersLayout.getChildAt(clicked);
-                    CardView clickedCard = clickedView.findViewById(R.id.cardView);
-
-                    if (clicked.equals(correct)) {
-                        clickedCard.setCardBackgroundColor(getResources().getColor(R.color.correct_green));
-                    } else {
-                        clickedCard.setCardBackgroundColor(getResources().getColor(R.color.incorrect_red));
-
-                        View correctView = binding.answersLayout.getChildAt(correct);
-                        CardView correctCard = correctView.findViewById(R.id.cardView);
-                        correctCard.setCardBackgroundColor(getResources().getColor(R.color.correct_green));
-                    }
-
+                    updateAnswerCardColors(clicked, correct);
                     binding.navigationButtonsLayout.setVisibility(View.VISIBLE);
                 }
             }
         });
+
+        viewModel.getImageUri().observe(this, uri -> {
+            if (uri != null) {
+                binding.questionImage.setVisibility(View.VISIBLE);
+                Glide.with(this).load(uri).into(binding.questionImage);
+            } else {
+                binding.questionImage.setVisibility(View.GONE);
+            }
+        });
+    }
+
+    private void updateAnswerCardColors(int clickedIndex, int correctIndex) {
+        CardView clickedCard = binding.answersLayout.getChildAt(clickedIndex).findViewById(R.id.cardView);
+        CardView correctCard = binding.answersLayout.getChildAt(correctIndex).findViewById(R.id.cardView);
+
+        if (clickedIndex == correctIndex) {
+            clickedCard.setCardBackgroundColor(getResources().getColor(R.color.correct_green));
+        } else {
+            clickedCard.setCardBackgroundColor(getResources().getColor(R.color.incorrect_red));
+            correctCard.setCardBackgroundColor(getResources().getColor(R.color.correct_green));
+        }
     }
 
     private void displayQuestion(Question question) {
-        binding.answersLayout.removeAllViews();
-
-        if (question.getImage() == null) {
-            binding.questionImage.setVisibility(View.GONE);
-        } else {
-            binding.questionImage.setVisibility(View.VISIBLE);
+        if (question == null){
+            return;
         }
 
         binding.questionTextView.setText(question.getQuestionText());
-
-        if(question.getExplanationText() != null){
-            explanationText = question.getExplanationText();
-        } else{
-            explanationText = "Sajnos nincs megjelenítendő magyarázat ehhez a kérdéshez";
-        }
-
-        if (question.getImage() != null && !question.getImage().isEmpty()) {
-            ProgressDialog progressDialog = new ProgressDialog(this);
-            progressDialog.setTitle("Kép betöltése...");
-            progressDialog.show();
-
-            String imagePath = "images/" + question.getImage();
-            FirebaseStorage.getInstance().getReference().child(imagePath)
-                    .getDownloadUrl()
-                    .addOnSuccessListener(uri -> {
-                        Glide.with(this).load(uri).into(binding.questionImage);
-                        progressDialog.dismiss();
-                    })
-                    .addOnFailureListener(e -> progressDialog.dismiss());
-        }
+        binding.answersLayout.removeAllViews();
 
         for (int i = 0; i < question.getAnswers().size(); i++) {
-            String answer = question.getAnswers().get(i);
             View answerCardView = getLayoutInflater().inflate(R.layout.answer_card, null);
             TextView answerTextView = answerCardView.findViewById(R.id.answerTextView);
             CardView cardView = answerCardView.findViewById(R.id.cardView);
 
-            answerTextView.setText(answer);
+            answerTextView.setText(question.getAnswers().get(i));
             cardView.setCardBackgroundColor(getResources().getColor(R.color.lightbrowne));
 
-            final int correctAnswerIndex = question.getCorrectAnswerIndex();
             final int clickedIndex = i;
-
             answerCardView.setOnClickListener(v -> {
-                viewModel.handleAnswerClick(clickedIndex, correctAnswerIndex);
+                if (!viewModel.getIsAnswerSelected().getValue()) {
+                    viewModel.handleAnswerClick(clickedIndex, question.getCorrectAnswerIndex());
+                    updateAnswerCardColors(clickedIndex, question.getCorrectAnswerIndex());
+                }
             });
 
             binding.answersLayout.addView(answerCardView);
+        }
+
+        // színek visszaállítása
+        Integer selected = viewModel.getClickedIndex().getValue();
+        Integer correct = viewModel.getCorrectIndex().getValue();
+
+        if (selected != null && selected != -1 && correct != null && correct != -1) {
+            updateAnswerCardColors(selected, correct);
         }
     }
 

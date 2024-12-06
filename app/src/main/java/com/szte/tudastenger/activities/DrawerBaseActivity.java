@@ -143,7 +143,7 @@ public class DrawerBaseActivity extends AppCompatActivity implements NavigationV
             startActivity(new Intent(DrawerBaseActivity.this, HistoryActivity.class));
         }
         if(itemId == R.id.nav_saved_questions){
-            startActivity(new Intent(DrawerBaseActivity.this, SavedQuestionsActivity.class));
+            startActivity(new Intent(DrawerBaseActivity.this, SavedQuestionListActivity.class));
         }
         if(itemId == R.id.nav_registration){
             startActivity(new Intent(DrawerBaseActivity.this, RegistrationActivity.class));
@@ -159,7 +159,7 @@ public class DrawerBaseActivity extends AppCompatActivity implements NavigationV
 
         if(itemId == R.id.nav_add_a_category){
             if(user != null && currentUserRole.equals("admin")) {
-                startActivity(new Intent(DrawerBaseActivity.this, CategoryUploadActivity.class));
+                startActivity(new Intent(DrawerBaseActivity.this, CategoryEditUploadActivity.class));
             }
         }
         if(itemId == R.id.nav_add_a_question){

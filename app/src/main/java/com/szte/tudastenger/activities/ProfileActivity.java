@@ -45,7 +45,7 @@ public class ProfileActivity extends DrawerBaseActivity {
                 startActivity(new Intent(this, EditProfileActivity.class)));
 
         binding.bookmarkLinearLayout.setOnClickListener(v ->
-                startActivity(new Intent(this, SavedQuestionsActivity.class)));
+                startActivity(new Intent(this, SavedQuestionListActivity.class)));
 
         binding.friendsLinearLayout.setOnClickListener(v ->
                 startActivity(new Intent(this, FriendsActivity.class)));

@@ -1,6 +1,7 @@
 package com.szte.tudastenger.viewmodels;
 
 import android.app.Application;
+import android.net.Uri;
 import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -39,11 +40,13 @@ public class SavedQuestionGameViewModel extends AndroidViewModel {
 
     private final MutableLiveData<Question> currentQuestion = new MutableLiveData<>();
     private final MutableLiveData<Boolean> isAnswerSelected = new MutableLiveData<>(false);
-    private final MutableLiveData<Integer> clickedIndex = new MutableLiveData<>();
-    private final MutableLiveData<Integer> correctIndex = new MutableLiveData<>();
+    private final MutableLiveData<Integer> clickedIndex = new MutableLiveData<>(-1);
+    private final MutableLiveData<Integer> correctIndex = new MutableLiveData<>(-1);
     private final MutableLiveData<Boolean> isQuestionSaved = new MutableLiveData<>(true);
     private final MutableLiveData<String> toastMessage = new MutableLiveData<>();
     private final MutableLiveData<User> currentUser = new MutableLiveData<>();
+    private final MutableLiveData<Uri> imageUri = new MutableLiveData<>();
+
     private String savedQuestionId;
     private String savedDocumentId;
 
@@ -61,6 +64,8 @@ public class SavedQuestionGameViewModel extends AndroidViewModel {
     public LiveData<Boolean> getIsQuestionSaved() { return isQuestionSaved; }
     public LiveData<String> getToastMessage() { return toastMessage; }
     public LiveData<User> getCurrentUser() { return currentUser; }
+    public LiveData<Uri> getImageUri() { return imageUri; }
+
 
     public void init(String questionId) {
         this.savedQuestionId = questionId;
@@ -78,9 +83,17 @@ public class SavedQuestionGameViewModel extends AndroidViewModel {
 
     private void loadQuestion() {
         questionRepository.loadSavedQuestion( savedQuestionId,
-                question -> currentQuestion.setValue(question),
+                question -> {
+                    currentQuestion.setValue(question);
+                    loadQuestionImage();
+                },
                 error -> toastMessage.setValue(error)
         );
+    }
+
+    private void loadQuestionImage() {
+        Question question = currentQuestion.getValue();
+        questionRepository.loadQuestionImage(question.getImage(), uri -> imageUri.setValue(Uri.parse(uri)), error -> imageUri.setValue(null));
     }
 
 

@@ -12,15 +12,10 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
-import com.szte.tudastenger.activities.QuizGameActivity;
 import com.szte.tudastenger.R;
 import com.szte.tudastenger.activities.SavedQuestionGameActivity;
 import com.szte.tudastenger.models.Question;
-import com.szte.tudastenger.viewmodels.SavedQuestionsViewModel;
+import com.szte.tudastenger.viewmodels.SavedQuestionListViewModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,9 +24,9 @@ public class SavedQuestionAdapter extends RecyclerView.Adapter<SavedQuestionAdap
     private ArrayList<Question> mQuestionsData;
     private Context mContext;
     private String mCurrentUserId;
-    private SavedQuestionsViewModel viewModel;
+    private SavedQuestionListViewModel viewModel;
 
-    public SavedQuestionAdapter(Context context, ArrayList<Question> questionsData, String currentUserId, SavedQuestionsViewModel viewModel) {
+    public SavedQuestionAdapter(Context context, ArrayList<Question> questionsData, String currentUserId, SavedQuestionListViewModel viewModel) {
         this.mQuestionsData = questionsData;
         this.mContext = context;
         this.mCurrentUserId = currentUserId;

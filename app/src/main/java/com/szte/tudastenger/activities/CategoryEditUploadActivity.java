@@ -1,10 +1,8 @@
 package com.szte.tudastenger.activities;
 
-import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -14,7 +12,7 @@ import android.widget.Toast;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.bumptech.glide.Glide;
-import com.szte.tudastenger.databinding.ActivityCategoryUploadBinding;
+import com.szte.tudastenger.databinding.ActivityCategoryEditUploadBinding;
 import com.szte.tudastenger.viewmodels.CategoryEditUploadViewModel;
 
 import com.yalantis.ucrop.UCrop;
@@ -22,13 +20,11 @@ import com.yalantis.ucrop.UCrop;
 import java.io.File;
 import java.util.UUID;
 
-import javax.inject.Inject;
-
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
-public class CategoryUploadActivity extends DrawerBaseActivity {
-    private ActivityCategoryUploadBinding binding;
+public class CategoryEditUploadActivity extends DrawerBaseActivity {
+    private ActivityCategoryEditUploadBinding binding;
 
     private CategoryEditUploadViewModel viewModel;
     private ProgressDialog progressDialog;
@@ -36,7 +32,7 @@ public class CategoryUploadActivity extends DrawerBaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding = ActivityCategoryUploadBinding.inflate(getLayoutInflater());
+        binding = ActivityCategoryEditUploadBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
         viewModel = new ViewModelProvider(this).get(CategoryEditUploadViewModel.class);
@@ -181,7 +177,7 @@ public class CategoryUploadActivity extends DrawerBaseActivity {
         builder.setTitle(title)
                 .setMessage(message)
                 .setPositiveButton("Rendben", (dialog, which) -> {
-                    Intent intent = new Intent(CategoryUploadActivity.this, CategoryListActivity.class);
+                    Intent intent = new Intent(CategoryEditUploadActivity.this, CategoryListActivity.class);
                     startActivity(intent);
                     finish();
                 })

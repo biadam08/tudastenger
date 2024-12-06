@@ -44,7 +44,9 @@ public class ChallengeActivity extends DrawerBaseActivity {
     }
 
     private void setupViews() {
-        viewModel.loadTodaysChallenge();
+        if (viewModel.getIsChallengeStarted().getValue() == null || !viewModel.getIsChallengeStarted().getValue()) {
+            viewModel.loadTodaysChallenge();
+        }
 
         binding.nextQuestionButton.setOnClickListener(v -> {
             if(viewModel.getIsLastQuestion().getValue()) {
@@ -116,6 +118,14 @@ public class ChallengeActivity extends DrawerBaseActivity {
             });
 
             binding.answersLayout.addView(answerCardView);
+        }
+
+        // színek visszaállítása
+        Integer selected = viewModel.getSelectedAnswer().getValue();
+        Integer correct = viewModel.getCorrectAnswer().getValue();
+
+        if (selected != null && selected != -1 && correct != null && correct != -1) {
+            updateAnswerCardColors(selected, correct);
         }
     }
 
