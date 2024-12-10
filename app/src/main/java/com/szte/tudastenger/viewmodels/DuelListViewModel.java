@@ -99,19 +99,18 @@ public class DuelListViewModel extends AndroidViewModel {
         if (user != null) {
             duelRepository.loadFinishedDuels(
                     user.getId(),
-                    pendingDuelsList -> finishedDuels.setValue(pendingDuelsList)
+                    finishedDuelsList -> finishedDuels.setValue(finishedDuelsList)
             );
         }
     }
 
     public void loadCategoryAndQuestionNumber(String categoryId, int questionCount) {
-        categoryRepository.loadCategoryData(
+        categoryRepository.loadCategoryNameForDuel(
                 categoryId,
-                category -> {
-                    String categoryAndQuestionNumberText = category.getName() + " / " + questionCount + " db";
+                categoryName -> {
+                    String categoryAndQuestionNumberText = categoryName + " / " + questionCount + " db";
                     categoryAndQuestionNumber.setValue(categoryAndQuestionNumberText);
-                },
-                url -> {}
+                }
         );
     }
 }

@@ -56,19 +56,17 @@ public class UserRepository {
                 .document(challengerUid)
                 .get()
                 .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists()) {
-                        mFirestore.collection("Users")
-                                .document(challengedUid)
-                                .get()
-                                .addOnSuccessListener(documentSnapshot2 -> {
-                                    if (documentSnapshot2.exists()) {
-                                        String challengedUsername = documentSnapshot2.getString("username");
-                                        String challengerUsername = documentSnapshot.getString("username");
-                                        String players = challengerUsername + " - " + challengedUsername;
-                                        usernamesLoadedCallback.onUsernamesLoaded(players);
-                                    }
-                                });
-                    }
+                    String challengerUsername = documentSnapshot.exists() ? documentSnapshot.getString("username") : "TÖRÖLT";
+
+                    mFirestore.collection("Users")
+                            .document(challengedUid)
+                            .get()
+                            .addOnSuccessListener(documentSnapshot2 -> {
+                                String challengedUsername = documentSnapshot2.exists() ? documentSnapshot2.getString("username") : "TÖRÖLT";
+
+                                String players = challengerUsername + " - " + challengedUsername;
+                                usernamesLoadedCallback.onUsernamesLoaded(players);
+                            });
                 });
     }
 

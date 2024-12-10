@@ -2,6 +2,7 @@ package com.szte.tudastenger.adapters;
 
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -78,6 +79,7 @@ public class DuelAdapter extends RecyclerView.Adapter<DuelAdapter.ViewHolder> {
                     (LifecycleOwner) mContext, usernames -> {
                         if (usernames != null) {
                             mPlayersUsernameTextView.setText(usernames);
+                            Log.d("ADAPTERGETUS", usernames);
                         }
                     }
             );

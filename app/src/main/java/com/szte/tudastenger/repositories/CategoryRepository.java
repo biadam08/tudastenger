@@ -1,6 +1,7 @@
 package com.szte.tudastenger.repositories;
 
 import android.net.Uri;
+import android.util.Log;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -183,6 +184,14 @@ public class CategoryRepository {
                 });
     }
 
+    public void loadCategoryNameForDuel(String categoryId, CategoryNameReceivedCallback categoryNameReceivedCallback) {
+        mCategories.document(categoryId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    String category = documentSnapshot.exists() ? documentSnapshot.getString("name") : "TÖRÖLT";
+                    categoryNameReceivedCallback.onCategoryNameReceived(category);
+                });
+    }
 
     public interface SuccessCallback {
         void onSuccess(String message);
@@ -209,5 +218,9 @@ public class CategoryRepository {
 
     public interface CategorySelectedCallback {
         void onCategorySelected(String categoryId);
+    }
+
+    public interface CategoryNameReceivedCallback {
+        void onCategoryNameReceived(String category);
     }
 }

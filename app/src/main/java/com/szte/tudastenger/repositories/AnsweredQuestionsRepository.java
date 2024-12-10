@@ -75,6 +75,8 @@ public class AnsweredQuestionsRepository {
                                 mFirestore.collection("Questions").document(questionId)
                                         .get()
                                         .addOnCompleteListener(task2 -> {
+                                            processedQuestions.getAndIncrement();
+
                                             if (task2.isSuccessful()) {
                                                 DocumentSnapshot questionDoc = task2.getResult();
                                                 if (questionDoc.exists()) {
@@ -83,7 +85,6 @@ public class AnsweredQuestionsRepository {
                                                     mFirestore.collection("Categories").document(categoryId)
                                                             .get()
                                                             .addOnSuccessListener(categoryDoc -> {
-                                                                processedQuestions.getAndIncrement();
 
                                                                 if (categoryDoc.exists()) {
                                                                     String categoryName = categoryDoc.getString("name");
