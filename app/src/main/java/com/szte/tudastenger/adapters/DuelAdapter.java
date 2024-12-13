@@ -79,7 +79,6 @@ public class DuelAdapter extends RecyclerView.Adapter<DuelAdapter.ViewHolder> {
                     (LifecycleOwner) mContext, usernames -> {
                         if (usernames != null) {
                             mPlayersUsernameTextView.setText(usernames);
-                            Log.d("ADAPTERGETUS", usernames);
                         }
                     }
             );
@@ -88,16 +87,17 @@ public class DuelAdapter extends RecyclerView.Adapter<DuelAdapter.ViewHolder> {
                 String mCategoryAndQuestionNumber = "Vegyes / " + currentDuel.getQuestionIds().size() + " db";
                 mCategoryAndQuestionNumberTextView.setText(mCategoryAndQuestionNumber);
             } else {
-                viewModel.loadCategoryAndQuestionNumber(currentDuel.getCategory(), currentDuel.getQuestionIds().size());
-
-                viewModel.getCategoryAndQuestionNumber().observe((LifecycleOwner) mContext, categoryAndQuestionNumber -> {
-                    mCategoryAndQuestionNumberTextView.setText(categoryAndQuestionNumber);
-                });
+                viewModel.getCategoryAndQuestionNumber(currentDuel.getId(), currentDuel.getCategory(), currentDuel.getQuestionIds().size())
+                        .observe((LifecycleOwner) mContext, categoryAndQuestionNumber -> {
+                            if (categoryAndQuestionNumber != null) {
+                                mCategoryAndQuestionNumberTextView.setText(categoryAndQuestionNumber);
+                            }
+                        });
             }
 
 
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy. MMMM dd. HH:mm:ss", new Locale("hu", "HU"));
-            sdf.setTimeZone(TimeZone.getTimeZone("GMT+02:00"));
+            sdf.setTimeZone(TimeZone.getTimeZone("GMT+01:00"));
             String formattedDate = sdf.format(currentDuel.getDate().toDate());
             mDuelDate.setText(formattedDate);
 

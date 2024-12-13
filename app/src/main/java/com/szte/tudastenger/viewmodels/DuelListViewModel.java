@@ -26,8 +26,10 @@ import com.szte.tudastenger.repositories.UserRepository;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -43,7 +45,7 @@ public class DuelListViewModel extends AndroidViewModel {
     private final MutableLiveData<User> currentUser = new MutableLiveData<>();
     private final MutableLiveData<List<Duel>> pendingDuels = new MutableLiveData<>();
     private final MutableLiveData<List<Duel>> finishedDuels = new MutableLiveData<>();
-    private final MutableLiveData<String> categoryAndQuestionNumber = new MutableLiveData<>();
+    private final Map<String, MutableLiveData<String>> categoryAndQuestionDataMap = new HashMap<>();
 
     @Inject
     public DuelListViewModel(Application application, DuelRepository duelRepository, CategoryRepository categoryRepository, UserRepository userRepository) {
@@ -57,7 +59,23 @@ public class DuelListViewModel extends AndroidViewModel {
     public LiveData<User> getCurrentUser() { return currentUser; }
     public LiveData<List<Duel>> getPendingDuels() { return pendingDuels; }
     public LiveData<List<Duel>> getFinishedDuels() { return finishedDuels; }
-    public LiveData<String> getCategoryAndQuestionNumber() { return categoryAndQuestionNumber; }
+    public LiveData<String> getCategoryAndQuestionNumber(String duelId, String categoryId, int questionCount) {
+        if (!categoryAndQuestionDataMap.containsKey(duelId)) {
+            MutableLiveData<String> liveData = new MutableLiveData<>();
+            categoryRepository.loadCategoryNameForDuel(
+                    categoryId,
+                    categoryName -> {
+                        if (categoryName != null) {
+                            String categoryAndQuestionText = categoryName + " / " + questionCount + " db";
+                            liveData.postValue(categoryAndQuestionText);
+                        }
+                    }
+            );
+            categoryAndQuestionDataMap.put(duelId, liveData);
+        }
+        return categoryAndQuestionDataMap.get(duelId);
+    }
+
 
     public LiveData<String> getUsernames(Duel currentDuel) {
         MutableLiveData<String> usernames = new MutableLiveData<>();
@@ -102,15 +120,5 @@ public class DuelListViewModel extends AndroidViewModel {
                     finishedDuelsList -> finishedDuels.setValue(finishedDuelsList)
             );
         }
-    }
-
-    public void loadCategoryAndQuestionNumber(String categoryId, int questionCount) {
-        categoryRepository.loadCategoryNameForDuel(
-                categoryId,
-                categoryName -> {
-                    String categoryAndQuestionNumberText = categoryName + " / " + questionCount + " db";
-                    categoryAndQuestionNumber.setValue(categoryAndQuestionNumberText);
-                }
-        );
     }
 }
